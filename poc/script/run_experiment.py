@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import csv
 import os
+from typing import Any
 
 import pandas as pd
 from numpy.random import RandomState
 from ollama import Client
 
-from poc.prompt import et_prompt
+from poc.prompt import etrig_prompt, etype_prompt
 from poc.query import (
     get_ollama_responce,
     hand_close_examples,
@@ -16,10 +17,72 @@ from poc.query import (
 )
 
 DATA_PATH = "data/gpt_data_with_embeddings.json"
-RESULTS_PATH = "result/et_close_experiment.csv"
+RESULTS_PATH = "result/e_type_close_experiment.csv"
 RANDOM_SEED = 1337
 EXAMPLE_TYPE = "close_example"
 TOTAL_SAMPLES = 100
+TASK_TYPE = "event_type"
+
+
+def write_event_type_results(
+    writer: csv.writer, outputs: list[tuple[dict[str, Any], dict[str, Any]]]
+) -> int:
+    writer.writerow(["Index", "RealEventType", "GivenEventType", "IsMatch"])
+
+    total_correct = 0
+    for output in outputs:
+        given_event = output[1].get("EventType", "")
+
+        real_event = output[0]["EventType"]
+        is_match = real_event == given_event
+
+        if is_match:
+            total_correct += 1
+
+        writer.writerow([output[0]["Index"], real_event, given_event, is_match])
+
+    return total_correct
+
+
+def write_event_trigger_results(
+    writer: csv.writer, outputs: list[tuple[dict[str, Any], dict[str, Any]]]
+) -> int:
+    writer.writerow(
+        [
+            "Index",
+            "RealEventType",
+            "RealEventTrigger",
+            "GivenEventTrigger",
+            "GivenEventTrigger",
+            "IsMatch",
+        ]
+    )
+
+    total_correct = 0
+
+    for output in outputs:
+        given_event = output[1].get("EventType", "")
+        given_trigger = output[1].get("EventTrigger", "")
+
+        real_event = output[0]["EventType"]
+        real_trigger = output[0]["EventTrigger"]
+        is_match = real_event == given_event and real_trigger == given_trigger
+
+        if is_match:
+            total_correct += 1
+
+        writer.writerow(
+            [
+                output[0]["Index"],
+                real_event,
+                real_trigger,
+                given_event,
+                given_trigger,
+                is_match,
+            ]
+        )
+
+    return total_correct
 
 
 def main() -> None:
@@ -34,9 +97,17 @@ def main() -> None:
 
     ollama_client = Client()
 
+    if TASK_TYPE == "event_type":
+        prompt_func = etype_prompt
+    elif TASK_TYPE == "event_trigger":
+        prompt_func = etrig_prompt
+    else:
+        msg = f"Invalid TASK_TYPE: {TASK_TYPE}"
+        raise ValueError(msg)
+
     def query_ollama(sent, examps):
-        prompt = et_prompt(sent, examples=examps)
-        return get_ollama_responce(ollama_client, "llama3.2:3b", prompt)
+        returned_prompt = prompt_func(sent, examples=examps)
+        return get_ollama_responce(ollama_client, "llama3.2:3b", returned_prompt)
 
     if EXAMPLE_TYPE == "no_example":
         hand_example = hand_no_examples
@@ -52,15 +123,16 @@ def main() -> None:
 
     with open(os.path.join(main_dir, RESULTS_PATH), mode="w", newline="") as file:
         writer = csv.writer(file)
-        writer.writerow(["Index", "RealEventType", "GivenEventType"])
 
-        for output in outputs:
-            given_event = output[0].get("EventType", "")
+        if TASK_TYPE == "event_type":
+            correct = write_event_type_results(writer, outputs)
+        elif TASK_TYPE == "event_trigger":
+            correct = write_event_trigger_results(writer, outputs)
+        else:
+            msg = f"Invalid TASK_TYPE: {TASK_TYPE}"
+            raise ValueError(msg)
 
-            real_event = output[0]["EventType"]
-            is_match = real_event == given_event
-
-            writer.writerow([output[0]["Index"], real_event, given_event, is_match])
+    print(f"Total correct: {correct}/{TOTAL_SAMPLES}")
 
 
 if __name__ == "__main__":

@@ -23,7 +23,7 @@ def main() -> None:
     gpt_example_df["Embedding"] = gpt_example_df["Sentence"].map(st_model.encode)
 
     # Save the data
-    gpt_example_df = gpt_example_df.reset_index().rename(columns={"index": "index"})
+    gpt_example_df = gpt_example_df.reset_index().rename(columns={"index": "Index"})
     gpt_example_df.to_json(
         os.path.join(main_dir, SAVE_DATA_PATH), orient="records", lines=True
     )

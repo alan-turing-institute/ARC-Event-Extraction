@@ -2,6 +2,7 @@
 
 # Proof of Concept
 poc/data/gpt_data_with_embeddings.json
+poc/result/*.csv
 
 
 ### ~~~~ FROM PYTHON TEMPLATE ~~~~ ###

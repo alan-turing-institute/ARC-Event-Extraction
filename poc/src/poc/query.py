@@ -44,7 +44,7 @@ def get_ollama_responce(client: Client, model_choice: str, prompt: list) -> dict
 def hand_no_examples(
     data_df: pd.DataFrame,
     sample_choice: list[int],
-    prompt_func: Callable[[str], dict[str, Any]],
+    prompt_func: Callable[[str, list[dict] | None], dict[str, Any]],
     verbose: bool = False,
 ) -> list[tuple[dict[str, Any], dict[str, Any]]]:
     """
@@ -67,14 +67,14 @@ def hand_no_examples(
     samples = data_df[data_df["Index"].isin(sample_choice)].to_dict("records")
     output = []
     for samp in tqdm(samples, disable=not verbose):
-        output.append((samp, prompt_func(samp["Sentence"])))
+        output.append((samp, prompt_func(samp["Sentence"], None)))
     return output
 
 
 def hand_random_examples(
     data_df: pd.DataFrame,
     sample_choice: list[int],
-    prompt_func: Callable[[str, list[dict]], dict[str, Any]],
+    prompt_func: Callable[[str, list[dict] | None], dict[str, Any]],
     number_samples: int = 5,
     random_state: np.RandomState | None = None,
     verbose: bool = False,
@@ -136,7 +136,7 @@ def cosine_similarity(list1: list[float], list2: list[float]) -> float:
 def hand_close_examples(
     data_df: pd.DataFrame,
     sample_choice: list[int],
-    prompt_func: Callable[[str, list[dict]], dict[str, Any]],
+    prompt_func: Callable[[str, list[dict] | None], dict[str, Any]],
     number_samples: int = 5,
     verbose: bool = False,
 ) -> list[tuple[dict[str, Any], dict[str, Any]]]:

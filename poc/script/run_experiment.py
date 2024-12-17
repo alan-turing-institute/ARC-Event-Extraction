@@ -8,7 +8,7 @@ import pandas as pd
 from numpy.random import RandomState
 from ollama import Client
 
-from poc.prompt import etrig_prompt, etype_prompt
+from poc.prompt import eall_prompt, etrig_prompt, etype_prompt
 from poc.query import (
     get_ollama_responce,
     hand_close_examples,
@@ -17,11 +17,11 @@ from poc.query import (
 )
 
 DATA_PATH = "data/gpt_data_with_embeddings.json"
-RESULTS_PATH = "result/e_type_close_experiment.csv"
+RESULTS_PATH = "result/e_all_close_experiment.csv"
 RANDOM_SEED = 1337
 EXAMPLE_TYPE = "close_example"
 TOTAL_SAMPLES = 100
-TASK_TYPE = "event_type"
+TASK_TYPE = "event_all"
 
 
 def write_event_type_results(
@@ -85,6 +85,64 @@ def write_event_trigger_results(
     return total_correct
 
 
+def write_event_all_results(
+    writer: csv.writer, outputs: list[tuple[dict[str, Any], dict[str, Any]]]
+) -> int:
+    writer.writerow(
+        [
+            "Index",
+            "RealEventType",
+            "RealEventTrigger",
+            "RealSubject",
+            "RealObject",
+            "GivenEventTrigger",
+            "GivenEventTrigger",
+            "GivenSubject",
+            "GivenObject",
+            "IsMatch",
+        ]
+    )
+
+    total_correct = 0
+
+    for output in outputs:
+        given_event = output[1].get("EventType", "")
+        given_trigger = output[1].get("EventTrigger", "")
+        given_subject = output[1].get("Subject", "")
+        given_object = output[1].get("Object", "")
+
+        real_event = output[0]["EventType"]
+        real_trigger = output[0]["EventTrigger"]
+        real_subject = output[0]["Subject"]
+        real_object = output[0]["Object"]
+        is_match = (
+            real_event == given_event
+            and real_trigger == given_trigger
+            and real_subject == given_subject
+            and real_object == given_object
+        )
+
+        if is_match:
+            total_correct += 1
+
+        writer.writerow(
+            [
+                output[0]["Index"],
+                real_event,
+                real_trigger,
+                real_subject,
+                real_object,
+                given_event,
+                given_trigger,
+                given_subject,
+                given_object,
+                is_match,
+            ]
+        )
+
+    return total_correct
+
+
 def main() -> None:
     main_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -101,6 +159,8 @@ def main() -> None:
         prompt_func = etype_prompt
     elif TASK_TYPE == "event_trigger":
         prompt_func = etrig_prompt
+    elif TASK_TYPE == "event_all":
+        prompt_func = eall_prompt
     else:
         msg = f"Invalid TASK_TYPE: {TASK_TYPE}"
         raise ValueError(msg)
@@ -128,6 +188,8 @@ def main() -> None:
             correct = write_event_type_results(writer, outputs)
         elif TASK_TYPE == "event_trigger":
             correct = write_event_trigger_results(writer, outputs)
+        elif TASK_TYPE == "event_all":
+            correct = write_event_all_results(writer, outputs)
         else:
             msg = f"Invalid TASK_TYPE: {TASK_TYPE}"
             raise ValueError(msg)

@@ -22,6 +22,7 @@ RANDOM_SEED = 1337
 EXAMPLE_TYPE = "close_example"
 TOTAL_SAMPLES = 100
 TASK_TYPE = "event_all"
+LLM_CHOICE = "llama3.2:3b"
 
 
 def write_event_type_results(
@@ -167,7 +168,7 @@ def main() -> None:
 
     def query_ollama(sent, examps):
         returned_prompt = prompt_func(sent, examples=examps)
-        return get_ollama_responce(ollama_client, "llama3.2:3b", returned_prompt)
+        return get_ollama_responce(ollama_client, LLM_CHOICE, returned_prompt)
 
     if EXAMPLE_TYPE == "no_example":
         hand_example = hand_no_examples

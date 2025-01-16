@@ -1,8 +1,9 @@
 .vscode/
 
 # Proof of Concept
-poc/data/gpt_data_with_embeddings.json
-poc/result/*.csv
+poc/data/*.[ct]sv
+poc/result/**/*.[ct]sv
+poc/model/*
 
 
 ### ~~~~ FROM PYTHON TEMPLATE ~~~~ ###

@@ -359,4 +359,4 @@
     {"Sentence": "Liam forged a set of sturdy iron gates for the entrance of the historical mansion.", "EventType": "Build", "EventTrigger": "forged", "Subject": "Liam", "Object": "a set of sturdy iron gates"},
     {"Sentence": "The tech company constructed a state-of-the-art data center to support their expanding operations.", "EventType": "Build", "EventTrigger": "constructed", "Subject": "The tech company", "Object": "a state-of-the-art data center"},
     {"Sentence": "The carpenter crafted a custom bookshelf with intricate carvings to fit perfectly in the client’s study.", "EventType": "Build", "EventTrigger": "crafted", "Subject": "The carpenter", "Object": "a custom bookshelf"}
-]    
+]

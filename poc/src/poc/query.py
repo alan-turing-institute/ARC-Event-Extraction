@@ -38,7 +38,10 @@ def get_ollama_responce(client: Client, model_choice: str, prompt: list) -> dict
         keep_alive=60,  # How long the model should be kept in memory after the call
     )
 
-    return json.loads(responce["message"]["content"])
+    try:
+        return json.loads(responce["message"]["content"])
+    except json.JSONDecodeError:
+        return {}
 
 
 def hand_no_examples(

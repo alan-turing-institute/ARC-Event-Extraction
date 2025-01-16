@@ -19,8 +19,13 @@ dependencies = [
     "jupyter",
     "notebook",
     "colorcet",
-    "sentence-transformers", # for sentence embeddings
+    "sentence-transformers",
     "ollama",
+    "transformers",
+    "trl",
+    "pef",
+    "datasets",
+    "huggingface-hub>=0.27.1",
 ]
 
 

@@ -23,7 +23,7 @@ We are using `uv` workspaces, and also the uv.lock file to manage the dependenci
 ```bash
 git clone https://github.com/alan-turing-institute/ARC-Event-Extraction/
 cd ARC-Event-Extraction
-uv venv
+uv venv --python 3.12
 uv sync
 ```
 

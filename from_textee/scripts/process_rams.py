@@ -17,17 +17,17 @@ def read_docs(path):
     all_objs = []
     with open(os.path.join(path, "data", "train.jsonlines")) as fp:
         lines = fp.readlines()
-    objs = [json.loads(l) for l in lines]
+    objs = [json.loads(line) for line in lines]
     all_objs.extend(objs)
 
     with open(os.path.join(path, "data", "dev.jsonlines")) as fp:
         lines = fp.readlines()
-    objs = [json.loads(l) for l in lines]
+    objs = [json.loads(line) for line in lines]
     all_objs.extend(objs)
 
     with open(os.path.join(path, "data", "test.jsonlines")) as fp:
         lines = fp.readlines()
-    objs = [json.loads(l) for l in lines]
+    objs = [json.loads(line) for line in lines]
     all_objs.extend(objs)
 
     return all_objs
@@ -36,15 +36,15 @@ def read_docs(path):
 def get_split(objs, split_folder):
     with open(os.path.join(split_folder, "train.txt")) as fp:
         lines = fp.readlines()
-        train_doc_ids = set([l.strip() for l in lines])
+        train_doc_ids = {[line.strip() for line in lines]}
 
     with open(os.path.join(split_folder, "dev.txt")) as fp:
         lines = fp.readlines()
-        dev_doc_ids = set([l.strip() for l in lines])
+        dev_doc_ids = {[line.strip() for line in lines]}
 
     with open(os.path.join(split_folder, "test.txt")) as fp:
         lines = fp.readlines()
-        test_doc_ids = set([l.strip() for l in lines])
+        test_doc_ids = {[line.strip() for line in lines]}
 
     train_objs = []
     dev_objs = []
@@ -72,7 +72,8 @@ def convert_format(objs):
         for s in obj["sentences"]:
             tokens.extend(s)
 
-        token_lens = [len(x) for x in tokens]
+        # This line of code was included in TextEE, but token_lens is never used
+        # token_lens = [len(x) for x in tokens]
 
         entity_mentions = {}
         for k, entity in enumerate(obj["ent_spans"]):
@@ -93,7 +94,7 @@ def convert_format(objs):
             end = event[1] + 1
             event_type = event[2][0][0]
 
-            event = {
+            event_dict = {
                 "id": f"{obj['doc_key']}_Evt{k}",
                 "event_type": event_type,
                 "trigger": {
@@ -103,7 +104,7 @@ def convert_format(objs):
                 },
                 "arguments": [],
             }
-            event_mentions[(start, end)] = event
+            event_mentions[(start, end)] = event_dict
 
         for argument in obj["gold_evt_links"]:
             trigger = (argument[0][0], argument[0][1] + 1)

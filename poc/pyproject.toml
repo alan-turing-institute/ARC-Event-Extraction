@@ -1,7 +1,7 @@
 [project]
 name = "poc"
 version = "0.1.0"
-requires-python = ">= 3.10"
+requires-python = ">=3.12"
 description = "Proof of concept for the LLM event extraction."
 
 dependencies = [
@@ -25,9 +25,12 @@ dependencies = [
     "trl",
     "pef",
     "datasets",
-    "huggingface-hub>=0.27.1",
+    "huggingface-hub",
 ]
 
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.mypy]
 files = ["src", "tests"]

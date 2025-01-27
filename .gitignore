@@ -5,6 +5,10 @@ poc/data/*.[ct]sv
 poc/result/**/*.[ct]sv
 poc/model/*
 
+# Data
+data/RAMS/*
+!data/RAMS/README.md
+
 
 ### ~~~~ FROM PYTHON TEMPLATE ~~~~ ###
 

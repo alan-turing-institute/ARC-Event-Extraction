@@ -36,15 +36,15 @@ def read_docs(path):
 def get_split(objs, split_folder):
     with open(os.path.join(split_folder, "train.txt")) as fp:
         lines = fp.readlines()
-        train_doc_ids = {[line.strip() for line in lines]}
+        train_doc_ids = {*[line.strip() for line in lines]}
 
     with open(os.path.join(split_folder, "dev.txt")) as fp:
         lines = fp.readlines()
-        dev_doc_ids = {[line.strip() for line in lines]}
+        dev_doc_ids = {*[line.strip() for line in lines]}
 
     with open(os.path.join(split_folder, "test.txt")) as fp:
         lines = fp.readlines()
-        test_doc_ids = {[line.strip() for line in lines]}
+        test_doc_ids = {*[line.strip() for line in lines]}
 
     train_objs = []
     dev_objs = []

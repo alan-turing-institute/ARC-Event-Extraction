@@ -17,9 +17,9 @@ The folder should be set up as follows:
         │   └── train.jsonlines
         ├── output/
         │   ├── split1/
-        │   │   ├── dev.json
-        │   │   ├── test.json
-        │   │   └── train.json
+        │   │   ├── dev.jsonlines
+        │   │   ├── test.jsonlines
+        │   │   └── train.jsonlines
         │   └── ...
         ├── splits/
         │   ├── split1/

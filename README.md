@@ -1,13 +1,12 @@
 # ARC-Event-Extraction
 
-The Event Extraction project.
-
+This project examines a range of state-of-the-art approaches for labeling events in text.
 
 ## Installation
 
-As of the time of writing the project required python >3.10 <3.12
+As of the time of writing the project required python 3.12.
 
-Using `pip`
+#### Using `pip`
 
 ```bash
 git clone https://github.com/alan-turing-institute/ARC-Event-Extraction/
@@ -17,7 +16,8 @@ pip install -e from_textee/.
 pip install -e .
 ```
 
-Using `uv`
+#### Using `uv`
+
 We are using `uv` workspaces, and also the uv.lock file to manage the dependencies.
 
 ```bash
@@ -28,4 +28,17 @@ uv sync
 ```
 
 If you are developing you will want to call `uv lock` to update the lock file.
-This changes the python package versions to the latest available versions that are compatible with the current versions.
+This changes the python package versions to the latest available versions that are compatible.
+
+
+## Project Structure
+
+This project has sub-packages that are used for different purposes.
+
+### `poc` - Proof of Concept
+
+This is a proof of concept for the RAG prompting set up for the event extraction task. [Read Me Here](poc/README.md)
+
+### `from_textee` - From TextEE
+
+This package has a set of scripts taken and updated from the [TextEE project](https://github.com/ej0cl6/TextEE). [Read Me Here](from_textee/README.md)

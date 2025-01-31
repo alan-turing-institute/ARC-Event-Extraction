@@ -132,11 +132,21 @@ name = "arcee"
 version = "0.1.0"
 source = { editable = "arcee" }
 dependencies = [
+    { name = "pip" },
+    { name = "pre-commit" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
     { name = "torch" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "torch" }]
+requires-dist = [
+    { name = "pip" },
+    { name = "pre-commit" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
+    { name = "torch" },
+]
 
 [[package]]
 name = "argon2-cffi"

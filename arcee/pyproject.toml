@@ -5,6 +5,10 @@ description = "This is the main package for the ARC Event Extraction project."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "pip",
+    "pre-commit",
+    "pytest",
+    "pytest-cov",
     "torch",
 ]
 

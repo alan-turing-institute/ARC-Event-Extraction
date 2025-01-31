@@ -3,6 +3,7 @@ requires-python = "==3.12.*"
 
 [manifest]
 members = [
+    "arcee",
     "event-extraction",
     "from-textee",
     "poc",
@@ -125,6 +126,17 @@ sdist = { url = "https://files.pythonhosted.org/packages/35/5d/752690df9ef5b76e1
 wheels = [
     { url = "https://files.pythonhosted.org/packages/81/29/5ecc3a15d5a33e31b26c11426c45c501e439cb865d0bff96315d86443b78/appnope-0.1.4-py2.py3-none-any.whl", hash = "sha256:502575ee11cd7a28c0205f379b525beefebab9d161b7c964670864014ed7213c", size = 4321 },
 ]
+
+[[package]]
+name = "arcee"
+version = "0.1.0"
+source = { editable = "arcee" }
+dependencies = [
+    { name = "torch" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "torch" }]
 
 [[package]]
 name = "argon2-cffi"
@@ -536,12 +548,14 @@ name = "event-extraction"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "arcee" },
     { name = "from-textee" },
     { name = "poc" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "arcee", editable = "arcee" },
     { name = "from-textee", editable = "from_textee" },
     { name = "poc", editable = "poc" },
 ]

@@ -2,7 +2,8 @@
 
 # Proof of Concept
 poc/data/*.[ct]sv
-poc/result/**/*.[ct]sv
+poc/results/**/*.[ct]sv
+poc/results/*.txt
 poc/model/*
 
 

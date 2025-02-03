@@ -18,7 +18,7 @@ from poc.query import (
 )
 
 DATA_PATH = "data/gpt_test.tsv"
-RESULTS_PATH = "result/new/e_all_random_base_llama3.2_1b.csv"
+RESULTS_PATH = "results/new/e_all_random_base_llama3.2_1b.csv"
 RANDOM_SEED = 1337
 EXAMPLE_TYPE = "random_example"
 TOTAL_SAMPLES = 100

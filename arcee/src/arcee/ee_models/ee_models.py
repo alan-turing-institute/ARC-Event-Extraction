@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+import os
 from abc import ABC, abstractmethod
 from typing import Any
 
@@ -11,7 +13,11 @@ class EEBaseModel(ABC):
         super().__init__()
 
     @abstractmethod
-    def predict(self, test_data_path: str) -> None:
+    def predict_ed(self, test_data_path: str) -> None:
+        pass
+
+    @abstractmethod
+    def predict_eae(self, test_data_path: str) -> None:
         pass
 
 
@@ -24,8 +30,21 @@ class EEBaseICLModel(EEBaseModel):
         super().__init__()
 
     @abstractmethod
-    def predict(self, test_data_path: str, prompt_template: str = "") -> None:
+    def predict_ed(self, test_data_path: str, prompt_template: str = "") -> None:
         pass
+
+    @abstractmethod
+    def predict_eae(self, test_data_path: str, prompt_template: str = "") -> None:
+        pass
+
+    def _load_test_data_for_ed(self, test_data_path: str) -> list[str]:
+        with open(os.path.join(test_data_path, "test.json")) as file:
+            lines = file.readlines()
+        return [json.loads(line)["text"] for line in lines]
+
+    def _load_test_data_for_eae(self, test_data_path: str) -> list[Any]:
+        with open(os.path.join(test_data_path, "test.json")) as file:
+            return file.readlines()
 
 
 class EEOllamaModel(EEBaseICLModel):
@@ -81,7 +100,7 @@ class EEOllamaModel(EEBaseICLModel):
             keep_alive=self.keep_alive,
         )["message"]["content"]
 
-    def predict(self, test_data_path: str, prompt_template: str = "") -> None:
+    def predict_eae(self, test_data_path: str, prompt_template: str = "") -> None:
         path = test_data_path
         message = prompt_template
         response = self._get_response([{"role": "user", "content": message}])

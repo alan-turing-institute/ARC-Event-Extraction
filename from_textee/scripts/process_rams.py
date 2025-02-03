@@ -36,15 +36,15 @@ def read_docs(path):
 def get_split(objs, split_folder):
     with open(os.path.join(split_folder, "train.txt")) as fp:
         lines = fp.readlines()
-        train_doc_ids = {[line.strip() for line in lines]}
+        train_doc_ids = {*[line.strip() for line in lines]}
 
     with open(os.path.join(split_folder, "dev.txt")) as fp:
         lines = fp.readlines()
-        dev_doc_ids = {[line.strip() for line in lines]}
+        dev_doc_ids = {*[line.strip() for line in lines]}
 
     with open(os.path.join(split_folder, "test.txt")) as fp:
         lines = fp.readlines()
-        test_doc_ids = {[line.strip() for line in lines]}
+        test_doc_ids = {*[line.strip() for line in lines]}
 
     train_objs = []
     dev_objs = []
@@ -190,15 +190,15 @@ def main():
     parser = ArgumentParser()
     parser.add_argument("-i", "--in_folder", help="Path to the input folder")
     parser.add_argument("-o", "--out_folder", help="Path to the output folder")
-    parser.add_argument("--seed", type=int, default=0, help="Path to split folder")
-    parser.add_argument("--split", help="Path to split folder")
+    parser.add_argument("--seed", type=int, default=0, help="Random seed")
+    parser.add_argument("--split_folder", help="Path to split folder")
     args = parser.parse_args()
 
     np.random.seed(args.seed)
 
     objs = read_docs(args.in_folder)
 
-    train_objs, dev_objs, test_objs = get_split(objs, args.split)
+    train_objs, dev_objs, test_objs = get_split(objs, args.split_folder)
 
     train_data = convert_format(train_objs)
     dev_data = convert_format(dev_objs)
@@ -211,7 +211,7 @@ def main():
     print("Test")
     get_statistics(test_data)
 
-    save_data(args.out_folder, args.split, train_data, dev_data, test_data)
+    save_data(args.out_folder, args.split_folder, train_data, dev_data, test_data)
 
 
 if __name__ == "__main__":

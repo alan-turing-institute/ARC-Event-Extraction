@@ -196,7 +196,7 @@ def main():
 
     np.random.seed(args.seed)
 
-    objs = args.in_folder
+    objs = read_docs(args.in_folder)
 
     train_objs, dev_objs, test_objs = get_split(objs, args.split_folder)
 

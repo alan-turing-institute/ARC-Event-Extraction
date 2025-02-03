@@ -5,17 +5,18 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
+    "arcee",
     "poc",
     "from_textee",
 ]
 
 [tool.uv.sources]
+arcee = { workspace = true }
 poc = { workspace = true }
 from_textee = { workspace = true }
 
-
 [tool.uv.workspace]
-members = ["poc", "from_textee"]
+members = ["arcee", "poc", "from_textee",]
 
 [tool.mypy]
 files = ["src", "tests"]

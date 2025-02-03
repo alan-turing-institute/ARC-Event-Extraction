@@ -11,6 +11,7 @@ As of the time of writing the project required python 3.12.
 ```bash
 git clone https://github.com/alan-turing-institute/ARC-Event-Extraction/
 cd ARC-Event-Extraction
+pip install -e arcee/.
 pip install -e poc/.
 pip install -e from_textee/.
 pip install -e .
@@ -34,6 +35,10 @@ This changes the python package versions to the latest available versions that a
 ## Project Structure
 
 This project has sub-packages that are used for different purposes.
+
+### `arcee` - ARC Event Extraction
+
+This is the main experiment package for the ARC Event Extraction project. [Read Me Here](arcee/README.md)
 
 ### `poc` - Proof of Concept
 

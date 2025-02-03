@@ -190,8 +190,8 @@ def main():
     parser = ArgumentParser()
     parser.add_argument("-i", "--in_folder", help="Path to the input folder")
     parser.add_argument("-o", "--out_folder", help="Path to the output folder")
-    parser.add_argument("--seed", type=int, default=0, help="Path to split folder")
-    parser.add_argument("--split", help="Path to split folder")
+    parser.add_argument("--seed", type=int, default=0, help="Random seed")
+    parser.add_argument("--split_folder", help="Path to split folder")
     args = parser.parse_args()
 
     np.random.seed(args.seed)

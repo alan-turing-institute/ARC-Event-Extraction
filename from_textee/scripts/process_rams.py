@@ -196,9 +196,9 @@ def main():
 
     np.random.seed(args.seed)
 
-    objs = read_docs(args.in_folder)
+    objs = args.in_folder
 
-    train_objs, dev_objs, test_objs = get_split(objs, args.split)
+    train_objs, dev_objs, test_objs = get_split(objs, args.split_folder)
 
     train_data = convert_format(train_objs)
     dev_data = convert_format(dev_objs)
@@ -211,7 +211,7 @@ def main():
     print("Test")
     get_statistics(test_data)
 
-    save_data(args.out_folder, args.split, train_data, dev_data, test_data)
+    save_data(args.out_folder, args.split_folder, train_data, dev_data, test_data)
 
 
 if __name__ == "__main__":

@@ -29,3 +29,7 @@ The folder should be set up as follows:
         │   └── ...
         └── README.md
 ```
+
+The data downloaded from RAMS should be saved into the `data/RAMS/data` folder.
+
+The splits we have used were downloaded from TextEE and were saved into the `data/RAMS/splits` folder, these are found in this repo <https://github.com/ej0cl6/TextEE>

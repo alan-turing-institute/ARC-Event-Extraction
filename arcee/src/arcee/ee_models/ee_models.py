@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 import ollama
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from arcee.prompts.prompts import EEPrompt
 from arcee.utils.data import load_data, load_pattern
@@ -184,3 +185,61 @@ class EEOllamaModel(EEBaseModel):
             print(data["event_mentions"][0]["arguments"])
             print()
             print("-------------------------------------------")
+
+
+class EEHFModel(EEBaseModel):
+    def __init__(
+        self,
+        model_id: str,
+        options: dict | None = None,
+    ) -> None:
+        super().__init__()
+        # Load tokenizer
+        tokenizer = AutoTokenizer.from_pretrained(model_id)
+        if tokenizer.pad_token_id is None:
+            tokenizer.pad_token_id = tokenizer.eos_token_id
+        self.tokenizer = tokenizer
+        self.terminators = [
+            tokenizer.eos_token_id,
+            tokenizer.convert_tokens_to_ids("<|eot_id|>") #TODO: Llama only?
+        ]
+        
+        # Load model
+        self.model = AutoModelForCausalLM.from_pretrained(model_id) #TODO additional kwargs
+        
+        # Options (TODO: needed?)
+        if options is None:
+            options = {"temperature": 0.0}
+        self.options = options
+        
+    def predict(
+        self,
+        input: list[dict[str: str]],
+    ) -> None:
+        # Process input into chat template
+        # TODO reconcile w/ prompt classes, data format (lost[dict[str]]) above
+        text = self.tokenizer.apply_chat_template(
+            input, add_generation_prompt=True, tokenize=False
+        )
+        tokenized_text = self.tokenizer(text, padding="longest", return_tensors="pt")
+        
+        # Generate outputs
+        gen_tokens = self.model.generate(
+            **tokenized_text, 
+            max_new_tokens=512, 
+            pad_token_id=self.tokenizer.eos_token_id, 
+            eos_token_id=self.terminators,
+            do_sample=True,
+            temperature=0.6,
+            top_p=0.9
+        )
+
+        # Decode
+        gen_text = self.tokenizer.batch_decode(gen_tokens, skip_special_tokens=True)
+        
+        # Return
+        # TODO: needs class wrapped around output?
+        return gen_text
+        
+        
+        

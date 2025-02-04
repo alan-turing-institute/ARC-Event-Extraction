@@ -47,3 +47,18 @@ This is a proof of concept for the RAG prompting set up for the event extraction
 ### `from_textee` - From TextEE
 
 This package has a set of scripts taken and updated from the [TextEE project](https://github.com/ej0cl6/TextEE). [Read Me Here](from_textee/README.md)
+
+## Scripts
+
+The scripts folder contain scripts to run the following processes:
+
+### `data_prep`
+The scripts in this folder process the data.
+To run `process_rams.py`, the following args could be used:
+`-i=data/RAMS/data -o=data/RAMS/output/split1 -s=data/RAMS/splits/split1`
+
+The script `create_dev_datasets.py` can be used to create a `train` and `dev` datasets that would specifically be used for prompt development, where the records come from an intersection of all five of the existing train splits (the number of splits can be altered, but there will be five if TextEE is followed). This can be run with the following args:
+`-o=data/RAMS/output/ --num_splits=5 --seed=42`
+
+### `objective_1`
+The script in this folder is designed to try out different language models for event extraction tasks using in-context learning (ICL), i.e., without any fine tuning.

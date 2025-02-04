@@ -36,23 +36,6 @@ class EEBaseModel(ABC):
         """
 
 
-class EEMockModel(EEBaseModel):
-    """
-    Only used in tests to avoid loading a Ollama or HF model while running tests
-    """
-
-    def __init__(self) -> None:
-        super().__init__()
-
-    def predict(
-        self,
-        data_file_path: str,
-        pattern_file_path: str,
-        prompt_obj: EEPrompt,
-    ) -> None:
-        pass
-
-
 class EEOllamaModel(EEBaseModel):
     """
     Wrapper class to conduct event extraction tasks using the Ollama framework
@@ -70,10 +53,26 @@ class EEOllamaModel(EEBaseModel):
         Parameters
         ----------
         model: str
-            The name of an Ollama model,
+            The name of an Ollama model, will try to download if it doesn't already
+            exist
+        options: dict | None
+            These are used when the chat function is called - see Ollama docs for
+            possible values here:
+            https://github.com/ollama/ollama/blob/main/docs/api.md
+            If nothing is passed, then the temperature is set to zero
+        keep_alive: int
+            controls how long the model will stay loaded into memory following the
+            request (default is 5m)
+        host_port: int
+            Needed when running on HPC to make sure the Ollama models don't interfere
+            with one another
+
         """
         super().__init__()
         if options is None:
+            # TO DO: Copied this functionality over from WikiGame, do we want it here?
+            # To discuss?
+            # This will make the model more deterministic
             options = {"temperature": 0.0}
         self.options = options
 
@@ -100,8 +99,10 @@ class EEOllamaModel(EEBaseModel):
         messages : list[dict[Any, Any]])
             The list of messages to send to the model. They are in the format
             {"role": "user", "content": "message"}.
-        format : str
+        response_format : str
             Expected 'json' if JSON format is to be used
+            If blank then natural language is returned
+            Might want to add a check that nothing else is passed?
 
         Returns:
             str | None: This is the response from the model. It will only include the
@@ -184,3 +185,33 @@ class EEOllamaModel(EEBaseModel):
             print(data["event_mentions"][0]["arguments"])
             print()
             print("-------------------------------------------")
+
+
+class EEMockOllamaModel(EEOllamaModel):
+    """
+    Only used in tests to avoid loading a Ollama or HF model while running tests
+    """
+
+    def __init__(self) -> None:
+        pass
+
+    def _get_response(
+        self,
+        messages: list[dict[Any, Any]],
+        response_format: str = "json",
+    ) -> str | None:
+        # To prevent the linter throwing a wobbly, do something with the args
+        del messages
+        del response_format
+        return "This is a mock object"
+
+    def predict(
+        self,
+        data_file_path: str,
+        pattern_file_path: str,
+        prompt_obj: EEPrompt,
+        examples_data_file_path: str | None = None,
+    ) -> None:
+        return super().predict(
+            data_file_path, pattern_file_path, prompt_obj, examples_data_file_path
+        )

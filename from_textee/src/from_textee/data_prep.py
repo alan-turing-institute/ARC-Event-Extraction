@@ -73,7 +73,7 @@ def save_data(
 
 
 def get_split(
-    objs: list[dict], split_folder: str
+    objs: list[dict], split_folder: str, key_name: str = "doc_id"
 ) -> tuple[list[dict], list[dict], list[dict]]:
     """
     Splits a list of objects into training, development, and test sets based on
@@ -84,6 +84,8 @@ def get_split(
             identifies the document.
         split_folder (str): The folder path where the split files
             ("train.txt", "dev.txt", "test.txt") are located.
+        key_name (str, optional): The key name to use for identifying the document.
+            Defaults to "doc_id".
 
     Returns:
         tuple[list[dict]]: A tuple containing three lists of dictionaries:
@@ -109,16 +111,16 @@ def get_split(
     test_objs = []
 
     for obj in objs:
-        if obj["doc_key"] in train_doc_ids:
+        if obj[key_name] in train_doc_ids:
             train_objs.append(obj)
-        if obj["doc_key"] in dev_doc_ids:
+        if obj[key_name] in dev_doc_ids:
             dev_objs.append(obj)
-        if obj["doc_key"] in test_doc_ids:
+        if obj[key_name] in test_doc_ids:
             test_objs.append(obj)
 
-    train_objs.sort(key=lambda x: x["doc_key"])
-    dev_objs.sort(key=lambda x: x["doc_key"])
-    test_objs.sort(key=lambda x: x["doc_key"])
+    train_objs.sort(key=lambda x: x[key_name])
+    dev_objs.sort(key=lambda x: x[key_name])
+    test_objs.sort(key=lambda x: x[key_name])
 
     return train_objs, dev_objs, test_objs
 
@@ -298,7 +300,7 @@ def process_rams_data(in_folder: str, out_folder: str, split_folder: str) -> Non
 
     objs = read_docs(in_folder)
 
-    train_objs, dev_objs, test_objs = get_split(objs, split_folder)
+    train_objs, dev_objs, test_objs = get_split(objs, split_folder, key_name="doc_key")
 
     train_data = convert_rams_format(train_objs)
     dev_data = convert_rams_format(dev_objs)

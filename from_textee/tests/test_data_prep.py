@@ -40,14 +40,14 @@ def test_get_split(
 ) -> None:
     t_events = events_to_test.copy()
     for i, event in enumerate(t_events):
-        event["doc_key"] = f"doc_{i}"
+        event["doc_id"] = f"doc_{i}"
     train_objs, dev_objs, test_objs = data_prep.get_split(t_events, testing_split_dir)
     assert isinstance(train_objs, list)
     assert isinstance(train_objs[0], dict)
     assert all((len(train_objs) == 6, len(dev_objs) == 2, len(test_objs) == 2))
-    assert train_objs[0]["doc_key"] == "doc_2"
-    assert dev_objs[0]["doc_key"] == "doc_8"
-    assert test_objs[0]["doc_key"] == "doc_0"
+    assert train_objs[0]["doc_id"] == "doc_2"
+    assert dev_objs[0]["doc_id"] == "doc_8"
+    assert test_objs[0]["doc_id"] == "doc_0"
 
 
 def data_format_tester(all_objs: list[dict], events_to_test: dict[dict]) -> None:

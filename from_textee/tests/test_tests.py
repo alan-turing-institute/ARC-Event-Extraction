@@ -25,7 +25,7 @@ def test_rams_data(
                     == t_events[json_line["doc_key"]]["Sentence"].split(" ")[1]
                 )
                 assert (
-                    json_line["evt_triggers"][0][2][0]
+                    json_line["evt_triggers"][0][2][0][0]
                     == t_events[json_line["doc_key"]]["EventType"]
                 )
 

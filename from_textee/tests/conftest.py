@@ -78,7 +78,7 @@ some_events = [
 ]
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def events_to_test() -> list[dict[str, str]]:
     # Return the fake events to test
     return some_events
@@ -100,14 +100,14 @@ def rams_data_paths(testing_rams_dir: pytest.fixture) -> str:
         trig_loc = new_event["sentences"][0].index(event["EventTrigger"])
         subj_loc = new_event["sentences"][0].index(event["Subject"])
         obj_loc = new_event["sentences"][0].index(event["Object"])
-        new_event["evt_triggers"] = [[trig_loc, trig_loc, [event["EventType"], 1.0]]]
+        new_event["evt_triggers"] = [[trig_loc, trig_loc, [[event["EventType"], 1.0]]]]
         new_event["ent_spans"] = [
-            [subj_loc, subj_loc, ["Subject", 1.0]],
-            [obj_loc, obj_loc, ["Object", 1.0]],
+            [subj_loc, subj_loc, [["evt1arg01Subject", 1.0]]],
+            [obj_loc, obj_loc, [["evt1arg02Object", 1.0]]],
         ]
         new_event["gold_evt_links"] = [
-            [[trig_loc, trig_loc], [subj_loc, subj_loc], "Subject"],
-            [[trig_loc, trig_loc], [obj_loc, obj_loc], "Object"],
+            [[trig_loc, trig_loc], [subj_loc, subj_loc], "evt1arg01Subject"],
+            [[trig_loc, trig_loc], [obj_loc, obj_loc], "evt1arg02Object"],
         ]
         rams_jsons.append(new_event)
 
@@ -152,3 +152,9 @@ def split_data_paths(testing_split_dir: pytest.fixture) -> tuple[str, str, str]:
         file_paths.append(file_path)
 
     return file_paths
+
+
+@pytest.fixture
+def save_testing_data_dir(tmp_path_factory: pytest.fixture.tmp_path_factory) -> str:
+    # Create a temporary directory
+    return tmp_path_factory.mktemp("save_data")

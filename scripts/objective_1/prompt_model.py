@@ -5,6 +5,11 @@ import argparse
 from arcee.ee_models.ee_models import EEOllamaModel
 from arcee.prompts.prompts import EAEPromptNoExample_01
 
+"""
+This script is very much a WIP
+Will need lots of updates for added flexibility when running experiments.
+"""
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Get arguments for prompting a model")
@@ -48,9 +53,10 @@ def main():
         err_msg = "Only valid EE model is ollama"
         raise NotImplementedError(err_msg)
 
+    # To do: decide what prompt to use with an argument
     prompt_obj = EAEPromptNoExample_01()
 
-    ee_model.predict_eae(predict_dataset, pattern, prompt_obj)
+    ee_model.predict(predict_dataset, pattern, prompt_obj)
 
 
 if __name__ == "__main__":

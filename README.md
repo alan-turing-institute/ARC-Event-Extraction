@@ -49,3 +49,13 @@ This is a proof of concept for the RAG prompting set up for the event extraction
 ### `from_textee` - From TextEE
 
 This package has a set of scripts taken and updated from the [TextEE project](https://github.com/ej0cl6/TextEE). [Read Me Here](from_textee/README.md)
+
+## Scripts
+
+The scripts folder contain scripts to run the following processes:
+
+### `data_prep`
+To do
+
+### `objective_1`
+The script in this folder is designed to try out different language models for event extraction tasks using in-context learning (ICL), i.e., without any fine tuning.

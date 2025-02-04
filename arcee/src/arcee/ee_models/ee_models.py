@@ -36,6 +36,23 @@ class EEBaseModel(ABC):
         """
 
 
+class EEMockModel(EEBaseModel):
+    """
+    Only used in tests to avoid loading a Ollama or HF model while running tests
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    def predict(
+        self,
+        data_file_path: str,
+        pattern_file_path: str,
+        prompt_obj: EEPrompt,
+    ) -> None:
+        pass
+
+
 class EEOllamaModel(EEBaseModel):
     """
     Wrapper class to conduct event extraction tasks using the Ollama framework

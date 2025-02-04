@@ -22,7 +22,7 @@ class EEPrompt(ABC):
     def get_prompt(
         self,
         tokens: list[str],
-        event_mentions: dict,
+        event_mentions: list,
         schema: dict,
         examples: list[dict],
     ) -> tuple[str, str]:
@@ -53,7 +53,7 @@ class EAEPromptNoExample_01(EEPrompt):
     def get_prompt(
         self,
         tokens: list[str],
-        event_mentions: dict,
+        event_mentions: list,
         schema: dict,
         examples: list[dict],
     ) -> tuple[str, str]:
@@ -62,8 +62,8 @@ class EAEPromptNoExample_01(EEPrompt):
         ----------
         tokens: list[str]
             The input text in token form
-        event_mentions: dict
-            From the processed data, the event mention dictionary for the input text.
+        event_mentions: list
+            From the processed data, the list of event mentions for the input text.
             Multiple events may exist in for some records, but this method creates
             a prompt only using the first of these.
         schema: dict

@@ -5,55 +5,40 @@ from typing import Any
 
 import ollama
 
-from arcee.prompts.prompts import EAEPrompt
+from arcee.prompts.prompts import EEPrompt
 from arcee.utils.data import load_data, load_pattern
 
 
 class EEBaseModel(ABC):
-    def __init__(self) -> None:
-        super().__init__()
-
-    @abstractmethod
-    def predict_ed(self, data_file_path: str) -> None:
-        pass
-
-    @abstractmethod
-    def predict_eae(
-        self,
-        data_file_path: str,
-        pattern_file_path: str,
-        prompt_obj: EAEPrompt,
-    ) -> None:
-        pass
-
-
-class EEBaseICLModel(EEBaseModel):
     """
-    To do: base class for in-context learning (ICL) only, i.e., not fine-tuning
+    Base class for event extraction models.
+    The classes that will inherit from this will be wrapper classes for
+    HuggingFace or Ollama models.
     """
 
     def __init__(self) -> None:
         super().__init__()
 
     @abstractmethod
-    def predict_ed(self, test_data_path: str, prompt_template: str = "") -> None:
-        pass
-
-    @abstractmethod
-    def predict_eae(
+    def predict(
         self,
         data_file_path: str,
         pattern_file_path: str,
-        prompt_obj: EAEPrompt,
-        # use_examples: bool = False,
-        # examples_data_file_path: str | None = None,
+        prompt_obj: EEPrompt,
     ) -> None:
-        pass
+        """
+        Makes predictions for some data, whether it is doing event detection (ED),
+        event argument extraction (EAE) or end-to-end (E2E) will be determined
+        by the logic held in the prompt.
+
+        TO DO: Determine the required output format, currently set to None
+        but will want to return the predictions in some form...
+        """
 
 
-class EEOllamaModel(EEBaseICLModel):
+class EEOllamaModel(EEBaseModel):
     """
-    To do: class for using Ollama to do in-context learning for EE
+    Wrapper class to conduct event extraction tasks using the Ollama framework
     """
 
     def __init__(
@@ -65,7 +50,10 @@ class EEOllamaModel(EEBaseICLModel):
     ) -> None:
         super().__init__()
         """
-        To do
+        Parameters
+        ----------
+        model: str
+            The name of an Ollama model,
         """
         super().__init__()
         if options is None:
@@ -111,27 +99,57 @@ class EEOllamaModel(EEBaseICLModel):
             keep_alive=self.keep_alive,
         )["message"]["content"]
 
-    def predict_ed(self, test_data_path: str, prompt_template: str = "") -> None:
-        pass
-
-    def predict_eae(
+    def predict(
         self,
         data_file_path: str,
         pattern_file_path: str,
-        prompt_obj: EAEPrompt,
-        # use_examples: bool = False,
-        # examples_data_file_path: str | None = None,
+        prompt_obj: EEPrompt,
+        examples_data_file_path: str | None = None,
     ) -> None:
-        test_data = load_data(data_file_path)
-        pattern = load_pattern(pattern_file_path, "rams")
-        # examples_data = []
-        # if use_examples:
-        #     examples_data = load_data(examples_data_file_path)
+        """
+        This method makes predictions using an Ollama model, a given prompt and
+        a dataset
 
+        Parameters
+        ----------
+        data_file_path: str
+            The file path of the data to be used for making predictions, e.g.,
+            "data/RAMS/output/splits/split1/test.json"
+        pattern_file_path: str
+            The file path containing the schema (currently taken from the pattern files
+            in TextEE) e.g., "data/RAMS/patterns/pattern.txt"
+        prompt_obj: EEPrompt:
+            An object that inherits from EEPrompt
+        examples_data_file_path: str | None = None
+            If None, then no examples will be loaded and passed to the prompt
+            Otherwise, expected to be the file loaction of a dataset to be used
+            as examples, e.g., "data/RAMS/output/splits/split1/train.json"
+
+        Returns
+        ------
+        Currently returns None, but will want to update once we've worked out a
+        suitable format.
+
+        """
+        # Load data to make predictions on
+        test_data = load_data(data_file_path)
+
+        # Load schema
+        schema = load_pattern(pattern_file_path, "rams")
+
+        # If using examples, then load the dataset from which the examples
+        # can be sampled
+        if examples_data_file_path is not None:
+            examples_data = load_data(examples_data_file_path)
+
+        # Temp for now: hard-coded to first ten records in dataset
         for data in test_data[:10]:
             system_content = prompt_obj.get_system_content()
             prompt, response_format = prompt_obj.get_prompt(
-                data["tokens"], data["event_mentions"], pattern
+                data["tokens"],
+                data["event_mentions"],
+                schema,
+                examples_data,
             )
             messages = [
                 {"role": "system", "content": system_content},
@@ -139,6 +157,8 @@ class EEOllamaModel(EEBaseICLModel):
             ]
 
             response = self._get_response(messages, response_format)
+
+            # Temp for now: print the prompt, response and annotated solution
             print(prompt)
             print()
             print(response)

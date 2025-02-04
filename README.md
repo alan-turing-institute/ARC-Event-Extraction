@@ -55,7 +55,9 @@ This package has a set of scripts taken and updated from the [TextEE project](ht
 The scripts folder contain scripts to run the following processes:
 
 ### `data_prep`
-To do
+The scripts in this folder process the data.
+To run `process_rams.py`, the following args could be used:
+`-i=data/RAMS/data -o=data/RAMS/output/split1 -s=data/RAMS/splits/split1`
 
 ### `objective_1`
 The script in this folder is designed to try out different language models for event extraction tasks using in-context learning (ICL), i.e., without any fine tuning.

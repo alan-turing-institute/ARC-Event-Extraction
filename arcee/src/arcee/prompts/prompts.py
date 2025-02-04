@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from abc import ABC, abstractmethod
 
 
@@ -84,14 +85,15 @@ class EAEPromptNoExample_01(EEPrompt):
                 "Example records have been provided to a prompt that does "
                 "not use them."
             )
-            raise Warning(warning_msg)
+            warnings.warn(warning_msg, UserWarning, stacklevel=2)
         event_mention = event_mentions[0]
         trig_start = event_mention["trigger"]["start"]
         trig_end = event_mention["trigger"]["end"]  # End index is exclusive
-        tokens[trig_start] = "<trigger>" + tokens[trig_start]
-        tokens[trig_end - 1] = tokens[trig_end - 1] + "</trigger>"
+        tagged_tokens = tokens.copy()
+        tagged_tokens[trig_start] = "<trigger>" + tagged_tokens[trig_start]
+        tagged_tokens[trig_end - 1] = tagged_tokens[trig_end - 1] + "</trigger>"
 
-        input_text = " ".join(tokens)
+        input_text = " ".join(tagged_tokens)
 
         event_type = event_mention["event_type"]
 

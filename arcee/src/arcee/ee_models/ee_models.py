@@ -156,6 +156,7 @@ class EEOllamaModel(EEBaseModel):
 
         # If using examples, then load the dataset from which the examples
         # can be sampled
+        examples_data =[]
         if examples_data_file_path is not None:
             examples_data = load_data(examples_data_file_path)
 

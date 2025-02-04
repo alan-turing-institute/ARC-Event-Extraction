@@ -9,6 +9,8 @@ poc/model/*
 # Data
 data/RAMS/*
 !data/RAMS/README.md
+data/WikiEvents/*
+!data/WikiEvents/README.md
 
 
 ### ~~~~ FROM PYTHON TEMPLATE ~~~~ ###

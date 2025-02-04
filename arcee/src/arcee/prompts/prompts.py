@@ -42,7 +42,7 @@ class EAEPromptNoExample_01(EAEPrompt):
         self,
         tokens: list[str],
         event_mentions: dict,
-        pattern: dict,
+        schema: dict,
     ) -> tuple[str, str]:
         """
         To do
@@ -59,7 +59,7 @@ class EAEPromptNoExample_01(EAEPrompt):
 
         event_type = event_mention["event_type"]
 
-        arg_roles = pattern[event_type]["roles"]
+        arg_roles = schema[event_type]["roles"]
 
         prompt = (
             "An event type of " + event_type + " has been detected in the input text. "

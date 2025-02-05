@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+from pathlib import PosixPath
+from typing import Any
 
 import pytest
 
@@ -85,13 +87,15 @@ def events_to_test() -> list[dict[str, str]]:
 
 
 @pytest.fixture(scope="module")
-def testing_split_dir(tmp_path_factory: pytest.fixture.tmp_path_factory) -> str:
+def testing_split_dir(tmp_path_factory: Any) -> PosixPath:
     # Create a temporary directory
     return tmp_path_factory.mktemp("split")
 
 
 @pytest.fixture(scope="module")
-def split_data_paths(testing_split_dir: pytest.fixture) -> tuple[str, str, str]:
+def split_data_paths(
+    testing_split_dir: PosixPath,
+) -> list[PosixPath]:
     # This builds the split data in the correct format
     keys = [f"doc_{i}" for i in range(10)]
     files = [
@@ -111,23 +115,25 @@ def split_data_paths(testing_split_dir: pytest.fixture) -> tuple[str, str, str]:
 
 
 @pytest.fixture
-def save_testing_data_dir(tmp_path_factory: pytest.fixture.tmp_path_factory) -> str:
+def save_testing_data_dir(
+    tmp_path_factory: Any,
+) -> PosixPath:
     # Create a temporary directory
     return tmp_path_factory.mktemp("save_data")
 
 
 @pytest.fixture(scope="module")
-def testing_rams_dir(tmp_path_factory: pytest.fixture.tmp_path_factory) -> str:
+def testing_rams_dir(tmp_path_factory: Any) -> PosixPath:
     # Create a temporary directory
     return tmp_path_factory.mktemp("data_rams")
 
 
 @pytest.fixture(scope="module")
-def rams_data_paths(testing_rams_dir: pytest.fixture) -> str:
+def rams_data_paths(testing_rams_dir: PosixPath) -> list[PosixPath]:
     # Build the RAMS data in the correct format
     rams_jsons = []
     for i, event in enumerate(some_events):
-        new_event = {"doc_key": f"doc_{i}"}
+        new_event: dict[str, str | list] = {"doc_key": f"doc_{i}"}
         new_event["sentences"] = [event["Sentence"].replace(".", " .").split(" ")]
         trig_loc = new_event["sentences"][0].index(event["EventTrigger"])
         subj_loc = new_event["sentences"][0].index(event["Subject"])
@@ -161,27 +167,29 @@ def rams_data_paths(testing_rams_dir: pytest.fixture) -> str:
 
 
 @pytest.fixture(scope="module")
-def testing_wikievents_dir(tmp_path_factory: pytest.fixture.tmp_path_factory) -> str:
+def testing_wikievents_dir(
+    tmp_path_factory: Any,
+) -> PosixPath:
     # Create a temporary directory
     return tmp_path_factory.mktemp("data_wikievents")
 
 
 @pytest.fixture(scope="module")
-def wikievents_data_paths(testing_wikievents_dir: pytest.fixture) -> str:
+def wikievents_data_paths(testing_wikievents_dir: PosixPath) -> list[PosixPath]:
     # Build the WikiEvents data in the correct format
     rams_jsons = []
     for i, event in enumerate(some_events):
-        new_event = {"doc_id": f"doc_{i}"}
+        new_event: dict[str, str | list] = {"doc_id": f"doc_{i}"}
         new_event["tokens"] = event["Sentence"].replace(".", " .").split(" ")
         # Build the token triplets for the sentences
         count = 0
         token_triplets = []
         for token in new_event["tokens"]:
-            token_triplets.append([token, count, count + len(token)])
+            token_triplets.append([token, count, count + len(token) + 1])
             count += len(token) + 1
-        token_triplets[-2][2] -= 1  # Remove the period space from the last token
-        token_triplets[-1][1] -= 1
-        token_triplets[-1][2] -= 1
+        # token_triplets[-2][2] -= 1  # Remove the period space from the last token
+        # token_triplets[-1][1] -= 1
+        # token_triplets[-1][2] -= 1
         new_event["sentences"] = [[token_triplets, event["Sentence"]]]
         del token_triplets, count
         # Build the event mentions
@@ -257,7 +265,7 @@ def wikievents_data_paths(testing_wikievents_dir: pytest.fixture) -> str:
 
 
 @pytest.fixture(scope="module")
-def wikievents_seg_path(testing_rams_dir: pytest.fixture) -> str:
+def wikievents_seg_path(testing_rams_dir: PosixPath) -> PosixPath:
     big_json = {}
     for i, _event in enumerate(some_events):
         big_json[f"doc_{i}"] = [[0, 1]]

@@ -2,11 +2,10 @@ from __future__ import annotations
 
 import json
 import os
+from pathlib import PosixPath
 
-import pytest
 
-
-def test_splits(split_data_paths: pytest.fixture) -> None:
+def test_splits(split_data_paths: list[PosixPath]) -> None:
     # This checks that the fake data made to check the RMAS scripts were correct
     # Check if the split files were created
     assert all(os.path.exists(path) for path in split_data_paths)
@@ -19,7 +18,7 @@ def test_splits(split_data_paths: pytest.fixture) -> None:
 
 
 def test_rams_data(
-    rams_data_paths: pytest.fixture, events_to_test: pytest.fixture
+    rams_data_paths: list[PosixPath], events_to_test: list[dict[str, str]]
 ) -> None:
     # This checks that the fake dta made to check the RMAS scripts were correct
     t_events = {f"doc_{i}": event for i, event in enumerate(events_to_test)}
@@ -43,7 +42,7 @@ def test_rams_data(
 
 
 def test_wikievent_data(
-    wikievents_data_paths: pytest.fixture, events_to_test: pytest.fixture
+    wikievents_data_paths: list[PosixPath], events_to_test: list[dict[str, str]]
 ) -> None:
     # This checks that the fake data made to check the WikiEvents scripts were correct
     t_events = {f"doc_{i}": event for i, event in enumerate(events_to_test)}
@@ -70,7 +69,7 @@ def test_wikievent_data(
                 )
 
 
-def test_wikievents_seg_path(wikievents_seg_path: pytest.fixture) -> None:
+def test_wikievents_seg_path(wikievents_seg_path: PosixPath) -> None:
     # This checks that the fake data made to check the WikiEvents scripts were correct
     # Check if the segment map file was created
     assert os.path.exists(wikievents_seg_path)

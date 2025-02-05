@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+from pathlib import PosixPath
 
 import pytest
 
@@ -9,7 +10,7 @@ from from_textee import data_prep
 
 
 @pytest.mark.usefixtures("rams_data_paths")
-def test_read_docs(testing_rams_dir: pytest.fixture) -> None:
+def test_read_docs(testing_rams_dir: PosixPath) -> None:
     all_objs = data_prep.read_docs(testing_rams_dir)
 
     assert len(all_objs) == 10
@@ -18,8 +19,8 @@ def test_read_docs(testing_rams_dir: pytest.fixture) -> None:
 
 
 def test_save_data(
-    save_testing_data_dir: pytest.fixture,
-    events_to_test: pytest.fixture,
+    save_testing_data_dir: PosixPath,
+    events_to_test: list[dict[str, str]],
 ) -> None:
     # Get the data to save
     train_data = events_to_test[:6]
@@ -36,8 +37,8 @@ def test_save_data(
 
 @pytest.mark.usefixtures("split_data_paths")
 def test_get_split(
-    testing_split_dir: pytest.fixture,
-    events_to_test: pytest.fixture,
+    testing_split_dir: PosixPath,
+    events_to_test: list[dict[str, str]],
 ) -> None:
     t_events = events_to_test.copy()
     for i, event in enumerate(t_events):
@@ -51,7 +52,9 @@ def test_get_split(
     assert test_objs[0]["doc_id"] == "doc_0"
 
 
-def data_format_tester(all_objs: list[dict], events_to_test: dict[dict]) -> None:
+def data_format_tester(
+    all_objs: list[dict], events_to_test: list[dict[str, str]]
+) -> None:
     t_events = {f"doc_{i}": event for i, event in enumerate(events_to_test)}
     assert isinstance(all_objs, list)
     assert isinstance(all_objs[0], dict)
@@ -84,8 +87,8 @@ def data_format_tester(all_objs: list[dict], events_to_test: dict[dict]) -> None
 
 @pytest.mark.usefixtures("rams_data_paths")
 def test_convert_rams_format(
-    testing_rams_dir: pytest.fixture,
-    events_to_test: pytest.fixture,
+    testing_rams_dir: PosixPath,
+    events_to_test: list[dict[str, str]],
 ) -> None:
     all_objs = data_prep.read_docs(testing_rams_dir)
     new_objs = data_prep.convert_rams_format(all_objs)
@@ -94,7 +97,7 @@ def test_convert_rams_format(
 
 @pytest.mark.usefixtures("rams_data_paths")
 def test_rams_print_statistics(
-    testing_rams_dir: pytest.fixture,
+    testing_rams_dir: PosixPath,
 ) -> None:
     all_objs = data_prep.read_docs(testing_rams_dir)
     new_objs = data_prep.convert_rams_format(all_objs)
@@ -104,9 +107,9 @@ def test_rams_print_statistics(
 
 @pytest.mark.usefixtures("rams_data_paths", "split_data_paths")
 def test_process_rams_data(
-    testing_rams_dir: pytest.fixture,
-    testing_split_dir: pytest.fixture,
-    save_testing_data_dir: pytest.fixture,
+    testing_rams_dir: PosixPath,
+    testing_split_dir: PosixPath,
+    save_testing_data_dir: PosixPath,
 ) -> None:
     data_prep.process_rams_data(
         testing_rams_dir, save_testing_data_dir, testing_split_dir
@@ -119,9 +122,9 @@ def test_process_rams_data(
 
 @pytest.mark.usefixtures("wikievents_data_paths")
 def test_convert_wikievents_format(
-    testing_wikievents_dir: pytest.fixture,
-    wikievents_seg_path: pytest.fixture,
-    events_to_test: pytest.fixture,
+    testing_wikievents_dir: PosixPath,
+    wikievents_seg_path: PosixPath,
+    events_to_test: list[dict[str, str]],
 ) -> None:
     with open(wikievents_seg_path) as fseg:
         seg_map = json.load(fseg)
@@ -132,8 +135,8 @@ def test_convert_wikievents_format(
 
 @pytest.mark.usefixtures("wikievents_data_paths")
 def test_wikievents_print_statistics(
-    testing_wikievents_dir: pytest.fixture,
-    wikievents_seg_path: pytest.fixture,
+    testing_wikievents_dir: PosixPath,
+    wikievents_seg_path: PosixPath,
 ) -> None:
     with open(wikievents_seg_path) as fseg:
         seg_map = json.load(fseg)
@@ -145,10 +148,10 @@ def test_wikievents_print_statistics(
 
 @pytest.mark.usefixtures("wikievents_data_paths", "split_data_paths")
 def test_process_wikievents_data(
-    testing_wikievents_dir: pytest.fixture,
-    testing_split_dir: pytest.fixture,
-    save_testing_data_dir: pytest.fixture,
-    wikievents_seg_path: pytest.fixture,
+    testing_wikievents_dir: PosixPath,
+    testing_split_dir: PosixPath,
+    save_testing_data_dir: PosixPath,
+    wikievents_seg_path: PosixPath,
 ) -> None:
     data_prep.process_wikievents_data(
         testing_wikievents_dir,

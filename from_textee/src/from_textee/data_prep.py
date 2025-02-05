@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 from collections import defaultdict
+from pathlib import PosixPath
 
 import numpy as np
 from tqdm import tqdm
@@ -16,7 +17,7 @@ __all__ = [
 ]
 
 
-def read_docs(path: str) -> list[dict]:
+def read_docs(path: str | PosixPath) -> list[dict]:
     """
     Reads and parses JSON lines files from the specified directory.
     This function reads three files: "train.jsonlines", "dev.jsonlines", and
@@ -48,7 +49,10 @@ def read_docs(path: str) -> list[dict]:
 
 
 def save_data(
-    out_path: str, train_data: list[dict], dev_data: list[dict], test_data: list[dict]
+    out_path: str | PosixPath,
+    train_data: list[dict],
+    dev_data: list[dict],
+    test_data: list[dict],
 ) -> None:
     """
     Save training, development, and test data to JSON lines files.
@@ -74,7 +78,7 @@ def save_data(
 
 
 def get_split(
-    objs: list[dict], split_folder: str, key_name: str = "doc_id"
+    objs: list[dict], split_folder: str | PosixPath, key_name: str = "doc_id"
 ) -> tuple[list[dict], list[dict], list[dict]]:
     """
     Splits a list of objects into training, development, and test sets based on
@@ -284,7 +288,11 @@ def convert_rams_format(objs: list[dict]) -> list[dict]:
     return data
 
 
-def process_rams_data(in_folder: str, out_folder: str, split_folder: str) -> None:
+def process_rams_data(
+    in_folder: str | PosixPath,
+    out_folder: str | PosixPath,
+    split_folder: str | PosixPath,
+) -> None:
     """
     Processes RAMS data by reading documents, splitting them into train, dev, and
     test sets, converting them to the RAMS format, printing statistics for each set,
@@ -494,7 +502,10 @@ def convert_wikievents_format(objs: list[dict], seg_map: dict) -> list[dict]:
 
 
 def process_wikievents_data(
-    in_folder: str, out_folder: str, split_folder: str, seg_map: str
+    in_folder: str | PosixPath,
+    out_folder: str | PosixPath,
+    split_folder: str | PosixPath,
+    seg_map: str | PosixPath,
 ) -> None:
     """
     Processes WikiEvents data by reading documents, splitting them into train, dev, and

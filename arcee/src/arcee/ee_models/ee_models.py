@@ -38,7 +38,7 @@ class EEOllamaModel(EEBaseModel):
 
     def __init__(
         self,
-        model: str,
+        model_id: str,
         options: dict | None = None,
         keep_alive: int = 300,
         host_port: int = 11434,
@@ -73,11 +73,11 @@ class EEOllamaModel(EEBaseModel):
 
         self.keep_alive = keep_alive
 
-        if model not in [mod["model"] for mod in ollama.list()["models"]]:
+        if model_id not in [mod["model"] for mod in ollama.list()["models"]]:
             print("Model not found. Trying to download...")
-            ollama.pull(model)
+            ollama.pull(model_id)
 
-        self.model = model
+        self.model = model_id
 
         self.ollama_client = ollama.Client(host=f"localhost:{host_port}")
 

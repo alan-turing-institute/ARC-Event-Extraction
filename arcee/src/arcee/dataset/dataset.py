@@ -50,7 +50,6 @@ class EEDataset(Dataset):
     def __getitem__(self, idx: int):
         prompt = self.prompt_constuctor.get_prompt(
             tokens=self.data[idx]["tokens"],
-            text=self.data[idx]["text"],
             event_mentions=self.data[idx]["event_mentions"],
             schema=self.event_schema,
         )

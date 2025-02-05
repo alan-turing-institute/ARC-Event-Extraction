@@ -130,7 +130,6 @@ class DummyEAEPrompter(EEPrompt):
     def get_prompt(
         self,
         tokens: list[str],
-        text: str,
         event_mentions: list,
         schema: dict,
     ) -> tuple[str, str]:
@@ -165,6 +164,7 @@ class DummyEAEPrompter(EEPrompt):
         tagged_tokens = tokens.copy()
         tagged_tokens[trig_start] = "<trigger>" + tagged_tokens[trig_start]
         tagged_tokens[trig_end - 1] = tagged_tokens[trig_end - 1] + "</trigger>"
+        input_text = " ".join(tagged_tokens)
         
         # Get additional details for the prompt
         event_type = event_mention["event_type"]
@@ -173,7 +173,7 @@ class DummyEAEPrompter(EEPrompt):
         prompt = (
             "An event type of " + event_type + " has been detected in the input text. "
             "The trigger word is identified with a <trigger> tag.\n "
-            "Input text:\n```" + text + "```\n "
+            "Input text:\n```" + input_text + "```\n "
             "What are the words in the input text that represent the argument role "
             "```" + arg_roles[0] + "```?"
         )

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-from ast import literal_eval
 from typing import Any
 
 
@@ -28,7 +27,7 @@ def load_data(dataset_file_path: str) -> list[Any]:
     return [json.loads(line) for line in lines]
 
 
-def load_pattern(pattern_file_path: str, dataset_name: str) -> dict:
+def load_pattern(pattern_file_path: str) -> dict:
     """
     This function loads a schema for a given dataset
     The file is expected to be in txt format
@@ -39,8 +38,6 @@ def load_pattern(pattern_file_path: str, dataset_name: str) -> dict:
         The file path where the pattern file is stored for the dataset, this should
         include the file name and extension,
         e.g. "data/RAMS/patterns/pattern.txt"
-    dataset_name: str
-        The name of the dataset which will be selected from the file, e.g., "rams"
 
     Returns
     -------
@@ -48,5 +45,4 @@ def load_pattern(pattern_file_path: str, dataset_name: str) -> dict:
         A dictionary containing the schema of event types and argument roles.
     """
     with open(pattern_file_path) as file:
-        data = file.read()
-    return literal_eval(data)[dataset_name]
+        return json.load(file)

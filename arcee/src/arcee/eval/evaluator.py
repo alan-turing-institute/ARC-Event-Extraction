@@ -21,7 +21,6 @@ class Evaluator:
         data_path: str,  # dataset
         prompt_constructor_cls: str,  # dataset/prompt constructor
         pattern_file_path: str,  # dataset/prompt constructor
-        dataset_name: str,  # dataset/prompt constructor
         batch_size: int,  # loader
         shuffle: bool = False,  # loader
         # extractor: BaseExtractor,
@@ -45,7 +44,7 @@ class Evaluator:
 
         # Get prompter and data schema
         prompt_constructor = getattr(prompts, prompt_constructor_cls)()
-        schema = load_pattern(pattern_file_path, dataset_name)
+        schema = load_pattern(pattern_file_path)
 
         # Instantiate data and dataloader
         self.data = EEDataset.from_file(

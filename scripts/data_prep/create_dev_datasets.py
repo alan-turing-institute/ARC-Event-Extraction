@@ -44,15 +44,14 @@ def main():
     split_id_float = 9 * len(data_intersection) / 10
     split_id = round(split_id_float)
 
-    new_split_foler = os.path.join(output_path, "split_dev")
-    if not os.path.exists(new_split_foler):
-        os.makedirs(new_split_foler)
+    new_split_folder = os.path.join(output_path, "split_dev")
+    os.makedirs(new_split_folder, exist_ok=True)
 
-    with open(os.path.join(new_split_foler, "train.jsonlines"), "w") as fp:
+    with open(os.path.join(new_split_folder, "train.jsonlines"), "w") as fp:
         for data in data_intersection[:split_id]:
             fp.write(json.dumps(data) + "\n")
 
-    with open(os.path.join(new_split_foler, "dev.jsonlines"), "w") as fp:
+    with open(os.path.join(new_split_folder, "dev.jsonlines"), "w") as fp:
         for data in data_intersection[split_id:]:
             fp.write(json.dumps(data) + "\n")
 

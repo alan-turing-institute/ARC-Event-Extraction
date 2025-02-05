@@ -1,13 +1,9 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any
 
 import ollama
 from transformers import AutoModelForCausalLM, AutoTokenizer
-
-from arcee.prompts.prompts import EEPrompt
-from arcee.utils.data import load_data, load_pattern
 
 
 class EEBaseModel(ABC):
@@ -23,10 +19,8 @@ class EEBaseModel(ABC):
     @abstractmethod
     def predict(
         self,
-        data_file_path: str,
-        pattern_file_path: str,
-        prompt_obj: EEPrompt,
-    ) -> None:
+        input: list[dict[str, str]],
+    ) -> list[str]:
         """
         Makes predictions for some data, whether it is doing event detection (ED),
         event argument extraction (EAE) or end-to-end (E2E) will be determined
@@ -89,9 +83,9 @@ class EEOllamaModel(EEBaseModel):
 
     def _get_response(
         self,
-        messages: list[dict[Any, Any]],
+        messages: list[dict[str, str]],
         response_format: str = "json",
-    ) -> str | None:
+    ) -> list[str]:
         """
         Get the response from the Ollama model.
 
@@ -120,11 +114,8 @@ class EEOllamaModel(EEBaseModel):
 
     def predict(
         self,
-        data_file_path: str,
-        pattern_file_path: str,
-        prompt_obj: EEPrompt,
-        examples_data_file_path: str | None = None,
-    ) -> None:
+        input: list[dict[str, str]],
+    ) -> list[str]:
         """
         This method makes predictions using an Ollama model, a given prompt and
         a dataset
@@ -150,42 +141,7 @@ class EEOllamaModel(EEBaseModel):
         suitable format.
 
         """
-        # Load data to make predictions on
-        test_data = load_data(data_file_path)
-
-        # Load schema
-        schema = load_pattern(pattern_file_path, "rams")
-
-        # If using examples, then load the dataset from which the examples
-        # can be sampled
-        examples_data = []
-        if examples_data_file_path is not None:
-            examples_data = load_data(examples_data_file_path)
-
-        # Temp for now: hard-coded to first ten records in dataset
-        for data in test_data[:10]:
-            system_content = prompt_obj.get_system_content()
-            prompt, response_format = prompt_obj.get_prompt(
-                data["tokens"],
-                data["event_mentions"],
-                schema,
-                examples_data,
-            )
-            messages = [
-                {"role": "system", "content": system_content},
-                {"role": "user", "content": prompt},
-            ]
-
-            response = self._get_response(messages, response_format)
-
-            # Temp for now: print the prompt, response and annotated solution
-            print(prompt)
-            print()
-            print(response)
-            print()
-            print(data["event_mentions"][0]["arguments"])
-            print()
-            print("-------------------------------------------")
+        return self._get_response(input, "json")
 
 
 class EEMockOllamaModel(EEOllamaModel):
@@ -198,24 +154,19 @@ class EEMockOllamaModel(EEOllamaModel):
 
     def _get_response(
         self,
-        messages: list[dict[Any, Any]],
+        messages: list[dict[str, str]],
         response_format: str = "json",
-    ) -> str | None:
+    ) -> list[str]:
         # To prevent the linter throwing a wobbly, do something with the args
         del messages
         del response_format
-        return "This is a mock object"
+        return ["This is a mock object"]
 
     def predict(
         self,
-        data_file_path: str,
-        pattern_file_path: str,
-        prompt_obj: EEPrompt,
-        examples_data_file_path: str | None = None,
-    ) -> None:
-        return super().predict(
-            data_file_path, pattern_file_path, prompt_obj, examples_data_file_path
-        )
+        input: list[dict[str, str]],
+    ) -> list[str]:
+        return super().predict(input)
 
 
 class EEHFModel(EEBaseModel):
@@ -232,45 +183,40 @@ class EEHFModel(EEBaseModel):
         self.tokenizer = tokenizer
         self.terminators = [
             tokenizer.eos_token_id,
-            tokenizer.convert_tokens_to_ids("<|eot_id|>") #TODO: Llama only?
+            tokenizer.convert_tokens_to_ids("<|eot_id|>"),  # TODO: Llama only?
         ]
-        
+
         # Load model
-        self.model = AutoModelForCausalLM.from_pretrained(model_id) #TODO additional kwargs
-        
+        # TODO additional kwargs
+        self.model = AutoModelForCausalLM.from_pretrained(model_id)
+
         # Options (TODO: needed?)
         if options is None:
             options = {"temperature": 0.0}
         self.options = options
-        
+
     def predict(
         self,
-        input: list[dict[str: str]],
-    ) -> None:
+        input: list[dict[str, str]],
+    ) -> list[str]:
         # Process input into chat template
         # TODO reconcile w/ prompt classes, data format (lost[dict[str]]) above
         text = self.tokenizer.apply_chat_template(
             input, add_generation_prompt=True, tokenize=False
         )
         tokenized_text = self.tokenizer(text, padding="longest", return_tensors="pt")
-        
+
         # Generate outputs
         gen_tokens = self.model.generate(
-            **tokenized_text, 
-            max_new_tokens=512, 
-            pad_token_id=self.tokenizer.eos_token_id, 
+            **tokenized_text,
+            max_new_tokens=512,
+            pad_token_id=self.tokenizer.eos_token_id,
             eos_token_id=self.terminators,
             do_sample=True,
             temperature=0.6,
-            top_p=0.9
+            top_p=0.9,
         )
 
         # Decode
-        gen_text = self.tokenizer.batch_decode(gen_tokens, skip_special_tokens=True)
-        
-        # Return
         # TODO: needs class wrapped around output?
-        return gen_text
-        
-        
-        
+        return self.tokenizer.batch_decode(gen_tokens, skip_special_tokens=True)

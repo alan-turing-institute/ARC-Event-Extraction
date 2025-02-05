@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 from torch.utils.data import Dataset
 
+from arcee.dataset.load import load_data
 from arcee.prompts.prompts import EEPrompt
-from arcee.utils.data import load_data
+
 
 # Please ignore docstrings for now - I'm ripping this off selective forgetting
 class EEDataset(Dataset):
@@ -31,23 +34,23 @@ class EEDataset(Dataset):
         self.data = data
         self.prompt_constuctor = prompt_constuctor
         self.event_schema = event_schema
-    
+
     @classmethod
     def from_file(
         cls,
         data_path: str,
         prompt_constuctor: EEPrompt,
         event_schema: dict,
-    ):
+    ) -> EEDataset:
         data = load_data(data_path)
         # TODO: remove temporary shorterning of dataset
         data = data[0:16]
         return cls(data, prompt_constuctor, event_schema)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.data)
 
-    def __getitem__(self, idx: int):
+    def __getitem__(self, idx: int) -> dict[str, str]:
         prompt = self.prompt_constuctor.get_prompt(
             tokens=self.data[idx]["tokens"],
             event_mentions=self.data[idx]["event_mentions"],

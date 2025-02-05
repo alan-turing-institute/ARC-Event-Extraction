@@ -310,7 +310,12 @@ def convert_batch(
         cross_boundary_relation_counts,
         cross_boundary_trigger_counts,
         cross_boundary_argument_counts,
-    ) = 0, 0, 0, 0
+    ) = (
+        0,
+        0,
+        0,
+        0,
+    )
     objs = []
     for sgm_file in sgm_files:
         progress.update(1)

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from arcee.eval.evaluator import Evaluator
 
 if __name__ == "__main__":

@@ -85,6 +85,38 @@ def events_to_test() -> list[dict[str, str]]:
 
 
 @pytest.fixture(scope="module")
+def testing_split_dir(tmp_path_factory: pytest.fixture.tmp_path_factory) -> str:
+    # Create a temporary directory
+    return tmp_path_factory.mktemp("split")
+
+
+@pytest.fixture(scope="module")
+def split_data_paths(testing_split_dir: pytest.fixture) -> tuple[str, str, str]:
+    # This builds the split data in the correct format
+    keys = [f"doc_{i}" for i in range(10)]
+    files = [
+        ("train.txt", keys[2:8]),
+        ("dev.txt", keys[8:]),
+        ("test.txt", keys[:2]),
+    ]
+    file_paths = []
+    for file, data in files:
+        file_path = testing_split_dir / file
+        with open(file_path, "w") as f:
+            for key in data:
+                f.write(key + "\n")
+        file_paths.append(file_path)
+
+    return file_paths
+
+
+@pytest.fixture
+def save_testing_data_dir(tmp_path_factory: pytest.fixture.tmp_path_factory) -> str:
+    # Create a temporary directory
+    return tmp_path_factory.mktemp("save_data")
+
+
+@pytest.fixture(scope="module")
 def testing_rams_dir(tmp_path_factory: pytest.fixture.tmp_path_factory) -> str:
     # Create a temporary directory
     return tmp_path_factory.mktemp("data_rams")
@@ -129,32 +161,104 @@ def rams_data_paths(testing_rams_dir: pytest.fixture) -> str:
 
 
 @pytest.fixture(scope="module")
-def testing_split_dir(tmp_path_factory: pytest.fixture.tmp_path_factory) -> str:
+def testing_wikievents_dir(tmp_path_factory: pytest.fixture.tmp_path_factory) -> str:
     # Create a temporary directory
-    return tmp_path_factory.mktemp("split")
+    return tmp_path_factory.mktemp("data_wikievents")
 
 
 @pytest.fixture(scope="module")
-def split_data_paths(testing_split_dir: pytest.fixture) -> tuple[str, str, str]:
-    # This builds the split data in the correct format
-    keys = [f"doc_{i}" for i in range(10)]
-    files = [
-        ("train.txt", keys[2:8]),
-        ("dev.txt", keys[8:]),
-        ("test.txt", keys[:2]),
+def wikievents_data_paths(testing_rams_dir: pytest.fixture) -> str:
+    # Build the WikiEvents data in the correct format
+    rams_jsons = []
+    for i, event in enumerate(some_events):
+        new_event = {"doc_id": f"doc_{i}"}
+        new_event["tokens"] = event["Sentence"].replace(".", " .").split(" ")
+        # Build the token triplets for the sentences
+        count = 0
+        token_triplets = []
+        for token in new_event["tokens"]:
+            token_triplets.append([token, count, count + len(token)])
+            count += len(token) + 1
+        token_triplets[-2][2] -= 1  # Remove the period space from the last token
+        token_triplets[-1][1] -= 1
+        token_triplets[-1][2] -= 1
+        new_event["sentences"] = [token_triplets, event["Sentence"]]
+        del token_triplets, count
+        # Build the event mentions
+        new_event["event_mentions"] = [
+            {
+                "id": f"evt{i+1}",
+                "event_type": event["EventType"],
+                "trigger": {
+                    "text": event["EventTrigger"],
+                    "sent_idx": 0,
+                    "start": new_event["tokens"].index(event["EventTrigger"]),
+                    "end": new_event["tokens"].index(event["EventTrigger"]) + 1,
+                },
+                "arguments": [
+                    {
+                        "role": "Subject",
+                        "entity": [new_event["tokens"].index(event["Subject"])],
+                    },
+                    {
+                        "role": "Object",
+                        "entity": [new_event["tokens"].index(event["Object"])],
+                    },
+                ],
+            }
+        ]
+        # Build the entity mentions
+        new_event["entity_mentions"] = [
+            {
+                "id": f"ent{i+1}",
+                "text": event["Subject"],
+                "sent_idx": 0,
+                "start": new_event["tokens"].index(event["Subject"]),
+                "end": new_event["tokens"].index(event["Subject"]) + 1,
+                "entity_type": "X1",
+                "mention_type": "X2",
+            },
+            {
+                "id": f"ent{i+2}",
+                "text": event["Object"],
+                "sent_idx": 0,
+                "start": new_event["tokens"].index(event["Object"]),
+                "end": new_event["tokens"].index(event["Object"]) + 1,
+                "entity_type": "X3",
+                "mention_type": "X4",
+            },
+        ]
+        # Relation mention
+        new_event["relation_mentions"] = []  # No relation mentions
+
+        rams_jsons.append(new_event)
+
+    # Write the WikiEvents data to files
+    file_names = [
+        ("train.jsonlines", rams_jsons[:6]),
+        ("dev.jsonlines", rams_jsons[6:8]),
+        ("test.jsonlines", rams_jsons[8:]),
     ]
     file_paths = []
-    for file, data in files:
-        file_path = testing_split_dir / file
+    for file_name, data in file_names:
+        file_path = testing_rams_dir / file_name
         with open(file_path, "w") as f:
-            for key in data:
-                f.write(key + "\n")
+            for line in data:
+                f.write(json.dumps(line) + "\n")
         file_paths.append(file_path)
 
     return file_paths
 
 
-@pytest.fixture
-def save_testing_data_dir(tmp_path_factory: pytest.fixture.tmp_path_factory) -> str:
-    # Create a temporary directory
-    return tmp_path_factory.mktemp("save_data")
+@pytest.fixture(scope="module")
+def wikievents_seg_path(testing_rams_dir: pytest.fixture) -> str:
+    big_json = {}
+    for i, event in enumerate(some_events):
+        big_json[f"doc_{i}"] = [[0, len(event["Sentence"].split(" ")) + 1]]
+
+    # Write the Segment data to files
+    seg_file_path = testing_rams_dir / "segments.json"
+    with open(seg_file_path, "w") as f:
+        f.write(json.dumps(big_json))
+
+    return seg_file_path

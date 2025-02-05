@@ -4,6 +4,7 @@ import json
 import os
 from collections import defaultdict
 
+import numpy as np
 from tqdm import tqdm
 
 __all__ = [
@@ -158,7 +159,7 @@ def print_statistics(data: list[dict]) -> None:
 
 def convert_rams_format(objs: list[dict]) -> list[dict]:
     """
-    Convert a list of event objects from the RAMS forma to the format used in TextEE.
+    Convert a list of event objects from the RAMS format to the format used in TextEE.
 
     Args:
         objs (list[dict]): A list of dictionaries, each representing a document with
@@ -305,6 +306,221 @@ def process_rams_data(in_folder: str, out_folder: str, split_folder: str) -> Non
     train_data = convert_rams_format(train_objs)
     dev_data = convert_rams_format(dev_objs)
     test_data = convert_rams_format(test_objs)
+
+    print("Train")
+    print_statistics(train_data)
+    print("Dev")
+    print_statistics(dev_data)
+    print("Test")
+    print_statistics(test_data)
+
+    save_data(out_folder, train_data, dev_data, test_data)
+
+
+def convert_wikievents_format(objs: list[dict], seg_map: dict) -> list[dict]:
+    """
+    Convert a list of event objects from the WikiEvents to the TextEE format.
+
+    Args:
+        objs (list[dict]): A list of dictionaries, each representing a document with
+            the following keys:
+            - "doc_id" (str): Unique identifier for the document.
+            - "tokens" (list[str]): List of tokens in the document.
+            - "sentences" (list[list[list[list[str, int, int]], str]]):
+                List of chunks of text, where each text is a list of tokens, and two
+                integers representing the start and end indices of the character span.
+                Along with the list there is the sentence written out.
+            - "entity_mentions" (list[dict]): List of entity mentions, each with the
+                following keys:
+                - "id" (str): Unique identifier for the entity.
+                - "sent_idx" (int): Index of the sentence where the entity mention is.
+                - "start" (int): Start index of the entity mention.
+                - "end" (int): End index of the entity mention.
+                - "entity_type" (str): Type of the entity.
+                - "mention_type" (str): Type of the mention.
+                - "text" (str): Text of the entity mention.
+            - "relation_mentions" (list[]): List of relation mentions.
+            - "event_mentions" (list[dict]): List of event mentions, each with the
+                following keys:
+                - "id" (str): Unique identifier for the event.
+                - "event_type" (str): Type of the event.
+                - "trigger" (dict): Trigger information with keys
+                    - "text" (str): Text of the trigger.
+                    - "sent_idx" (int): Index of the sentence where the trigger is.
+                    - "start" (int): Start index of the trigger.
+                    - "end" (int): End index of the trigger.
+                - "arguments" (list[dict]): List of arguments, each with keys
+                    - "entity_id" (str)
+                    - "role" (str)
+                    - "text" (str)
+        seg_map (dict[str, list[list[int, int]]): A dictionary mapping document
+            IDs to segment indices.
+
+    Returns:
+        list[dict]: A list of dictionaries, each representing a document in the
+            TextEE format with the following keys:
+            - "doc_id" (str): Unique identifier for the document.
+            - "wnd_id" (str): Window identifier for the document.
+            - "text" (str): Full text of the document.
+            - "tokens" (list[str]): List of tokens in the document.
+            - "event_mentions" (list[dict]): List of event mentions, each with the
+                following keys:
+                - "id" (str): Unique identifier for the event.
+                - "event_type" (str): Type of the event.
+                - "trigger" (dict): Trigger information with keys
+                    - "text" (str): Text of the trigger.
+                    - "start" (int): Index of the trigger in the document.
+                    - "end" (int): Index of the trigger in the document.
+                - "arguments" (list[dict]): List of arguments, each with keys
+                    - "entity_id" (str): Unique identifier for the entity.
+                    - "role" (str): Role of the argument.
+                    - "text" (str): Text of the argument.
+                    - "start" (int): Start index of the argument.
+                    - "end" (int): End index of the argument.
+            - "entity_mentions" (list[dict]): List of entity mentions, each with
+                the following keys:
+                - "id" (str): Unique identifier for the entity.
+                - "text" (str): Text of the entity.
+                - "entity_type" (str): Type of the entity.
+                - "start" (int): Start index of the entity.
+                - "end" (int): End index of the entity.
+            - "lang" (str): Language of the document. Always 'en'.
+    """
+    data = []
+    n_arg_drop = 0
+    for obj in tqdm(objs, ncols=100):
+        n_sent = len(obj["sentences"])
+        # Assigned but never used:
+        # sent_tokens = [[t[0] for t in s[0]] for s in obj["sentences"]]
+        sent_lens = [len(s[0]) for s in obj["sentences"]]
+        assert sum(sent_lens) == len(obj["tokens"])
+
+        sent_token_start = [0] + [sum(sent_lens[: i + 1]) for i in range(n_sent)]
+
+        sents = seg_map[obj["doc_id"]]
+
+        n_seg = len(sents)
+        sent_starts = [sum(sent_lens[0 : s[0]]) for s in sents]
+
+        idx2seg_map = np.zeros((n_sent,), dtype=int)
+        for i in range(n_sent):
+            idx2seg_map[i] = -1
+        for i, (idx1, idx2) in enumerate(sents):
+            for j in range(idx1, idx2):
+                idx2seg_map[j] = i
+
+        entity_mentions = defaultdict(list)
+        entity_map = {}
+        for entity_mention in obj["entity_mentions"]:
+            seg_loc = idx2seg_map[entity_mention["sent_idx"]]
+            if seg_loc == -1:
+                continue
+            entity = {
+                "id": entity_mention["id"],
+                "text": entity_mention["text"],
+                "entity_type": entity_mention["entity_type"],
+                "start": entity_mention["start"] - sent_starts[seg_loc],
+                "end": entity_mention["end"] - sent_starts[seg_loc],
+            }
+            entity_map[entity_mention["id"]] = (seg_loc, entity)
+            entity_mentions[seg_loc].append(entity)
+
+        event_mentions = defaultdict(list)
+        for event_mention in obj["event_mentions"]:
+            seg_loc = idx2seg_map[event_mention["trigger"]["sent_idx"]]
+            if seg_loc == -1:
+                continue
+
+            arguments = []
+            for arg in event_mention["arguments"]:
+                entity_loc, entity = entity_map[arg["entity_id"]]
+                if seg_loc != entity_loc:
+                    n_arg_drop += 1
+                    continue
+
+                argument = {
+                    "entity_id": arg["entity_id"],
+                    "role": arg["role"],
+                    "text": arg["text"],
+                    "start": entity["start"],
+                    "end": entity["end"],
+                }
+                arguments.append(argument)
+            arguments.sort(key=lambda x: (x["start"], x["end"]))
+
+            event = {
+                "id": event_mention["id"],
+                "event_type": event_mention["event_type"],
+                "trigger": {
+                    "text": event_mention["trigger"]["text"],
+                    "start": event_mention["trigger"]["start"] - sent_starts[seg_loc],
+                    "end": event_mention["trigger"]["end"] - sent_starts[seg_loc],
+                },
+                "arguments": arguments,
+            }
+            event_mentions[seg_loc].append(event)
+
+        for i in range(n_seg):
+            entity_mentions_ = entity_mentions[i]
+            event_mentions_ = event_mentions[i]
+
+            entity_mentions_ = sorted(
+                entity_mentions_, key=lambda x: (x["start"], x["end"])
+            )
+            event_mentions_ = sorted(
+                event_mentions_,
+                key=lambda x: (x["trigger"]["start"], x["trigger"]["end"]),
+            )
+            dt = {
+                "doc_id": obj["doc_id"],
+                "wnd_id": f"{obj['doc_id']}_{i}",
+                "text": " ".join(
+                    obj["tokens"][
+                        sent_token_start[sents[i][0]] : sent_token_start[sents[i][1]]
+                    ]
+                ),
+                "tokens": obj["tokens"][
+                    sent_token_start[sents[i][0]] : sent_token_start[sents[i][1]]
+                ],
+                "event_mentions": event_mentions_,
+                "entity_mentions": entity_mentions_,
+                "lang": "en",
+            }
+            data.append(dt)
+
+    print(f"Number of dropped arguments: {n_arg_drop}")
+
+    return data
+
+
+def process_wikievents_data(
+    in_folder: str, out_folder: str, split_folder: str, seg_map: str
+) -> None:
+    """
+    Processes WikiEvents data by reading documents, splitting them into train, dev, and
+    test sets, converting them to the WikiEvents format, printing statistics for each
+    set, and saving the processed data.
+    This uses the segment map provided to convert the data to the TextEE format.
+
+    The data is saved as JSON lines files in the TextEE format.
+
+    Args:
+        in_folder (str): The input folder containing the raw data documents.
+        out_folder (str): The output folder where the processed data will be saved.
+        split_folder (str): The folder containing the split information for
+            train, dev, and test sets.
+        seg_map (str): The path to the segment map JSON file.
+    """
+    with open(seg_map) as fp:
+        s_map = json.load(fp)
+
+    objs = read_docs(in_folder)
+
+    train_objs, dev_objs, test_objs = get_split(objs, split_folder)
+
+    train_data = convert_wikievents_format(train_objs, s_map)
+    dev_data = convert_wikievents_format(dev_objs, s_map)
+    test_data = convert_wikievents_format(test_objs, s_map)
 
     print("Train")
     print_statistics(train_data)

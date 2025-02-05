@@ -66,16 +66,11 @@ class DummyEAEPrompter(EEPrompt):
             a prompt only using the first of these.
         schema: dict
             A schema for the dataset (currently taken from TextEE pattern files)
-        examples: list[dict]
-            A list of example records in dictionary form, expected to be an empty string
-            for this class but could be used by other classes to sample records to
-            include in the prompt
 
         Returns
         -------
-        tuple[str, str]:
-            The first string is the prompt and the second is the response format,
-            e.g., 'json'
+        str:
+            Returns the prompt
         """
         # Get trigger span for 1st event mention
         event_mention = event_mentions[0]
@@ -92,9 +87,6 @@ class DummyEAEPrompter(EEPrompt):
         event_type = event_mention["event_type"]
         arg_roles = schema[event_type]["roles"]
 
-        # Want this to return natural language so specify response format as an empty
-        # string (will work for Ollama - might need to update when using HF?)
-        # TODO: discuss if second element needed for Ollama. I've removed for now
         return (
             "An event type of " + event_type + " has been detected in the input text. "
             "The trigger word is identified with a <trigger> tag.\n "

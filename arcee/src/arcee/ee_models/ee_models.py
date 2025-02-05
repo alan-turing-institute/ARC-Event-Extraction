@@ -25,9 +25,6 @@ class EEBaseModel(ABC):
         Makes predictions for some data, whether it is doing event detection (ED),
         event argument extraction (EAE) or end-to-end (E2E) will be determined
         by the logic held in the prompt.
-
-        TO DO: Determine the required output format, currently set to None
-        but will want to return the predictions in some form...
         """
 
 
@@ -65,9 +62,10 @@ class EEOllamaModel(EEBaseModel):
         """
         super().__init__()
         if options is None:
-            # TO DO: Copied this functionality over from WikiGame, do we want it here?
-            # To discuss?
-            # This will make the model more deterministic
+            # TODO: Copied this functionality over from WikiGame, do we want it here?
+            # Might want to see the difference in performance when changing the
+            # temperature, I have a feeling a lower value might be better to stop it
+            # being too creative when doing event extraction, but not 100% sure
             options = {"temperature": 0.0}
         self.options = options
 
@@ -122,23 +120,13 @@ class EEOllamaModel(EEBaseModel):
 
         Parameters
         ----------
-        data_file_path: str
-            The file path of the data to be used for making predictions, e.g.,
-            "data/RAMS/output/splits/split1/test.json"
-        pattern_file_path: str
-            The file path containing the schema (currently taken from the pattern files
-            in TextEE) e.g., "data/RAMS/patterns/pattern.txt"
-        prompt_obj: EEPrompt:
-            An object that inherits from EEPrompt
-        examples_data_file_path: str | None = None
-            If None, then no examples will be loaded and passed to the prompt
-            Otherwise, expected to be the file loaction of a dataset to be used
-            as examples, e.g., "data/RAMS/output/splits/split1/train.json"
+        input: list[dict[str, str]]
+            A list of messages to be passed to the Ollama client chat
 
         Returns
-        ------
-        Currently returns None, but will want to update once we've worked out a
-        suitable format.
+        -------
+        list[str]
+            The response from the Ollama model
 
         """
         return self._get_response(input, "json")
@@ -162,10 +150,7 @@ class EEMockOllamaModel(EEOllamaModel):
         del response_format
         return ["This is a mock object"]
 
-    def predict(
-        self,
-        input: list[dict[str, str]],
-    ) -> list[str]:
+    def predict(self, input: list[dict[str, str]]) -> list[str]:
         return super().predict(input)
 
 

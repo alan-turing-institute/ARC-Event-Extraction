@@ -167,7 +167,7 @@ def testing_wikievents_dir(tmp_path_factory: pytest.fixture.tmp_path_factory) ->
 
 
 @pytest.fixture(scope="module")
-def wikievents_data_paths(testing_rams_dir: pytest.fixture) -> str:
+def wikievents_data_paths(testing_wikievents_dir: pytest.fixture) -> str:
     # Build the WikiEvents data in the correct format
     rams_jsons = []
     for i, event in enumerate(some_events):
@@ -182,7 +182,7 @@ def wikievents_data_paths(testing_rams_dir: pytest.fixture) -> str:
         token_triplets[-2][2] -= 1  # Remove the period space from the last token
         token_triplets[-1][1] -= 1
         token_triplets[-1][2] -= 1
-        new_event["sentences"] = [token_triplets, event["Sentence"]]
+        new_event["sentences"] = [[token_triplets, event["Sentence"]]]
         del token_triplets, count
         # Build the event mentions
         new_event["event_mentions"] = [
@@ -197,12 +197,18 @@ def wikievents_data_paths(testing_rams_dir: pytest.fixture) -> str:
                 },
                 "arguments": [
                     {
+                        "entity_id": f"ent{i+1}_1",
                         "role": "Subject",
-                        "entity": [new_event["tokens"].index(event["Subject"])],
+                        "text": event["Subject"],
+                        "start": [new_event["tokens"].index(event["Subject"])],
+                        "end": [new_event["tokens"].index(event["Subject"]) + 1],
                     },
                     {
+                        "entity_id": f"ent{i+1}_2",
                         "role": "Object",
-                        "entity": [new_event["tokens"].index(event["Object"])],
+                        "text": event["Object"],
+                        "start": [new_event["tokens"].index(event["Object"])],
+                        "end": [new_event["tokens"].index(event["Object"]) + 1],
                     },
                 ],
             }
@@ -210,7 +216,7 @@ def wikievents_data_paths(testing_rams_dir: pytest.fixture) -> str:
         # Build the entity mentions
         new_event["entity_mentions"] = [
             {
-                "id": f"ent{i+1}",
+                "id": f"ent{i+1}_1",
                 "text": event["Subject"],
                 "sent_idx": 0,
                 "start": new_event["tokens"].index(event["Subject"]),
@@ -219,7 +225,7 @@ def wikievents_data_paths(testing_rams_dir: pytest.fixture) -> str:
                 "mention_type": "X2",
             },
             {
-                "id": f"ent{i+2}",
+                "id": f"ent{i+1}_2",
                 "text": event["Object"],
                 "sent_idx": 0,
                 "start": new_event["tokens"].index(event["Object"]),
@@ -241,7 +247,7 @@ def wikievents_data_paths(testing_rams_dir: pytest.fixture) -> str:
     ]
     file_paths = []
     for file_name, data in file_names:
-        file_path = testing_rams_dir / file_name
+        file_path = testing_wikievents_dir / file_name
         with open(file_path, "w") as f:
             for line in data:
                 f.write(json.dumps(line) + "\n")
@@ -253,8 +259,8 @@ def wikievents_data_paths(testing_rams_dir: pytest.fixture) -> str:
 @pytest.fixture(scope="module")
 def wikievents_seg_path(testing_rams_dir: pytest.fixture) -> str:
     big_json = {}
-    for i, event in enumerate(some_events):
-        big_json[f"doc_{i}"] = [[0, len(event["Sentence"].split(" ")) + 1]]
+    for i, _event in enumerate(some_events):
+        big_json[f"doc_{i}"] = [[0, 1]]
 
     # Write the Segment data to files
     seg_file_path = testing_rams_dir / "segments.json"

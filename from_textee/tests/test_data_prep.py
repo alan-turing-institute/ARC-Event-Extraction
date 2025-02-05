@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 
 import pytest
@@ -109,6 +110,51 @@ def test_process_rams_data(
 ) -> None:
     data_prep.process_rams_data(
         testing_rams_dir, save_testing_data_dir, testing_split_dir
+    )
+    assert all(
+        os.path.exists(save_testing_data_dir / f"{file}.jsonlines")
+        for file in ["train", "dev", "test"]
+    )
+
+
+@pytest.mark.usefixtures("wikievents_data_paths")
+def test_convert_wikievents_format(
+    testing_wikievents_dir: pytest.fixture,
+    wikievents_seg_path: pytest.fixture,
+    events_to_test: pytest.fixture,
+) -> None:
+    with open(wikievents_seg_path) as fseg:
+        seg_map = json.load(fseg)
+    all_objs = data_prep.read_docs(testing_wikievents_dir)
+    new_objs = data_prep.convert_wikievents_format(all_objs, seg_map)
+    data_format_tester(new_objs, events_to_test)
+
+
+@pytest.mark.usefixtures("wikievents_data_paths")
+def test_wikievents_print_statistics(
+    testing_wikievents_dir: pytest.fixture,
+    wikievents_seg_path: pytest.fixture,
+) -> None:
+    with open(wikievents_seg_path) as fseg:
+        seg_map = json.load(fseg)
+    all_objs = data_prep.read_docs(testing_wikievents_dir)
+    new_objs = data_prep.convert_wikievents_format(all_objs, seg_map)
+    data_prep.print_statistics(new_objs)
+    assert True  # Just checking nothing throws error
+
+
+@pytest.mark.usefixtures("wikievents_data_paths", "split_data_paths")
+def test_process_wikievents_data(
+    testing_wikievents_dir: pytest.fixture,
+    testing_split_dir: pytest.fixture,
+    save_testing_data_dir: pytest.fixture,
+    wikievents_seg_path: pytest.fixture,
+) -> None:
+    data_prep.process_wikievents_data(
+        testing_wikievents_dir,
+        save_testing_data_dir,
+        testing_split_dir,
+        wikievents_seg_path,
     )
     assert all(
         os.path.exists(save_testing_data_dir / f"{file}.jsonlines")

@@ -110,3 +110,75 @@ class EAEPromptNoExample_01(EEPrompt):
         # Want this to return natural language so specify response format as an empty
         # string (will work for Ollama - might need to update when using HF?)
         return prompt, ""
+
+
+class DummyEAEPrompter(EEPrompt):
+    """
+    Event argument extraction:
+    - only takes a SINGLE event trigger
+    - only predicts ONE arguement role at a time
+    - does NOT use examples in the prompt
+    - returns natural language prompt, rather than structured format
+
+    This class might only be suitable for exploratory work as the natural language
+    will need to be parsed by a human.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    def get_prompt(
+        self,
+        tokens: list[str],
+        event_mentions: list,
+        schema: dict,
+    ) -> tuple[str, str]:
+        """
+        Parameters
+        ----------
+        tokens: list[str]
+            The input text in token form
+        event_mentions: list
+            From the processed data, the list of event mentions for the input text.
+            Multiple events may exist in for some records, but this method creates
+            a prompt only using the first of these.
+        schema: dict
+            A schema for the dataset (currently taken from TextEE pattern files)
+        examples: list[dict]
+            A list of example records in dictionary form, expected to be an empty string
+            for this class but could be used by other classes to sample records to
+            include in the prompt
+
+        Returns
+        -------
+        tuple[str, str]:
+            The first string is the prompt and the second is the response format,
+            e.g., 'json'
+        """
+        # Get trigger span for 1st event mention
+        event_mention = event_mentions[0]
+        trig_start = event_mention["trigger"]["start"]
+        trig_end = event_mention["trigger"]["end"]  # End index is exclusive
+        
+        # Get trigger based on tagged tokens
+        tagged_tokens = tokens.copy()
+        tagged_tokens[trig_start] = "<trigger>" + tagged_tokens[trig_start]
+        tagged_tokens[trig_end - 1] = tagged_tokens[trig_end - 1] + "</trigger>"
+        input_text = " ".join(tagged_tokens)
+        
+        # Get additional details for the prompt
+        event_type = event_mention["event_type"]
+        arg_roles = schema[event_type]["roles"]
+
+        prompt = (
+            "An event type of " + event_type + " has been detected in the input text. "
+            "The trigger word is identified with a <trigger> tag.\n "
+            "Input text:\n```" + input_text + "```\n "
+            "What are the words in the input text that represent the argument role "
+            "```" + arg_roles[0] + "```?"
+        )
+
+        # Want this to return natural language so specify response format as an empty
+        # string (will work for Ollama - might need to update when using HF?)
+        # TODO: discuss if second element needed for Ollama. I've removed for now
+        return prompt #, ""

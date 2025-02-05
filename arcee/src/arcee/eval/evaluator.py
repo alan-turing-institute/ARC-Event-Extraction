@@ -31,7 +31,7 @@ class Evaluator:
         # Instantiate model
         if model_type not in ["hf", "ollama"]:
             raise ValueError(
-                "`model_type` should be one of `'hf'` or '.`ollama`'. `model_type` is "
+                "`model_type` should be one of `'hf'` or `'ollama'` `model_type` is "
                 f"currently being passed as {model_type}."
             )
         model_cls = MODEL_CLS_MAP[model_type]

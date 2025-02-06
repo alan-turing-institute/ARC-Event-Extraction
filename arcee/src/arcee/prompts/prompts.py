@@ -38,12 +38,9 @@ class DummyEAEPrompter(EEPrompt):
     """
     Event argument extraction:
     - only takes a SINGLE event trigger
-    - only predicts ONE arguement role at a time
+    - only predicts ONE argument role at a time
     - does NOT use examples in the prompt
-    - returns natural language prompt, rather than structured format
-
-    This class might only be suitable for exploratory work as the natural language
-    will need to be parsed by a human.
+    - requests JSON output
     """
 
     def __init__(self) -> None:
@@ -92,5 +89,7 @@ class DummyEAEPrompter(EEPrompt):
             "The trigger word is identified with a <trigger> tag.\n "
             "Input text:\n```" + input_text + "```\n "
             "What are the words in the input text that represent the argument role "
-            "```" + arg_roles[0] + "```?"
+            "```" + arg_roles[0] + "```? Provide your response in JSON format with the "
+            "key " + arg_roles[0] + " and the value as the words in the input text "
+            "that represent the argument."
         )

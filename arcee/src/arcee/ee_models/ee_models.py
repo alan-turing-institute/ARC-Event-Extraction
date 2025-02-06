@@ -83,7 +83,7 @@ class EEOllamaModel(EEBaseModel):
         self,
         messages: list[dict[str, str]],
         response_format: str = "json",
-    ) -> list[str]:
+    ) -> str:
         """
         Get the response from the Ollama model.
 
@@ -129,7 +129,11 @@ class EEOllamaModel(EEBaseModel):
             The response from the Ollama model
 
         """
-        return self._get_response(input, "json")
+        responses = []
+        for message in input:
+            responses.append(self._get_response([message], "json"))
+
+        return responses
 
 
 class EEMockOllamaModel(EEOllamaModel):
@@ -144,11 +148,11 @@ class EEMockOllamaModel(EEOllamaModel):
         self,
         messages: list[dict[str, str]],
         response_format: str = "json",
-    ) -> list[str]:
+    ) -> str:
         # To prevent the linter throwing a wobbly, do something with the args
         del messages
         del response_format
-        return ["This is a mock object"]
+        return "This is a mock object"
 
     def predict(self, input: list[dict[str, str]]) -> list[str]:
         return super().predict(input)

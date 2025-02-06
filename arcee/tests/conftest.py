@@ -29,3 +29,28 @@ def test_event_mentions() -> list:
 @pytest.fixture(scope="module")
 def test_schema() -> dict:
     return {"hire": {"roles": ["object", "subject"]}}
+
+
+@pytest.fixture(scope="module")
+def test_batch_prompts() -> list[dict[str, str]]:
+    prompt1 = (
+        "An event type of hire has been detected in the input text. "
+        "The trigger word is identified with a <trigger> tag.\n "
+        "Input text:\n```The university <trigger>hired</trigger> Dr . "
+        "Smith to lead the biology department .```\n What are the words "
+        "in the input text that represent the argument role ```object```? "
+        "Provide your response in JSON format with the "
+        "key object and the value as the words in the input text "
+        "that represent the argument."
+    )
+    prompt2 = (
+        "An event type of hire has been detected in the input text. "
+        "The trigger word is identified with a <trigger> tag.\n "
+        "Input text:\n```The university <trigger>hired</trigger> Dr . "
+        "Jones to lead the physics department .```\n What are the words "
+        "in the input text that represent the argument role ```object```? "
+        "Provide your response in JSON format with the "
+        "key object and the value as the words in the input text "
+        "that represent the argument."
+    )
+    return [{"role": "user", "content": prompt1}, {"role": "user", "content": prompt2}]

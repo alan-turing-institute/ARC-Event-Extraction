@@ -67,7 +67,7 @@ class Evaluator:
         # TODO: use dataloader, loop over batches to produce outputs
         outputs = []
         for batch in iter(self.dataloader):
-            outputs.append(self.model.predict(batch))
+            outputs.extend(self.model.predict(batch))
 
         # Extract trigger/arguments from predicted outputs (given dataset)
         # TODO: set up EE dataset to return targets conditional on schema

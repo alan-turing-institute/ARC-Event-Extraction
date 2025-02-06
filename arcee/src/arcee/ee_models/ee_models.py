@@ -152,10 +152,10 @@ class EEMockOllamaModel(EEOllamaModel):
         # To prevent the linter throwing a wobbly, do something with the args
         del messages
         del response_format
-        return "This is a mock object"
+        return '{"object": "mock object"}'
 
     def predict(self, input: list[dict[str, str]]) -> list[str]:
-        return super().predict(input)
+        return [self._get_response(input, "json")]
 
 
 class EEHFModel(EEBaseModel):

@@ -154,8 +154,11 @@ class EEMockOllamaModel(EEOllamaModel):
         del response_format
         return '{"object": "mock object"}'
 
-    def predict(self, input: list[dict[str, str]]) -> list[str]:
-        return [self._get_response(input, "json")]
+    def predict(
+        self,
+        input: list[dict[str, str]],
+    ) -> list[str]:
+        return super().predict(input)
 
 
 class EEHFModel(EEBaseModel):

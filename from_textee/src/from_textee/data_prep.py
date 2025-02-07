@@ -8,6 +8,8 @@ from pathlib import PosixPath
 import numpy as np
 from tqdm import tqdm
 
+from from_textee import read_ace
+
 __all__ = [
     "read_docs",
     "save_data",
@@ -78,7 +80,10 @@ def save_data(
 
 
 def get_split(
-    objs: list[dict], split_folder: str | PosixPath, key_name: str = "doc_id"
+    objs: list[dict],
+    split_folder: str | PosixPath,
+    key_name: str = "doc_id",
+    if_ace: bool = False,
 ) -> tuple[list[dict], list[dict], list[dict]]:
     """
     Splits a list of objects into training, development, and test sets based on
@@ -91,6 +96,7 @@ def get_split(
             ("train.txt", "dev.txt", "test.txt") are located.
         key_name (str, optional): The key name to use for identifying the document.
             Defaults to "doc_id".
+        if_ace (bool, optional): If True, process ACE data. Defaults to False.
 
     Returns:
         tuple[list[dict]]: A tuple containing three lists of dictionaries:
@@ -111,17 +117,27 @@ def get_split(
         lines = fp.readlines()
         test_doc_ids = {*[line.strip() for line in lines]}
 
-    train_objs = []
-    dev_objs = []
-    test_objs = []
+    train_objs: list[dict] = []
+    dev_objs: list[dict] = []
+    test_objs: list[dict] = []
+
+    if if_ace:
+
+        def app_func(o_list: list, ob: dict) -> None:
+            o_list.extend(ob["sentences"])
+
+    else:
+
+        def app_func(o_list: list, ob: dict) -> None:
+            o_list.append(ob)
 
     for obj in objs:
         if obj[key_name] in train_doc_ids:
-            train_objs.append(obj)
+            app_func(train_objs, obj)
         if obj[key_name] in dev_doc_ids:
-            dev_objs.append(obj)
+            app_func(dev_objs, obj)
         if obj[key_name] in test_doc_ids:
-            test_objs.append(obj)
+            app_func(test_objs, obj)
 
     train_objs.sort(key=lambda x: x[key_name])
     dev_objs.sort(key=lambda x: x[key_name])
@@ -541,3 +557,57 @@ def process_wikievents_data(
     print_statistics(test_data)
 
     save_data(out_folder, train_data, dev_data, test_data)
+
+
+def process_ace05_data(
+    in_folder: str | PosixPath,
+    out_folder: str | PosixPath,
+    split_folder: str | PosixPath,
+    sent_map: str | PosixPath,
+    token_map: str | PosixPath,
+    time_and_val: bool = False,
+    full_span: bool = False,
+) -> None:
+    """
+    Processes ACE 2005 data and splits it into training, development, and test sets.
+
+    This puts it into the format of TextEE and saves the processed data. This uses the
+    functionality in the `read_ace` module which is taken from the TextEE library.
+
+    Args:
+        in_folder (str | PosixPath): Path to the input folder containing ACE 2005 data.
+        out_folder (str | PosixPath): Path to the output folder where processed data
+            will be saved.
+        split_folder (str | PosixPath): Path to the folder containing data split
+            information.
+        sent_map (str | PosixPath): Path to the sentence map file.
+        token_map (str | PosixPath): Path to the token map file.
+        lang (str, optional): Language of the data. Defaults to "english".
+        time_and_val (bool, optional): Whether to include time and value annotations.
+            Defaults to False.
+        full_span (bool, optional): Whether to use full span annotations.
+            Defaults to False.
+    """
+
+    with open(sent_map) as fp:
+        s_map = json.load(fp)
+    with open(token_map) as fp:
+        t_map = json.load(fp)
+    objs = read_ace.convert_batch(
+        in_folder,
+        s_map,
+        t_map,
+        time_and_val=time_and_val,
+        use_full_span=full_span,
+    )
+
+    train_objs, dev_objs, test_objs = get_split(objs, split_folder, if_ace=True)
+
+    print("Train")
+    print_statistics(train_objs)
+    print("Dev")
+    print_statistics(dev_objs)
+    print("Test")
+    print_statistics(test_objs)
+
+    save_data(out_folder, train_objs, dev_objs, test_objs)

@@ -1,3 +1,18 @@
+"""Processing ACE 2005 dataset adapted from TextEE
+
+This script processes the ACE05 dataset to the format used in TextEE making use of the
+from_textee package. The script requires a few arguments to run. An example of these
+arguments is shown below:
+
+```bash
+-i=data/ACE05/data/English
+-o=data/ACE05/output/split1
+-s=data/ACE05/splits/split1
+--sent_map=data/ACE05/sent_map.json
+--token_map=data/ACE05/token_map.json
+```
+"""
+
 from __future__ import annotations
 
 from argparse import ArgumentParser

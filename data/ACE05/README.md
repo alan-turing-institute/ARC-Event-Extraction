@@ -1,13 +1,15 @@
 # ACE 2005 Dataset
 
-UPDATE THIS LATER
-
+This dataset is read by the processing code used in TextEE.
+This takes subsections of documents from the ACE 2005 dataset and attaches the relevant annotations to the sentences.
+The ACE 2005 dataset is paid for and the format shown here is close to the original format provided.
+The difference is that the `outputs`, `splits`, and other files needed to do the pre-processing are included in this folder, along with the output of the pre-processing.
 
 ## Set up of the folder
 
 The folder should be set up as follows:
 
-```
+```text
 .
 └── ACE05/
     ├── data/

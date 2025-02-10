@@ -1,6 +1,21 @@
-"""This is taken from the TextEE libary and is used to convert the ACE 2005 dataset
-into a structed JSON format. It is largely the same as the original code. Some attempt
-has been made to document it.
+"""This is taken from the TextEE library and is used to convert the ACE 2005 dataset
+into a structured JSON format. It is largely the same as the original code. Some
+attempt has been made to document it.
+
+++++
+From my understanding, the code is used to convert the ACE 2005 dataset into a JSON
+by building nested dataclasses. The dataclasses have a to_dict method that converts the
+dataclass into a dictionary for the JSON format. The code slowly reads the datafiles to
+build the interlinked dataclasses.
+
+Most of the meta-information is stored in the SGM file and then this information is
+used to read the XML in the other files which are not explicitly given to the
+script. The script then reads the XML files and builds the dataclasses.
+
+The sent_map is then used to split out only the bits needed for the experiments
+described in TextEE, and the token_map is used to make sure the words are grouped
+consistently.
++++++
 """
 
 from __future__ import annotations
@@ -63,6 +78,13 @@ class Span:
     start: int
     end: int
     text: str
+    """
+    A class to represent a text span with start and end character offsets.
+    Attributes:
+        start (int): The starting character offset of the span.
+        end (int): The ending character offset of the span.
+        text (str): The text content of the span.
+    """
 
     def __post_init__(self: Span) -> None:
         self.start = int(self.start)
@@ -124,6 +146,23 @@ class Entity(Span):
     entity_subtype: str
     mention_type: str
     value: str | None = None
+    """
+    This class represents an entity mention in a text span.
+    Inherits from Span.
+
+    Attributes:
+        From Span:
+            start (int): The starting character offset of the span.
+            end (int): The ending character offset of the span.
+            text (str): The text content of the span.
+
+        entity_id (str): The unique identifier for the entity.
+        mention_id (str): The unique identifier for the mention.
+        entity_type (str): The type of the entity (e.g., PERSON, ORGANIZATION).
+        entity_subtype (str): The subtype of the entity (e.g., INDIVIDUAL, COMPANY).
+        mention_type (str): The type of mention (e.g., NOMINAL, PROPER).
+        value (str | None): The value of the entity, if any.
+    """
 
     def to_dict(self: Entity) -> dict[str, Any]:
         """Converts instance variables to a dict.
@@ -152,6 +191,15 @@ class RelationArgument:
     role: str
     text: str
     pointed_entity: Entity
+    """
+    RelationArgument represents an argument in a relation with its associated metadata.
+
+    Attributes:
+        mention_id (str): The ID of the mention.
+        role (str): The role of the argument in the relation.
+        text (str): The text of the argument.
+        pointed_entity (Entity): The entity that the argument points to.
+    """
 
     def to_dict(self: RelationArgument) -> dict[str, str | int]:
         """Converts instance variables to a dict.
@@ -173,6 +221,10 @@ class RelationArgumentWithoutEntity:
     mention_id: str
     role: str
     text: str
+    """
+    This class is required because the original RelationArgument class requires an
+    entity object. This class is used as an intermediate to build RelationArgument.
+    """
 
 
 @dataclass
@@ -182,6 +234,16 @@ class Relation:
     relation_subtype: str
     arg1: RelationArgument
     arg2: RelationArgument
+    """
+    A class to represent a Relation in the ACE dataset.
+
+    Attributes:
+        relation_id (str): The unique identifier for the relation.
+        relation_type (str): The type of the relation.
+        relation_subtype (str): The subtype of the relation.
+        arg1 (RelationArgument): The first argument of the relation.
+        arg2 (RelationArgument): The second argument of the relation.
+    """
 
     def to_dict(self: Relation) -> dict[str, Any]:
         """Converts instance variables to a dict.
@@ -204,6 +266,10 @@ class RelationWithoutEntity:
     relation_subtype: str
     arg1: RelationArgumentWithoutEntity
     arg2: RelationArgumentWithoutEntity
+    """
+    This class is required because the original Relation class requires an Entity
+    object. This class is used as an intermediate to build Relation.
+    """
 
 
 @dataclass
@@ -212,6 +278,15 @@ class EventArgument:
     role: str
     text: str
     pointed_entity: Entity
+    """
+    Represents an argument of an event in the ACE dataset.
+
+    Attributes:
+        mention_id (str): The ID of the mention.
+        role (str): The role of the argument in the event.
+        text (str): The text of the argument.
+        pointed_entity (Entity): The entity that the argument points to.
+    """
 
     def to_dict(self: EventArgument) -> dict[str, Any]:
         """Converts instance variables to a dict.
@@ -233,6 +308,10 @@ class EventArgumentWthoutEnity:
     mention_id: str
     role: str
     text: str
+    """
+    This class is required because the original EventArgument class requires an Entity
+    object. This class is used as an intermediate to build EventArgument.
+    """
 
 
 @dataclass
@@ -243,6 +322,17 @@ class Event:
     event_subtype: str
     trigger: Span
     arguments: list[EventArgument]
+    """Represents an event with its associated attributes and methods.
+
+    Attributes:
+        event_id (str): The unique identifier for the event.
+        mention_id (str): The unique identifier for the event mention.
+        event_type (str): The main type of the event.
+        event_subtype (str): The subtype of the event.
+        trigger (Span): The trigger span of the event.
+        arguments (list[EventArgument]): The list of arguments associated with the
+            event.
+    """
 
     def to_dict(self: Event) -> dict[str, Any]:
         """Converts instance variables to a dict.
@@ -251,7 +341,7 @@ class Event:
             Dict[str, Any]: a dict of instance variables.
         """
         return {
-            # 'evnet_id': self.event_id,
+            # 'event_id': self.event_id,
             "id": self.mention_id,
             "event_main_type": self.event_type,
             "event_subtype": self.event_subtype,
@@ -269,6 +359,11 @@ class EventWithoutEntity:
     event_subtype: str
     trigger: Span
     arguments: list[EventArgumentWthoutEnity]
+    """
+    This class is required because the original Event class requires objects with
+    associated Entity objects.
+    This class is used as an intermediate to build Event.
+    """
 
 
 @dataclass
@@ -281,6 +376,20 @@ class Sentence(Span):
     events: list[Event]
     doc_tokens: list[str]
     lang: str = "en"
+    """
+    Represents a sentence in the ACE dataset. This is built on top of the Span class,
+    but doesn't seem to use that fact.
+
+    Attributes:
+        doc_id (str): The unique identifier for the document.
+        sent_id (str): The unique identifier for the sentence.
+        tokens (List[str]): The list of tokens in the sentence.
+        entities (List[Entity]): The list of entities in the sentence.
+        relations (List[Relation]): The list of relations in the sentence.
+        events (List[Event]): The list of events in the sentence.
+        doc_tokens (List[str]): The list of tokens in the document.
+        lang (str): The language of the sentence.
+    """
 
     def to_dict(self: Sentence) -> dict[str, Any]:
         """Converts instance variables to a dict.
@@ -304,6 +413,13 @@ class Sentence(Span):
 class Document:
     doc_id: str
     sentences: list[Sentence]
+    """
+    Represents a document in the ACE dataset. Which is just a composition of sentences.
+
+    Attributes:
+        doc_id (str): The unique identifier for the document.
+        sentences (List[Sentence]): The list of sentences in the document.
+    """
 
     def to_dict(self: Document) -> dict[str, Any]:
         """Converts instance variables to a dict.
@@ -322,6 +438,23 @@ def tokenize(
     doc_id: str,
     token_map: dict[str, dict[str, list[list[int]]]],
 ) -> list[tuple[int, int, str]]:
+    """
+    Apply the token map to a given sentence.
+
+    Args:
+        sentence (tuple[str, int, int]): A tuple containing the sentence text,
+            start index, and end index.
+        doc_id (str): The document ID to look up in the token map.
+        token_map (dict[str, dict[str, list[list[int]]]]): A nested dictionary
+            where the first key is the document ID, the second key is a string
+            representing the start and end indices, and the value is a list of lists
+            containing token start and end indices.
+
+    Returns:
+        list[tuple[int, int, str]]: A list of tuples where each tuple contains the
+            start index, end index, and the token text.
+    """
+
     text, start, end = sentence
     return [
         (t[0], t[1], text[t[0] - start : t[1] - start])
@@ -334,6 +467,15 @@ def process_entities(
 ) -> tuple[list[list[Entity]], int]:
     """
     Cleans entities and splits them into lists
+
+    Args:
+        entities (list[Entity]): A list of entities.
+        sentences (list[tuple[str, int, int]]): A list of tuples containing the
+            sentence text, start index, and end index.
+
+    Returns:
+        sentence_entities (list[list[Entity]]): A list of lists of entities.
+        cross_boundary_entity_count (int): The number of entities that cross sentence.
     """
     sentence_entities: list[list[Entity]] = [[] for _ in range(len(sentences))]
     cross_boundary_entity_count = 0
@@ -365,6 +507,22 @@ def process_relation(
     sentence_entities: list[list[Entity]],
     sentences: list[tuple[str, int, int]],
 ) -> tuple[list[list[Relation]], int]:
+    """
+    Cleans relations and added the relation argument with an entity object to them.
+
+    Args:
+        relations (list[RelationWithoutEntity]): A list of relations without entity,
+            which is used to build the relation with entity.
+        sentence_entities (list[list[Entity]]): A list of lists of entities.
+        sentences (list[tuple[str, int, int]]): A list of tuples containing the
+            sentence text, start index, and end index.
+
+    Returns:
+        sentence_relations (list[list[Relation]]): A list of lists of relations which
+            are built with entity objects.
+        cross_sentence_relation_count (int): The number of relations that cross
+            sentence boundaries.
+    """
     sentence_relations: list[list[Relation]] = [[] for _ in range(len(sentences))]
     cross_sentence_relation_count = 0
     for relation in relations:
@@ -410,6 +568,23 @@ def process_events(
     sentence_entities: list[list[Entity]],
     sentences: list[tuple[str, int, int]],
 ) -> tuple[list[list[Event]], int, int]:
+    """
+    This function cleans the events and adds the event arguments with entity objects
+    to them.
+
+    Args:
+        events (list[EventWithoutEntity]): A list of events without entity, which is
+            used to build the event with entity.
+        sentence_entities (list[list[Entity]]): A list of lists of entities.
+        sentences (list[tuple[str, int, int]]): A list of tuples containing the
+            sentence text, start index, and end index.
+
+    Returns:
+        sentence_events (list[list[Event]]): A list of lists of events which are built
+            with entity objects.
+        cross_boundary_trigger_count (int): The number of events that cross sentence
+            boundaries.
+    """
     sentence_events: list[list[Event]] = [[] for _ in range(len(sentences))]
     # assign each event mention to the sentence where it appears
     cross_boundary_trigger_count = 0
@@ -463,12 +638,28 @@ def process_events(
     return sentence_events, cross_boundary_trigger_count, cross_boundary_argument_count
 
 
+# This pattern is set as a global variable so that the regex only is complied once
 TAG_PATTERN = re.compile("<[^<>]+>", re.MULTILINE)
 
 
 def read_sgm_file(
     path: str, sent_map: dict[str, dict[str, list[list[int]]]]
 ) -> list[tuple[str, int, int]]:
+    """
+    Read the SGM file and return a list of sentences.
+
+    Args:
+        path (str): The path to the SGM file.
+        sent_map (dict[str, dict[str, list[list[int]]]): A nested dictionary where the
+            first key is the document ID, the second key is a string representing the
+            start and end indices, and the value is a list of lists containing token
+            start and end indices.
+
+    Returns:
+        sentences (list[tuple[str, int, int]]): A list of tuples containing the
+            sentence text, start index, and end index.
+    """
+
     with open(path, encoding="utf-8") as fp:
         data = fp.read()
 
@@ -539,6 +730,24 @@ def read_apf_file(
 ) -> tuple[
     str, str, list[Entity], list[RelationWithoutEntity], list[EventWithoutEntity]
 ]:
+    """
+    Read the APF file and return the important information extracted from the document.
+    This is what builds the class files for the entities, relations, and events.
+
+    Args:
+        path (str): The path to the APF file.
+        time_and_val (bool): A flag to indicate whether to include time and value
+            entities.
+        use_full_span (bool): A flag to indicate whether to use the full span of the
+            entity.
+
+    Returns:
+        doc_id (str): The document ID.
+        source (str): The source of the document.
+        entities (list[Entity]): A list of entities.
+        relations (list[RelationWithoutEntity]): A list of relations.
+        events (list[EventWithoutEntity]): A list of events.
+    """
     with open(path, encoding="utf-8") as fp:
         soup = BeautifulSoup(fp.read(), "lxml-xml")
 
@@ -703,6 +912,30 @@ def convert(
     time_and_val: bool,
     use_full_span: bool,
 ) -> tuple[Document, int, int, int, int]:
+    """
+    This function is the bulk of the structure of the code for processing the ACE
+    data.
+
+    Args:
+        sgm_file (str): The path to the SGM file.
+        apf_file (str): The path to the APF file.
+        sent_map (dict[str, dict[str, list[list[int]]]): A nested dictionary where the
+            containing the information about the sentence for each document.
+        token_map (dict[str, dict[str, list[list[int]]]): A nested dictionary where the
+            containing the information about the tokens for each document.
+        time_and_val (bool): A flag to indicate whether to include time and value
+            entities.
+        use_full_span (bool): A flag to indicate whether to use the full span of the
+            entity,
+
+    Returns:
+        doc,
+        cross_boundary_entity_count,
+        cross_boundary_relation_count,
+        cross_boundary_trigger_count,
+        cross_boundary_argument_count,
+    """
+
     sentences = read_sgm_file(sgm_file, sent_map)
     # sentences is a list of tuple (sentence, start_char_index, end_char_index)
 
@@ -722,7 +955,7 @@ def convert(
     )
 
     #####
-    # Right now, all the annotation is under characater span level.
+    # Right now, all the annotation is under character span level.
     #####
 
     # Tokenization
@@ -780,6 +1013,25 @@ def convert_batch(
     time_and_val: bool = False,
     use_full_span: bool = False,
 ) -> list[dict]:
+    """
+    This function is the entry point for processing the ACE data it wraps the convert
+    function and iterates over all the files in the input path.
+
+    Args:
+        input_path (str | PosixPath): The path to the ACE data.
+        sent_map (dict[str, dict[str, list[list[int]]]): A nested dictionary where the
+            containing the information about the sentence for each document.
+        token_map (dict[str, dict[str, list[list[int]]]): A nested dictionary where the
+            containing the information about the tokens for each document.
+        time_and_val (bool): A flag to indicate whether to include time and value
+            entities.
+        use_full_span (bool): A flag to indicate whether to use the full span of the
+            entity.
+
+    Returns:
+        objs (list[dict]): A list of dictionaries containing the events which will be
+            converted to JSON for the finial output.
+    """
     # Read all file
     sgm_files = glob.glob(os.path.join(str(input_path), "**", "timex2norm", "*.sgm"))
     print(input_path)

@@ -36,8 +36,8 @@ def load_pattern(pattern_file_path: str) -> dict:
     ----------
     pattern_file_path: str
         The file path where the pattern file is stored for the dataset, this should
-        include the file name and extension,
-        e.g. "data/RAMS/patterns/pattern.txt"
+        include the file name and extension, expected to be JSON format
+        e.g. "data/RAMS/patterns/pattern.josn"
 
     Returns
     -------
@@ -50,7 +50,23 @@ def load_pattern(pattern_file_path: str) -> dict:
 
 def load_schema(pattern_file_path: str) -> dict:
     """
-    To Do
+    Converts the JSON in the pattern file into a dictionary representing a schema for
+    the dataset. The dictionary will contain keys that are the event type names where
+    the words in the hierarchy are split by an underscore '_'. The values are dicts
+    where the keys are the role names and the values are the permitted types, which
+    will either by a 'str | None' or a tuple of 'str | None' values.
+
+    Parameters
+    ----------
+    pattern_file_path: str
+        The file path where the pattern file is stored for the dataset, this should
+        include the file name and extension, expected to be JSON format
+        e.g. "data/RAMS/patterns/pattern.json"
+
+    Returns
+    -------
+    dict
+        A dictionary containing the schema
     """
     pattern = load_pattern(pattern_file_path)
 

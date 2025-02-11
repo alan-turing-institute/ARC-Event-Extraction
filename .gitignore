@@ -11,6 +11,8 @@ data/RAMS/*
 !data/RAMS/README.md
 data/WikiEvents/*
 !data/WikiEvents/README.md
+data/ACE05/*
+!data/ACE05/README.md
 
 # Scratch file and folder
 scripts/scratch.py

@@ -15,17 +15,17 @@ from tqdm import tqdm
 
 def read_docs(path):
     all_objs = []
-    with open(os.path.join(path, "train.jsonl")) as fp:
+    with open(os.path.join(path, "train.jsonlines")) as fp:
         lines = fp.readlines()
     objs = [json.loads(line) for line in lines]
     all_objs.extend(objs)
 
-    with open(os.path.join(path, "dev.jsonl")) as fp:
+    with open(os.path.join(path, "dev.jsonlines")) as fp:
         lines = fp.readlines()
     objs = [json.loads(line) for line in lines]
     all_objs.extend(objs)
 
-    with open(os.path.join(path, "test.jsonl")) as fp:
+    with open(os.path.join(path, "test.jsonlines")) as fp:
         lines = fp.readlines()
     objs = [json.loads(line) for line in lines]
     all_objs.extend(objs)
@@ -36,15 +36,15 @@ def read_docs(path):
 def get_split(objs, split_folder):
     with open(os.path.join(split_folder, "train.txt")) as fp:
         lines = fp.readlines()
-        train_doc_ids = {[line.strip() for line in lines]}
+        train_doc_ids = {line.strip() for line in lines}
 
     with open(os.path.join(split_folder, "dev.txt")) as fp:
         lines = fp.readlines()
-        dev_doc_ids = {[line.strip() for line in lines]}
+        dev_doc_ids = {line.strip() for line in lines}
 
     with open(os.path.join(split_folder, "test.txt")) as fp:
         lines = fp.readlines()
-        test_doc_ids = {[line.strip() for line in lines]}
+        test_doc_ids = {line.strip() for line in lines}
 
     train_objs = []
     dev_objs = []

@@ -41,8 +41,7 @@ def main():
 
     np.random.shuffle(data_intersection)
 
-    split_id_float = 9 * len(data_intersection) / 10
-    split_id = round(split_id_float)
+    split_id = 9 * len(data_intersection) // 10
 
     new_split_folder = os.path.join(output_path, "split_dev")
     os.makedirs(new_split_folder, exist_ok=True)

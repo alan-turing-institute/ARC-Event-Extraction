@@ -117,6 +117,7 @@ name = "arcee"
 version = "0.1.0"
 source = { editable = "arcee" }
 dependencies = [
+    { name = "ollama" },
     { name = "pip" },
     { name = "pre-commit" },
     { name = "pytest" },
@@ -126,6 +127,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "ollama" },
     { name = "pip" },
     { name = "pre-commit" },
     { name = "pytest" },
@@ -551,13 +553,23 @@ name = "from-textee"
 version = "0.1.0"
 source = { editable = "from_textee" }
 dependencies = [
+    { name = "mypy" },
     { name = "numpy" },
+    { name = "pip" },
+    { name = "pre-commit" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
     { name = "tqdm" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "mypy" },
     { name = "numpy" },
+    { name = "pip" },
+    { name = "pre-commit" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
     { name = "tqdm" },
 ]
 

@@ -1,0 +1,278 @@
+from __future__ import annotations
+
+import json
+from pathlib import PosixPath
+from typing import Any
+
+import pytest
+
+some_events = [
+    {
+        "Sentence": "Linda dusted the living room furniture.",
+        "EventType": "Clean",
+        "EventTrigger": "dusted",
+        "Subject": "Linda",
+        "Object": "furniture",
+    },
+    {
+        "Sentence": "Sophia boiled pasta and then tossed it with creamy alfredo sauce.",
+        "EventType": "Cook",
+        "EventTrigger": "boiled",
+        "Subject": "Sophia",
+        "Object": "pasta",
+    },
+    {
+        "Sentence": "Emily embarked on a road trip to explore the national parks.",
+        "EventType": "Travel",
+        "EventTrigger": "embarked",
+        "Subject": "Emily",
+        "Object": "trip",
+    },
+    {
+        "Sentence": "Sophia practised Pilates on a mat in her living room.",
+        "EventType": "Exercise",
+        "EventTrigger": "practised",
+        "Subject": "Sophia",
+        "Object": "Pilates",
+    },
+    {
+        "Sentence": "Laura bumped into her college professor at the bookshop.",
+        "EventType": "Meet",
+        "EventTrigger": "bumped",
+        "Subject": "Laura",
+        "Object": "professor",
+    },
+    {
+        "Sentence": "The cyclist dislocated his shoulder after a collision with a car.",
+        "EventType": "Injure",
+        "EventTrigger": "dislocated",
+        "Subject": "cyclist",
+        "Object": "shoulder",
+    },
+    {
+        "Sentence": "Anna selected a bouquet from the florist for her friend.",
+        "EventType": "Purchase",
+        "EventTrigger": "selected",
+        "Subject": "Anna",
+        "Object": "bouquet",
+    },
+    {
+        "Sentence": "The airline transported cargo to the international terminal.",
+        "EventType": "Transport",
+        "EventTrigger": "transported",
+        "Subject": "airline",
+        "Object": "cargo",
+    },
+    {
+        "Sentence": "The university hired Dr. Smith to lead the biology department.",
+        "EventType": "Hire",
+        "EventTrigger": "hired",
+        "Subject": "university",
+        "Object": "Smith",
+    },
+    {
+        "Sentence": "The architect designed and watched the construction of a house.",
+        "EventType": "Build",
+        "EventTrigger": "construction",
+        "Subject": "architect",
+        "Object": "house",
+    },
+]
+
+
+@pytest.fixture
+def events_to_test() -> list[dict[str, str]]:
+    # Return the fake events to test
+    return some_events
+
+
+@pytest.fixture(scope="module")
+def testing_split_dir(tmp_path_factory: Any) -> PosixPath:
+    # Create a temporary directory
+    return tmp_path_factory.mktemp("split")
+
+
+@pytest.fixture(scope="module")
+def split_data_paths(
+    testing_split_dir: PosixPath,
+) -> list[PosixPath]:
+    # This builds the split data in the correct format
+    keys = [f"doc_{i}" for i in range(10)]
+    files = [
+        ("train.txt", keys[2:8]),
+        ("dev.txt", keys[8:]),
+        ("test.txt", keys[:2]),
+    ]
+    file_paths = []
+    for file, data in files:
+        file_path = testing_split_dir / file
+        with open(file_path, "w") as f:
+            for key in data:
+                f.write(key + "\n")
+        file_paths.append(file_path)
+
+    return file_paths
+
+
+@pytest.fixture
+def save_testing_data_dir(
+    tmp_path_factory: Any,
+) -> PosixPath:
+    # Create a temporary directory
+    return tmp_path_factory.mktemp("save_data")
+
+
+@pytest.fixture(scope="module")
+def testing_rams_dir(tmp_path_factory: Any) -> PosixPath:
+    # Create a temporary directory
+    return tmp_path_factory.mktemp("data_rams")
+
+
+@pytest.fixture(scope="module")
+def rams_data_paths(testing_rams_dir: PosixPath) -> list[PosixPath]:
+    # Build the RAMS data in the correct format
+    rams_jsons = []
+    for i, event in enumerate(some_events):
+        new_event: dict[str, str | list] = {"doc_key": f"doc_{i}"}
+        new_event["sentences"] = [event["Sentence"].replace(".", " .").split(" ")]
+        trig_loc = new_event["sentences"][0].index(event["EventTrigger"])
+        subj_loc = new_event["sentences"][0].index(event["Subject"])
+        obj_loc = new_event["sentences"][0].index(event["Object"])
+        new_event["evt_triggers"] = [[trig_loc, trig_loc, [[event["EventType"], 1.0]]]]
+        new_event["ent_spans"] = [
+            [subj_loc, subj_loc, [["evt1arg01Subject", 1.0]]],
+            [obj_loc, obj_loc, [["evt1arg02Object", 1.0]]],
+        ]
+        new_event["gold_evt_links"] = [
+            [[trig_loc, trig_loc], [subj_loc, subj_loc], "evt1arg01Subject"],
+            [[trig_loc, trig_loc], [obj_loc, obj_loc], "evt1arg02Object"],
+        ]
+        rams_jsons.append(new_event)
+
+    # Write the RAMS data to files
+    file_names = [
+        ("train.jsonlines", rams_jsons[:6]),
+        ("dev.jsonlines", rams_jsons[6:8]),
+        ("test.jsonlines", rams_jsons[8:]),
+    ]
+    file_paths = []
+    for file_name, data in file_names:
+        file_path = testing_rams_dir / file_name
+        with open(file_path, "w") as f:
+            for line in data:
+                f.write(json.dumps(line) + "\n")
+        file_paths.append(file_path)
+
+    return file_paths
+
+
+@pytest.fixture(scope="module")
+def testing_wikievents_dir(
+    tmp_path_factory: Any,
+) -> PosixPath:
+    # Create a temporary directory
+    return tmp_path_factory.mktemp("data_wikievents")
+
+
+@pytest.fixture(scope="module")
+def wikievents_data_paths(testing_wikievents_dir: PosixPath) -> list[PosixPath]:
+    # Build the WikiEvents data in the correct format
+    rams_jsons = []
+    for i, event in enumerate(some_events):
+        new_event: dict[str, str | list] = {"doc_id": f"doc_{i}"}
+        new_event["tokens"] = event["Sentence"].replace(".", " .").split(" ")
+        # Build the token triplets for the sentences
+        count = 0
+        token_triplets = []
+        for token in new_event["tokens"]:
+            token_triplets.append([token, count, count + len(token) + 1])
+            count += len(token) + 1
+        # token_triplets[-2][2] -= 1  # Remove the period space from the last token
+        # token_triplets[-1][1] -= 1
+        # token_triplets[-1][2] -= 1
+        new_event["sentences"] = [[token_triplets, event["Sentence"]]]
+        del token_triplets, count
+        # Build the event mentions
+        new_event["event_mentions"] = [
+            {
+                "id": f"evt{i+1}",
+                "event_type": event["EventType"],
+                "trigger": {
+                    "text": event["EventTrigger"],
+                    "sent_idx": 0,
+                    "start": new_event["tokens"].index(event["EventTrigger"]),
+                    "end": new_event["tokens"].index(event["EventTrigger"]) + 1,
+                },
+                "arguments": [
+                    {
+                        "entity_id": f"ent{i+1}_1",
+                        "role": "Subject",
+                        "text": event["Subject"],
+                        "start": [new_event["tokens"].index(event["Subject"])],
+                        "end": [new_event["tokens"].index(event["Subject"]) + 1],
+                    },
+                    {
+                        "entity_id": f"ent{i+1}_2",
+                        "role": "Object",
+                        "text": event["Object"],
+                        "start": [new_event["tokens"].index(event["Object"])],
+                        "end": [new_event["tokens"].index(event["Object"]) + 1],
+                    },
+                ],
+            }
+        ]
+        # Build the entity mentions
+        new_event["entity_mentions"] = [
+            {
+                "id": f"ent{i+1}_1",
+                "text": event["Subject"],
+                "sent_idx": 0,
+                "start": new_event["tokens"].index(event["Subject"]),
+                "end": new_event["tokens"].index(event["Subject"]) + 1,
+                "entity_type": "X1",
+                "mention_type": "X2",
+            },
+            {
+                "id": f"ent{i+1}_2",
+                "text": event["Object"],
+                "sent_idx": 0,
+                "start": new_event["tokens"].index(event["Object"]),
+                "end": new_event["tokens"].index(event["Object"]) + 1,
+                "entity_type": "X3",
+                "mention_type": "X4",
+            },
+        ]
+        # Relation mention
+        new_event["relation_mentions"] = []  # No relation mentions
+
+        rams_jsons.append(new_event)
+
+    # Write the WikiEvents data to files
+    file_names = [
+        ("train.jsonlines", rams_jsons[:6]),
+        ("dev.jsonlines", rams_jsons[6:8]),
+        ("test.jsonlines", rams_jsons[8:]),
+    ]
+    file_paths = []
+    for file_name, data in file_names:
+        file_path = testing_wikievents_dir / file_name
+        with open(file_path, "w") as f:
+            for line in data:
+                f.write(json.dumps(line) + "\n")
+        file_paths.append(file_path)
+
+    return file_paths
+
+
+@pytest.fixture(scope="module")
+def wikievents_seg_path(testing_rams_dir: PosixPath) -> PosixPath:
+    big_json = {}
+    for i, _event in enumerate(some_events):
+        big_json[f"doc_{i}"] = [[0, 1]]
+
+    # Write the Segment data to files
+    seg_file_path = testing_rams_dir / "segments.json"
+    with open(seg_file_path, "w") as f:
+        f.write(json.dumps(big_json))
+
+    return seg_file_path

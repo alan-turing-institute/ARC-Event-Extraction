@@ -46,3 +46,40 @@ def load_pattern(pattern_file_path: str) -> dict:
     """
     with open(pattern_file_path) as file:
         return json.load(file)
+
+
+def load_schema(pattern_file_path: str) -> dict:
+    """
+    To Do
+    """
+    pattern = load_pattern(pattern_file_path)
+
+    # Split the words making up the event type hierarchy with an underscore '_'
+    # and capitalise each first letter
+    pattern_formatted = {
+        "_".join(
+            word.capitalize().replace("N/a", "NA").replace("-", "")
+            for word in key.replace(":", ".").split(".")
+        ): pattern[key]
+        for key in pattern
+    }
+
+    # Create a schema dictionary - each key is the class name and the values
+    # are dictionaries with the key being the role name and the vlaue being
+    # the expected type (a 'str' or a tuple of 'str')
+    schema = {}  # type: dict[str, dict]
+    for key in pattern_formatted:
+        schema[key] = {}
+        roles = pattern_formatted[key]["roles"]
+        for role in set(roles):
+            count_role = roles.count(role)
+            if count_role == 1:
+                schema[key][role] = "str | None"
+            else:
+                str_types = "str | None"
+                while count_role > 1:
+                    str_types += ", str | None"
+                    count_role -= 1
+                schema[key][role] = "tuple[" + str_types + "]"
+
+    return schema

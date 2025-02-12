@@ -4,6 +4,29 @@ import json
 from typing import Any
 
 
+def format_event_type(event_type: str) -> str:
+    """
+    This function takes a event type that is defined in a hierarchy where the
+    different levels of the hierarchy are divided by either '.' or ':'. It transforms
+    the event type string so that each level of the hierarchy is divided by '_' and
+    so that any mention of 'N/a' is replaced with 'NA'
+
+    Parameters
+    ----------
+    event_type: str
+        The name of the event type from the dataset
+
+    Returns
+    -------
+    str
+        The re-formatted event type string
+    """
+    return "_".join(
+        word.capitalize().replace("N/a", "NA").replace("-", "")
+        for word in event_type.replace(":", ".").split(".")
+    )
+
+
 def load_data(dataset_file_path: str) -> list[Any]:
     """
     This function loads a dataset from the specified location
@@ -72,13 +95,7 @@ def load_schema(pattern_file_path: str) -> dict:
 
     # Split the words making up the event type hierarchy with an underscore '_'
     # and capitalise each first letter
-    pattern_formatted = {
-        "_".join(
-            word.capitalize().replace("N/a", "NA").replace("-", "")
-            for word in key.replace(":", ".").split(".")
-        ): pattern[key]
-        for key in pattern
-    }
+    pattern_formatted = {format_event_type(key): pattern[key] for key in pattern}
 
     # Create a schema dictionary - each key is the class name and the values
     # are dictionaries with the key being the role name and the vlaue being

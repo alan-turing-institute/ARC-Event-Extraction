@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
+from arcee.dataset.load import format_event_type
+
 
 class EEPrompt(ABC):
     def __init__(self) -> None:
@@ -24,7 +26,7 @@ class EEPrompt(ABC):
         tokens: list[str],
         event_mentions: list,
         schema: dict,
-    ) -> str:
+    ) -> tuple[str, str]:
         """
         This method creates a prompt given input text, event mention data, a
         schema and a list of examples.
@@ -51,7 +53,7 @@ class DummyEAEPrompter(EEPrompt):
         tokens: list[str],
         event_mentions: list,
         schema: dict,
-    ) -> str:
+    ) -> tuple[str, str]:
         """
         Parameters
         ----------
@@ -85,29 +87,29 @@ class DummyEAEPrompter(EEPrompt):
         arg_roles = schema[event_type]["roles"]
 
         return (
-            "An event type of " + event_type + " has been detected in the input text. "
-            "The trigger word is identified with a <trigger> tag.\n "
-            "Input text:\n```" + input_text + "```\n "
-            "What are the words in the input text that represent the argument role "
-            "```" + arg_roles[0] + "```? Provide your response in JSON format with the "
-            "key " + arg_roles[0] + " and the value as the words in the input text "
-            "that represent the argument."
+            (
+                "An event type of "
+                + event_type
+                + " has been detected in the input text. "
+                "The trigger word is identified with a <trigger> tag.\n "
+                "Input text:\n```" + input_text + "```\n "
+                "What are the words in the input text that represent the argument role "
+                "```"
+                + arg_roles[0]
+                + "```? Provide your response in JSON format with the "
+                "key " + arg_roles[0] + " and the value as the words in the input text "
+                "that represent the argument."
+            ),
+            "json",
         )
 
 
-class EAEPrompter1(EEPrompt):
-    """
-    Event argument extraction:
-    - only takes a SINGLE event trigger
-    - predicts multiple argument roles
-    - does NOT use examples in the prompt
-    - requests JSON output
-    """
-
+class EAEPrompter_Base(EEPrompt, ABC):
     def __init__(self) -> None:
         super().__init__()
 
-    def get_prompt(
+    @abstractmethod
+    def _construct_prompt(
         self,
         tokens: list[str],
         event_mentions: list,
@@ -162,15 +164,102 @@ class EAEPrompter1(EEPrompt):
                 )
 
         return (
-            "An event type of " + event_type + " has been detected in the input text. "
-            "The trigger word is identified with a <trigger> tag.\n "
-            "Input text:\n```" + input_text + "```\n "
-            "What are the words in the input text that represent the following "
-            "argument roles? "
-            + ",\n".join(set(arg_roles))
-            + "? "
-            + number_of_args_str
-            + "Provide your response in JSON format with one key for each"
-            "argument role and the value as the words in the input text "
-            "that represent the argument."
+            (
+                "An event type of {event_type} has been detected in the input text. "
+                "The trigger word is identified with a <trigger> tag.\n "
+                "Input text:\n```" + input_text + "```\n "
+                "What are the words in the input text that represent the following "
+                "argument roles? "
+                + ",\n".join(set(arg_roles))
+                + "? "
+                + number_of_args_str
+                + "Provide your response in JSON format with one key for each"
+                "argument role and the value as the words in the input text "
+                "that represent the argument."
+            ),
+            event_type,
         )
+
+
+class EAEPrompter1(EAEPrompter_Base):
+    """
+    Event argument extraction:
+    - only takes a SINGLE event trigger
+    - predicts multiple argument roles
+    - does NOT use examples in the prompt
+    - requests JSON output
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    def get_prompt(
+        self,
+        tokens: list[str],
+        event_mentions: list,
+        schema: dict,
+    ) -> tuple[str, str]:
+        """
+        Parameters
+        ----------
+        tokens: list[str]
+            The input text in token form
+        event_mentions: list
+            From the processed data, the list of event mentions for the input text.
+            Multiple events may exist in for some records, but this method creates
+            a prompt only using the first of these.
+        schema: dict
+            A schema for the dataset (currently taken from TextEE pattern files)
+
+        Returns
+        -------
+        str:
+            Returns the prompt
+        """
+        prompt, event_type = self._construct_prompt(tokens, event_mentions, schema)
+
+        prompt = prompt.replace("{event_type}", event_type)
+
+        return prompt, "json"
+
+
+class EAEPrompter2(EEPrompt):
+    """
+    Event argument extraction:
+    - only takes a SINGLE event trigger
+    - predicts multiple argument roles
+    - does NOT use examples in the prompt
+    - requests JSON output
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    def get_prompt(
+        self,
+        tokens: list[str],
+        event_mentions: list,
+        schema: dict,
+    ) -> str:
+        """
+        Parameters
+        ----------
+        tokens: list[str]
+            The input text in token form
+        event_mentions: list
+            From the processed data, the list of event mentions for the input text.
+            Multiple events may exist in for some records, but this method creates
+            a prompt only using the first of these.
+        schema: dict
+            A schema for the dataset (currently taken from TextEE pattern files)
+
+        Returns
+        -------
+        str:
+            Returns the prompt
+        """
+        prompt, event_type = self._construct_prompt(tokens, event_mentions, schema)
+
+        prompt = prompt.replace("{event_type}", format_event_type(event_type))
+
+        return prompt, "json"

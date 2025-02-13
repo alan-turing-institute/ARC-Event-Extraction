@@ -11,7 +11,7 @@ import os
 from argparse import ArgumentParser
 
 import numpy as np
-from arcee.utils.data import load_data
+from arcee.dataset.load import load_data
 
 
 def main():

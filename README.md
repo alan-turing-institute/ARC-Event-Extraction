@@ -6,6 +6,8 @@ This project examines a range of state-of-the-art approaches for labeling events
 
 As of the time of writing the project required python 3.12.
 
+If Ollama models are to be used for prompting, then [Ollama](https://ollama.com/) must be installed.
+
 #### Using `pip`
 
 ```bash

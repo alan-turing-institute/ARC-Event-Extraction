@@ -10,6 +10,8 @@ dependencies = [
     "pytest",
     "pytest-cov",
     "torch",
+    "ollama",
+    "transformers>=4.48.1",
 ]
 
 [build-system]

@@ -12,8 +12,9 @@ data/RAMS/*
 data/WikiEvents/*
 !data/WikiEvents/README.md
 
-# Scratch file
+# Scratch file and folder
 scripts/scratch.py
+scripts/scratch/*
 
 ### ~~~~ FROM PYTHON TEMPLATE ~~~~ ###
 

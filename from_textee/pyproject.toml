@@ -12,6 +12,8 @@ dependencies = [
     "mypy",
     "tqdm",
     "numpy",
+    "beautifulsoup4",
+    "lxml",
 ]
 
 [build-system]

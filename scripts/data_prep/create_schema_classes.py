@@ -74,12 +74,6 @@ def load_module_from_path(file_path: str) -> ModuleType:
     types.ModuleType
         The loaded module object, allowing access to its attributes and definitions.
 
-    Raises
-    ------
-    FileNotFoundError
-        If the specified file does not exist.
-    ImportError
-        If the module cannot be loaded.
     """
     module_name = Path(file_path).stem  # Extract filename without extension
     spec = importlib.util.spec_from_file_location(module_name, file_path)
@@ -100,14 +94,6 @@ def schema_to_json_dict(path_name: str, output_file: str) -> None:
     output_file : str
         The file path where the extracted JSON schemas should be saved.
 
-    Raises
-    ------
-    FileNotFoundError
-        If the specified file does not exist.
-    ImportError
-        If the module cannot be loaded.
-    TypeError
-        If the file does not contain valid Pydantic `BaseModel` classes.
     """
     module = load_module_from_path(path_name)
     schemas = {}

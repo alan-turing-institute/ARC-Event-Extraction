@@ -46,11 +46,11 @@
         "Justice:Charge-Indict": {
             "template": "<arg1> charged or indicted <arg2> before <arg3> court or judge in <arg4> place",
             "roles": ["Prosecutor", "Defendant", "Adjudicator", "Place"]
-        }, 
+        },
         "Justice:Convict": {
             "template": "<arg1> court or judge convicted <arg2> in <arg3> place",
             "roles": ["Adjudicator", "Defendant", "Place"]
-        }, 
+        },
         "Justice:Execute": {
             "template": "<arg1> executed <arg2> at <arg3> place",
             "roles": ["Agent", "Person", "Place"]
@@ -66,7 +66,7 @@
         "Justice:Pardon": {
             "template": "<arg1> court or judge pardoned <arg2> at <arg3> place",
             "roles": ["Adjudicator", "Defendant", "Place"]
-        }, 
+        },
         "Justice:Release-Parole": {
             "template": "<arg1> released or paroled <arg2> in <arg3> place",
             "roles": ["Entity", "Person", "Place"]
@@ -74,19 +74,19 @@
         "Justice:Sentence": {
             "template": "<arg1> court or judge sentenced <arg2> in <arg3> place",
             "roles": ["Adjudicator", "Defendant", "Place"]
-        }, 
+        },
         "Justice:Sue": {
             "template": "<arg1> sued <arg2> before <arg3> court or judge in <arg4> place",
             "roles": ["Plaintiff", "Defendant", "Adjudicator", "Place"]
-        }, 
+        },
         "Justice:Trial-Hearing": {
             "template": "<arg1> tried <arg2> before <arg3> court or judge in <arg4> place",
             "roles": ["Prosecutor", "Defendant", "Adjudicator", "Place"]
-        }, 
+        },
         "Life:Be-Born": {
             "template": "<arg1> was born in <arg2> place",
             "roles": ["Person", "Place"]
-        }, 
+        },
         "Life:Die": {
             "template": "<arg1> killed <arg2> with <arg3> instrument in <arg4> place",
             "roles": ["Agent", "Victim", "Instrument", "Place"]
@@ -94,7 +94,7 @@
         "Life:Divorce": {
             "template": "<arg1> divorced <arg2> in <arg3> place",
             "roles": ["Person", "Person", "Place"]
-        }, 
+        },
         "Life:Injure": {
             "template": "<arg1> injured <arg2> with <arg3> instrument in <arg4> place",
             "roles": ["Agent", "Victim", "Instrument", "Place"]
@@ -114,19 +114,19 @@
         "Personnel:End-Position": {
             "template": "<arg1> stopped working at <arg2> organization in <arg3> place",
             "roles": ["Person", "Entity", "Place"]
-        }, 
+        },
         "Personnel:Nominate": {
             "template": "<arg1> nominated <arg2>",
             "roles": ["Agent", "Person"]
-        },  
+        },
         "Personnel:Start-Position": {
             "template": "<arg1> started working at <arg2> organization in <arg3> place",
             "roles": ["Person", "Entity", "Place"]
-        },  
+        },
         "Transaction:Transfer-Money": {
             "template": "<arg1> gave money to <arg2> for the benefit of <arg3> in <arg4> place",
             "roles": ["Giver", "Recipient", "Beneficiary", "Place"]
-        },  
+        },
         "Transaction:Transfer-Ownership": {
             "template": "<arg1> gave <arg4> to <arg2> for the benefit of <arg3> at <arg5> place",
             "roles": ["Seller", "Buyer", "Beneficiary", "Artifact", "Place"]

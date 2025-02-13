@@ -123,6 +123,7 @@ dependencies = [
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "torch" },
+    { name = "transformers" },
 ]
 
 [package.metadata]
@@ -133,6 +134,7 @@ requires-dist = [
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "torch" },
+    { name = "transformers", specifier = ">=4.48.1" },
 ]
 
 [[package]]

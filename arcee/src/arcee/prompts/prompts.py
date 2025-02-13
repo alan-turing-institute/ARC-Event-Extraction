@@ -17,7 +17,7 @@ class EEPrompt(ABC):
         """
         return (
             "You are an assistant that helps extract the list of arguments for an "
-            "event from input text."
+            "event from input text.\n"
         )
 
     @abstractmethod
@@ -88,7 +88,8 @@ class DummyEAEPrompter(EEPrompt):
 
         return (
             (
-                "An event type of "
+                self.get_system_content()
+                + "An event type of "
                 + event_type
                 + " has been detected in the input text. "
                 "The trigger word is identified with a <trigger> tag.\n "
@@ -104,17 +105,16 @@ class DummyEAEPrompter(EEPrompt):
         )
 
 
-class EAEPrompter_Base(EEPrompt, ABC):
+class EAEPrompter_Base1(EEPrompt, ABC):
     def __init__(self) -> None:
         super().__init__()
 
-    @abstractmethod
     def _construct_prompt(
         self,
         tokens: list[str],
         event_mentions: list,
         schema: dict,
-    ) -> str:
+    ) -> tuple[str, str]:
         """
         Parameters
         ----------
@@ -165,7 +165,8 @@ class EAEPrompter_Base(EEPrompt, ABC):
 
         return (
             (
-                "An event type of {event_type} has been detected in the input text. "
+                self.get_system_content()
+                + "An event type of {event_type} has been detected in the input text. "
                 "The trigger word is identified with a <trigger> tag.\n "
                 "Input text:\n```" + input_text + "```\n "
                 "What are the words in the input text that represent the following "
@@ -181,7 +182,7 @@ class EAEPrompter_Base(EEPrompt, ABC):
         )
 
 
-class EAEPrompter1(EAEPrompter_Base):
+class EAEPrompter1A(EAEPrompter_Base1):
     """
     Event argument extraction:
     - only takes a SINGLE event trigger
@@ -223,7 +224,7 @@ class EAEPrompter1(EAEPrompter_Base):
         return prompt, "json"
 
 
-class EAEPrompter2(EEPrompt):
+class EAEPrompter1B(EAEPrompter_Base1):
     """
     Event argument extraction:
     - only takes a SINGLE event trigger
@@ -240,7 +241,7 @@ class EAEPrompter2(EEPrompt):
         tokens: list[str],
         event_mentions: list,
         schema: dict,
-    ) -> str:
+    ) -> tuple[str, str]:
         """
         Parameters
         ----------
@@ -263,3 +264,198 @@ class EAEPrompter2(EEPrompt):
         prompt = prompt.replace("{event_type}", format_event_type(event_type))
 
         return prompt, "json"
+
+
+class EAEPrompter_Base2(EEPrompt, ABC):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def _construct_prompt(
+        self,
+        tokens: list[str],
+        event_mentions: list,
+        schema: dict,
+    ) -> tuple[str, str]:
+        """
+        Parameters
+        ----------
+        tokens: list[str]
+            The input text in token form
+        event_mentions: list
+            From the processed data, the list of event mentions for the input text.
+            Multiple events may exist in for some records, but this method creates
+            a prompt only using the first of these.
+        schema: dict
+            A schema for the dataset (currently taken from TextEE pattern files)
+
+        Returns
+        -------
+        str:
+            Returns the prompt
+        """
+        # Get trigger span for 1st event mention
+        event_mention = event_mentions[0]
+        trig_start = event_mention["trigger"]["start"]
+        trig_end = event_mention["trigger"]["end"]  # End index is exclusive
+
+        # Get trigger based on tagged tokens
+        tagged_tokens = tokens.copy()
+        tagged_tokens[trig_start] = "<trigger>" + tagged_tokens[trig_start]
+        tagged_tokens[trig_end - 1] = tagged_tokens[trig_end - 1] + "</trigger>"
+        input_text = " ".join(tagged_tokens)
+
+        # Get additional details for the prompt
+        event_type = event_mention["event_type"]
+        event_type_cls = format_event_type(event_type)
+        arg_roles = list(schema[event_type_cls]["properties"])
+
+        return (
+            (
+                self.get_system_content()
+                + "An event type of {event_type} has been detected in the input text. "
+                "The trigger word is identified with a <trigger> tag.\n "
+                "Input text:\n```" + input_text + "```\n "
+                "What are the words in the input text that represent the following "
+                "argument roles? " + ",\n".join(set(arg_roles)) + "? "
+            ),
+            event_type,
+        )
+
+
+class EAEPrompter2A(EAEPrompter_Base2):
+    """
+    Event argument extraction:
+    - only takes a SINGLE event trigger
+    - predicts multiple argument roles
+    - does NOT use examples in the prompt
+    - requests JSON output using schema
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    def get_prompt(
+        self,
+        tokens: list[str],
+        event_mentions: list,
+        schema: dict,
+    ) -> tuple[str, str]:
+        """
+        Parameters
+        ----------
+        tokens: list[str]
+            The input text in token form
+        event_mentions: list
+            From the processed data, the list of event mentions for the input text.
+            Multiple events may exist in for some records, but this method creates
+            a prompt only using the first of these.
+        schema: dict
+            A schema for the dataset (currently taken from TextEE pattern files)
+
+        Returns
+        -------
+        str:
+            Returns the prompt
+        """
+        prompt, event_type = self._construct_prompt(tokens, event_mentions, schema)
+
+        prompt = prompt.replace("{event_type}", event_type)
+
+        return prompt, schema[format_event_type(event_type)]
+
+
+class EAEPrompter2B(EAEPrompter_Base2):
+    """
+    Event argument extraction:
+    - only takes a SINGLE event trigger
+    - predicts multiple argument roles
+    - does NOT use examples in the prompt
+    - requests JSON output using schema
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    def get_prompt(
+        self,
+        tokens: list[str],
+        event_mentions: list,
+        schema: dict,
+    ) -> tuple[str, str]:
+        """
+        Parameters
+        ----------
+        tokens: list[str]
+            The input text in token form
+        event_mentions: list
+            From the processed data, the list of event mentions for the input text.
+            Multiple events may exist in for some records, but this method creates
+            a prompt only using the first of these.
+        schema: dict
+            A schema for the dataset (currently taken from TextEE pattern files)
+
+        Returns
+        -------
+        str:
+            Returns the prompt
+        """
+        prompt, event_type = self._construct_prompt(tokens, event_mentions, schema)
+
+        prompt = prompt.replace("{event_type}", format_event_type(event_type))
+
+        return prompt, schema[format_event_type(event_type)]
+
+
+class EAEPrompter_Base3(EEPrompt, ABC):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def _construct_prompt(
+        self,
+        tokens: list[str],
+        event_mentions: list,
+        schema: dict,
+    ) -> tuple[str, str]:
+        """
+        Parameters
+        ----------
+        tokens: list[str]
+            The input text in token form
+        event_mentions: list
+            From the processed data, the list of event mentions for the input text.
+            Multiple events may exist in for some records, but this method creates
+            a prompt only using the first of these.
+        schema: dict
+            A schema for the dataset (currently taken from TextEE pattern files)
+
+        Returns
+        -------
+        str:
+            Returns the prompt
+        """
+        # Get trigger span for 1st event mention
+        event_mention = event_mentions[0]
+        trig_start = event_mention["trigger"]["start"]
+        trig_end = event_mention["trigger"]["end"]  # End index is exclusive
+
+        # Get trigger based on tagged tokens
+        tagged_tokens = tokens.copy()
+        tagged_tokens[trig_start] = "<trigger>" + tagged_tokens[trig_start]
+        tagged_tokens[trig_end - 1] = tagged_tokens[trig_end - 1] + "</trigger>"
+        input_text = " ".join(tagged_tokens)
+
+        # Get additional details for the prompt
+        event_type = event_mention["event_type"]
+        event_type_cls = format_event_type(event_type)
+        arg_roles = list(schema[event_type_cls]["properties"])
+
+        return (
+            (
+                "An event type of {event_type} has been detected in the input text. "
+                "The trigger word is identified with a <trigger> tag.\n "
+                "Input text:\n```" + input_text + "```\n "
+                "What are the words in the input text that represent the following "
+                "argument roles? " + ",\n".join(set(arg_roles)) + "? "
+            ),
+            event_type,
+        )

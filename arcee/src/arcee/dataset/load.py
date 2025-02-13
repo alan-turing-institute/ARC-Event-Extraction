@@ -71,7 +71,7 @@ def load_pattern(pattern_file_path: str) -> dict:
         return json.load(file)
 
 
-def load_schema(pattern_file_path: str) -> dict:
+def pattern_to_schema(pattern_file_path: str) -> dict:
     """
     Converts the JSON in the pattern file into a dictionary representing a schema for
     the dataset. The dictionary will contain keys that are the event type names where

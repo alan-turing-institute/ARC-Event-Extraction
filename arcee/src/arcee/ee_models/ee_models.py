@@ -19,7 +19,7 @@ class EEBaseModel(ABC):
     @abstractmethod
     def predict(
         self,
-        input: list[dict[str, str]],
+        input: list[tuple[dict[str, str], str]],
     ) -> list[str]:
         """
         Makes predictions for some data, whether it is doing event detection (ED),
@@ -110,17 +110,14 @@ class EEOllamaModel(EEBaseModel):
             keep_alive=self.keep_alive,
         )["message"]["content"]
 
-    def predict(
-        self,
-        input: list[dict[str, str]],
-    ) -> list[str]:
+    def predict(self, input: list[tuple[dict[str, str], str]]) -> list[str]:
         """
         This method makes predictions using an Ollama model, a given prompt and
         a dataset
 
         Parameters
         ----------
-        input: list[dict[str, str]]
+        input: list[tuple[dict[str, str], str]]
             A list of messages to be passed to the Ollama client chat
 
         Returns
@@ -130,8 +127,10 @@ class EEOllamaModel(EEBaseModel):
 
         """
         responses = []
-        for message in input:
-            responses.append(self._get_response([message], "json"))
+        for record in input:
+            messages = [record[0]]
+            output_format = record[1]
+            responses.append(self._get_response(messages, output_format))
 
         return responses
 
@@ -156,7 +155,7 @@ class EEMockOllamaModel(EEOllamaModel):
 
     def predict(
         self,
-        input: list[dict[str, str]],
+        input: list[tuple[dict[str, str], str]],
     ) -> list[str]:
         return super().predict(input)
 
@@ -189,7 +188,7 @@ class EEHFModel(EEBaseModel):
 
     def predict(
         self,
-        input: list[dict[str, str]],
+        input: list[tuple[dict[str, str], str]],
     ) -> list[str]:
         # Process input into chat template
         # TODO reconcile w/ prompt classes, data format (lost[dict[str]]) above

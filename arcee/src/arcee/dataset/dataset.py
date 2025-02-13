@@ -50,8 +50,8 @@ class EEDataset(Dataset):
     def __len__(self) -> int:
         return len(self.data)
 
-    def __getitem__(self, idx: int) -> dict[str, str]:
-        prompt = self.prompt_constuctor.get_prompt(
+    def __getitem__(self, idx: int) -> tuple[dict[str, str], str]:
+        prompt, output_format = self.prompt_constuctor.get_prompt(
             tokens=self.data[idx]["tokens"],
             event_mentions=self.data[idx]["event_mentions"],
             schema=self.event_schema,
@@ -59,4 +59,4 @@ class EEDataset(Dataset):
         return {
             "role": "user",
             "content": prompt,
-        }
+        }, output_format

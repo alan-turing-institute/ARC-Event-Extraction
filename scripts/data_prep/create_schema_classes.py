@@ -6,7 +6,7 @@ import inspect
 import json
 from pathlib import Path
 
-from arcee.dataset.load import load_schema
+from arcee.dataset.load import pattern_to_schema
 from jinja2 import Template
 from pydantic import BaseModel
 
@@ -27,7 +27,7 @@ class {{event_type}}(BaseModel):{% for key, value in schema[event_type].items() 
     """
 
     j2_template = Template(template)
-    schema = load_schema(pattern_file)
+    schema = pattern_to_schema(pattern_file)
     output = j2_template.render(schema=schema)
 
     with open(output_file, mode="w", encoding="utf-8") as f:

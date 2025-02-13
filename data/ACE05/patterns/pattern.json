@@ -1,0 +1,134 @@
+{
+        "Business:Declare-Bankruptcy": {
+            "template": "<arg1> declared bankruptcy at <arg2> place",
+            "roles": ["Org", "Place"]
+        },
+        "Business:End-Org": {
+            "template": "<arg1> organization shut down at <arg2> place",
+            "roles": ["Org", "Place"]
+        },
+        "Business:Merge-Org": {
+            "template": "<arg1> organization merged",
+            "roles": ["Org"]
+        },
+        "Business:Start-Org": {
+            "template": "<arg1> started <arg2> organization at <arg3> place",
+            "roles": ["Agent", "Org", "Place"]
+        },
+        "Conflict:Attack": {
+            "template": "<arg1> attacked <arg2> hurting <arg5> victims using <arg3> instrument at <arg4> place",
+            "roles": ["Attacker", "Target", "Instrument", "Place", "Victim"]
+        },
+        "Conflict:Demonstrate": {
+            "template": "<arg1> demonstrated at <arg2> place",
+            "roles": ["Entity", "Place"]
+        },
+        "Contact:Meet": {
+            "template": "<arg1> met with <arg2> in <arg3> place",
+            "roles": ["Entity", "Entity", "Place"]
+        },
+        "Contact:Phone-Write": {
+            "template": "<arg1> communicated remotely with <arg2> at <arg3> place",
+            "roles": ["Entity", "Entity", "Place"]
+        },
+        "Justice:Acquit": {
+            "template": "<arg1> court or judge acquitted <arg2>",
+            "roles": ["Adjudicator", "Defendant"]
+        },
+        "Justice:Appeal": {
+            "template": "<arg1> court or judge acquitted <arg2>",
+            "roles": ["Adjudicator", "Defendant"]
+        },
+        "Justice:Arrest-Jail": {
+            "template": "<arg1> arrested <arg2> in <arg3> place",
+            "roles": ["Agent", "Person", "Place"]
+        },
+        "Justice:Charge-Indict": {
+            "template": "<arg1> charged or indicted <arg2> before <arg3> court or judge in <arg4> place",
+            "roles": ["Prosecutor", "Defendant", "Adjudicator", "Place"]
+        },
+        "Justice:Convict": {
+            "template": "<arg1> court or judge convicted <arg2> in <arg3> place",
+            "roles": ["Adjudicator", "Defendant", "Place"]
+        },
+        "Justice:Execute": {
+            "template": "<arg1> executed <arg2> at <arg3> place",
+            "roles": ["Agent", "Person", "Place"]
+        },
+        "Justice:Extradite": {
+            "template": "<arg1> extradited <arg2> from <arg3> place to <arg4> place",
+            "roles": ["Agent", "Person", "Origin", "Destination"]
+        },
+        "Justice:Fine": {
+            "template": "<arg1> court or judge fined <arg2> at <arg3> place",
+            "roles": ["Adjudicator", "Entity", "Place"]
+        },
+        "Justice:Pardon": {
+            "template": "<arg1> court or judge pardoned <arg2> at <arg3> place",
+            "roles": ["Adjudicator", "Defendant", "Place"]
+        },
+        "Justice:Release-Parole": {
+            "template": "<arg1> released or paroled <arg2> in <arg3> place",
+            "roles": ["Entity", "Person", "Place"]
+        },
+        "Justice:Sentence": {
+            "template": "<arg1> court or judge sentenced <arg2> in <arg3> place",
+            "roles": ["Adjudicator", "Defendant", "Place"]
+        },
+        "Justice:Sue": {
+            "template": "<arg1> sued <arg2> before <arg3> court or judge in <arg4> place",
+            "roles": ["Plaintiff", "Defendant", "Adjudicator", "Place"]
+        },
+        "Justice:Trial-Hearing": {
+            "template": "<arg1> tried <arg2> before <arg3> court or judge in <arg4> place",
+            "roles": ["Prosecutor", "Defendant", "Adjudicator", "Place"]
+        },
+        "Life:Be-Born": {
+            "template": "<arg1> was born in <arg2> place",
+            "roles": ["Person", "Place"]
+        },
+        "Life:Die": {
+            "template": "<arg1> killed <arg2> with <arg3> instrument in <arg4> place",
+            "roles": ["Agent", "Victim", "Instrument", "Place"]
+        },
+        "Life:Divorce": {
+            "template": "<arg1> divorced <arg2> in <arg3> place",
+            "roles": ["Person", "Person", "Place"]
+        },
+        "Life:Injure": {
+            "template": "<arg1> injured <arg2> with <arg3> instrument in <arg4> place",
+            "roles": ["Agent", "Victim", "Instrument", "Place"]
+        },
+        "Life:Marry": {
+            "template": "<arg1> married <arg2> in <arg3> place",
+            "roles": ["Person", "Person", "Place"]
+        },
+        "Movement:Transport": {
+            "template": "<arg1> transported <arg2> in <arg3> vehicle from <arg4> place to <arg5> place",
+            "roles": ["Agent", "Artifact", "Vehicle", "Origin", "Destination"]
+        },
+        "Personnel:Elect": {
+            "template": "<arg1> elected <arg2> in <arg3> place",
+            "roles": ["Entity", "Person", "Place"]
+        },
+        "Personnel:End-Position": {
+            "template": "<arg1> stopped working at <arg2> organization in <arg3> place",
+            "roles": ["Person", "Entity", "Place"]
+        },
+        "Personnel:Nominate": {
+            "template": "<arg1> nominated <arg2>",
+            "roles": ["Agent", "Person"]
+        },
+        "Personnel:Start-Position": {
+            "template": "<arg1> started working at <arg2> organization in <arg3> place",
+            "roles": ["Person", "Entity", "Place"]
+        },
+        "Transaction:Transfer-Money": {
+            "template": "<arg1> gave money to <arg2> for the benefit of <arg3> in <arg4> place",
+            "roles": ["Giver", "Recipient", "Beneficiary", "Place"]
+        },
+        "Transaction:Transfer-Ownership": {
+            "template": "<arg1> gave <arg4> to <arg2> for the benefit of <arg3> at <arg5> place",
+            "roles": ["Seller", "Buyer", "Beneficiary", "Artifact", "Place"]
+        }
+    }

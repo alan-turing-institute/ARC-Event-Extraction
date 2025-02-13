@@ -1,0 +1,558 @@
+{
+        "artifactexistence.damagedestroy.damage": {
+            "template": "<arg1> damaged <arg2> using <arg3> instrument in <arg4> place",
+            "roles": ["damager", "artifact", "instrument", "place"]
+        },
+        "artifactexistence.damagedestroy.destroy": {
+            "template": "<arg1> destroyed <arg2> using <arg3> instrument in <arg4> place",
+            "roles": ["destroyer", "artifact", "instrument", "place"]
+        },
+        "artifactexistence.damagedestroy.n/a": {
+            "template": "<arg1> damaged or destroyed <arg2> using <arg3> instrument in <arg4> place",
+            "roles": ["damagerdestroyer", "artifact", "instrument", "place"]
+        },
+        "conflict.attack.airstrikemissilestrike": {
+            "template": "<arg1> attacked <arg2> using <arg3> at <arg4> place",
+            "roles": ["attacker", "target", "instrument", "place"]
+        },
+        "conflict.attack.biologicalchemicalpoisonattack": {
+            "template": "<arg1> attacked <arg2> using <arg3> at <arg4> place",
+            "roles": ["attacker", "target", "instrument", "place"]
+        },
+        "conflict.attack.bombing": {
+            "template": "<arg1> attacked <arg2> using <arg3> at <arg4> place",
+            "roles": ["attacker", "target", "instrument", "place"]
+        },
+        "conflict.attack.firearmattack": {
+            "template": "<arg1> attacked <arg2> using <arg3> at <arg4> place",
+            "roles": ["attacker", "target", "instrument", "place"]
+        },
+        "conflict.attack.hanging": {
+            "template": "<arg1> attacked <arg2> using <arg3> at <arg4> place",
+            "roles": ["attacker", "target", "instrument", "place"]
+        },
+        "conflict.attack.invade": {
+            "template": "<arg1> attacked <arg2> using <arg3> at <arg4> place",
+            "roles": ["attacker", "target", "instrument", "place"]
+        },
+        "conflict.attack.n/a": {
+            "template": "<arg1> attacked <arg2> using <arg3> at <arg4> place",
+            "roles": ["attacker", "target", "instrument", "place"]
+        },
+        "conflict.attack.selfdirectedbattle": {
+            "template": "<arg1> attacked <arg2> using <arg3> at <arg4> place",
+            "roles": ["attacker", "target", "instrument", "place"]
+        },
+        "conflict.attack.setfire": {
+            "template": "<arg1> attacked <arg2> using <arg3> at <arg4> place",
+            "roles": ["attacker", "target", "instrument", "place"]
+        },
+        "conflict.attack.stabbing": {
+            "template": "<arg1> attacked <arg2> using <arg3> at <arg4> place",
+            "roles": ["attacker", "target", "instrument", "place"]
+        },
+        "conflict.attack.stealrobhijack": {
+            "template": "<arg1> attacked <arg2> using <arg3> at <arg4> place, in order to take <arg5>",
+            "roles": ["attacker", "target", "instrument", "place", "artifact"]
+        },
+        "conflict.attack.strangling": {
+            "template": "<arg1> attacked <arg2> using <arg3> at <arg4> place",
+            "roles": ["attacker", "target", "instrument", "place"]
+        },
+        "conflict.demonstrate.marchprotestpoliticalgathering": {
+            "template": "<arg1> was in a demonstration or protest at <arg2> place",
+            "roles": ["demonstrator", "place"]
+        },
+        "conflict.demonstrate.n/a": {
+            "template": "<arg1> was in a demonstration at <arg2> place",
+            "roles": ["demonstrator", "place"]
+        },
+        "conflict.yield.n/a": {
+            "template": "<arg1> yielded to <arg2> at <arg3> place",
+            "roles": ["yielder", "recipient", "place"]
+        },
+        "conflict.yield.retreat": {
+            "template": "<arg1> retreated from <arg2> place to <arg3> place",
+            "roles": ["retreater", "origin", "destination"]
+        },
+        "conflict.yield.surrender": {
+            "template": "<arg1> surrendered to <arg2> at <arg3> place",
+            "roles": ["surrenderer", "recipient", "place"]
+        },
+        "contact.collaborate.correspondence": {
+            "template": "<arg1> communicated remotely with <arg2> at <arg3> place",
+            "roles": ["participant", "participant", "place"]
+        },
+        "contact.collaborate.meet": {
+            "template": "<arg1> met face-to-face with <arg2> at <arg3> place",
+            "roles": ["participant", "participant", "place"]
+        },
+        "contact.collaborate.n/a": {
+            "template": "<arg1> communicated with <arg2> at <arg3> place",
+            "roles": ["participant", "participant", "place"]
+        },
+        "contact.commandorder.broadcast": {
+            "template": "<arg1> communicated to <arg2> about <arg4> topic at <arg3> place (one-way communication)",
+            "roles": ["communicator", "recipient", "place", "topic"]
+        },
+        "contact.commandorder.correspondence": {
+            "template": "<arg1> communicated remotely with <arg2> about <arg4> topic at <arg3> place",
+            "roles": ["communicator", "recipient", "place", "topic"]
+        },
+        "contact.commandorder.meet": {
+            "template": "<arg1> met face-to-face with <arg2> about <arg4> topic at <arg3> place",
+            "roles": ["communicator", "recipient", "place", "topic"]
+        },
+        "contact.commandorder.n/a": {
+            "template": "<arg1> communicated with <arg2> about <arg4> topic at <arg3> place",
+            "roles": ["communicator", "recipient", "place", "topic"]
+        },
+        "contact.commitmentpromiseexpressintent.broadcast": {
+            "template": "<arg1> communicated to <arg2> about <arg4> topic at <arg3> place (one-way communication)",
+            "roles": ["communicator", "recipient", "place", "topic"]
+        },
+        "contact.commitmentpromiseexpressintent.correspondence": {
+            "template": "<arg1> communicated remotely with <arg2> about <arg4> topic at <arg3> place",
+            "roles": ["communicator", "recipient", "place", "topic"]
+        },
+        "contact.commitmentpromiseexpressintent.meet": {
+            "template": "<arg1> met face-to-face with <arg2> about <arg4> topic at <arg3> place",
+            "roles": ["communicator", "recipient", "place", "topic"]
+        },
+        "contact.commitmentpromiseexpressintent.n/a": {
+            "template": "<arg1> communicated with <arg2> about <arg4> topic at <arg3> place",
+            "roles": ["communicator", "recipient", "place", "topic"]
+        },
+        "contact.discussion.correspondence": {
+            "template": "<arg1> communicated remotely with <arg2> at <arg3> place",
+            "roles": ["participant", "participant", "place"]
+        },
+        "contact.discussion.meet": {
+            "template": "<arg1> met face-to-face with <arg2> at <arg3> place",
+            "roles": ["participant", "participant", "place"]
+        },
+        "contact.discussion.n/a": {
+            "template": "<arg1> communicated with <arg2> at <arg3> place",
+            "roles": ["participant", "participant", "place"]
+        },
+        "contact.funeralvigil.meet": {
+            "template": "<arg1> met face-to-face with <arg2> during a funeral or vigil for <arg3> at <arg4> place",
+            "roles": ["participant", "participant", "deceased", "place"]
+        },
+        "contact.funeralvigil.n/a": {
+            "template": "<arg1> communicated with <arg2> during a funeral or vigil for <arg3> at <arg4> place",
+            "roles": ["participant", "participant", "deceased", "place"]
+        },
+        "contact.mediastatement.broadcast": {
+            "template": "<arg1> communicated to <arg2> at <arg3> place (one-way communication)",
+            "roles": ["communicator", "recipient", "place"]
+        },
+        "contact.mediastatement.n/a": {
+            "template": "<arg1> communicated with <arg2> at <arg3> place",
+            "roles": ["communicator", "recipient", "place"]
+        },
+        "contact.negotiate.correspondence": {
+            "template": "<arg1> communicated remotely with <arg2> about <arg4> topic at <arg3> place",
+            "roles": ["participant", "participant", "place", "topic"]
+        },
+        "contact.negotiate.meet": {
+            "template": "<arg1> met face-to-face with <arg2> about <arg4> topic at <arg3> place",
+            "roles": ["participant", "participant", "place", "topic"]
+        },
+        "contact.negotiate.n/a": {
+            "template": "<arg1> communicated with <arg2> about <arg4> topic at <arg3> place",
+            "roles": ["participant", "participant", "place", "topic"]
+        },
+        "contact.prevarication.broadcast": {
+            "template": "<arg1> communicated to <arg2> about <arg4> topic at <arg3> place (one-way communication)",
+            "roles": ["communicator", "recipient", "place", "topic"]
+        },
+        "contact.prevarication.correspondence": {
+            "template": "<arg1> communicated remotely with <arg2> about <arg4> topic at <arg3> place",
+            "roles": ["communicator", "recipient", "place", "topic"]
+        },
+        "contact.prevarication.meet": {
+            "template": "<arg1> met face-to-face with <arg2> about <arg4> topic at <arg3> place",
+            "roles": ["communicator", "recipient", "place", "topic"]
+        },
+        "contact.prevarication.n/a": {
+            "template": "<arg1> communicated with <arg2> about <arg4> topic at <arg3> place",
+            "roles": ["communicator", "recipient", "place", "topic"]
+        },
+        "contact.publicstatementinperson.broadcast": {
+            "template": "<arg1> communicated to <arg2> at <arg3> place (one-way communication)",
+            "roles": ["communicator", "recipient", "place"]
+        },
+        "contact.publicstatementinperson.n/a": {
+            "template": "<arg1> communicated with <arg2> at <arg3> place",
+            "roles": ["communicator", "recipient", "place"]
+        },
+        "contact.requestadvise.broadcast": {
+            "template": "<arg1> communicated to <arg2> about <arg4> topic at <arg3> place (one-way communication)",
+            "roles": ["communicator", "recipient", "place", "topic"]
+        },
+        "contact.requestadvise.correspondence": {
+            "template": "<arg1> communicated remotely with <arg2> about <arg4> topic at <arg3> place",
+            "roles": ["communicator", "recipient", "place", "topic"]
+        },
+        "contact.requestadvise.meet": {
+            "template": "<arg1> met face-to-face with <arg2> about <arg4> topic at <arg3> place",
+            "roles": ["communicator", "recipient", "place", "topic"]
+        },
+        "contact.requestadvise.n/a": {
+            "template": "<arg1> communicated with <arg2> about <arg4> topic at <arg3> place",
+            "roles": ["communicator", "recipient", "place", "topic"]
+        },
+        "contact.threatencoerce.broadcast": {
+            "template": "<arg1> communicated to <arg2> about <arg4> topic at <arg3> place (one-way communication)",
+            "roles": ["communicator", "recipient", "place", "topic"]
+        },
+        "contact.threatencoerce.correspondence": {
+            "template": "<arg1> communicated remotely with <arg2> about <arg4> topic at <arg3> place",
+            "roles": ["communicator", "recipient", "place", "topic"]
+        },
+        "contact.threatencoerce.meet": {
+            "template": "<arg1> met face-to-face with <arg2> about <arg4> topic at <arg3> place",
+            "roles": ["communicator", "recipient", "place", "topic"]
+        },
+        "contact.threatencoerce.n/a": {
+            "template": "<arg1> communicated with <arg2> about <arg4> topic at <arg3> place",
+            "roles": ["communicator", "recipient", "place", "topic"]
+        },
+        "disaster.accidentcrash.accidentcrash": {
+            "template": "<arg1> person in <arg2> vehicle crashed into <arg3> at <arg4> place",
+            "roles": ["driverpassenger", "vehicle", "crashobject", "place"]
+        },
+        "disaster.fireexplosion.fireexplosion": {
+            "template": "<arg1> caught fire or exploded from <arg2> instrument at <arg3> place",
+            "roles": ["fireexplosionobject", "instrument", "place"]
+        },
+        "government.agreements.acceptagreementcontractceasefire": {
+            "template": "<arg1> and <arg2> signed an agreement in <arg3> place",
+            "roles": ["participant", "participant", "place"]
+        },
+        "government.agreements.n/a": {
+            "template": "<arg1> and <arg2> signed an agreement in <arg3> place",
+            "roles": ["participant", "participant", "place"]
+        },
+        "government.agreements.rejectnullifyagreementcontractceasefire": {
+            "template": "<arg1> rejected or nullified an agreement with <arg2> in <arg3> place",
+            "roles": ["rejecternullifier", "otherparticipant", "place"]
+        },
+        "government.agreements.violateagreement": {
+            "template": "<arg1> violated an agreement with <arg2> in <arg3> place",
+            "roles": ["violator", "otherparticipant", "place"]
+        },
+        "government.formation.mergegpe": {
+            "template": "<arg1> merged with <arg2> at <arg3> place",
+            "roles": ["participant", "participant", "place"]
+        },
+        "government.formation.n/a": {
+            "template": "<arg1> was formed by <arg2> in <arg3> place",
+            "roles": ["gpe", "founder", "place"]
+        },
+        "government.formation.startgpe": {
+            "template": "<arg1> was started by <arg2> in <arg3> place",
+            "roles": ["gpe", "founder", "place"]
+        },
+        "government.legislate.legislate": {
+            "template": "<arg1> legislature enacted <arg2> law in <arg3> place",
+            "roles": ["governmentbody", "law", "place"]
+        },
+        "government.spy.spy": {
+            "template": "<arg1> spied on <arg2> to the benefit of <arg3> in <arg4> place",
+            "roles": ["spy", "observedentity", "beneficiary", "place"]
+        },
+        "government.vote.castvote": {
+            "template": "<arg1> voted for <arg2> on <arg3> ballot with <arg4> results in <arg5> place",
+            "roles": ["voter", "candidate", "ballot", "result", "place"]
+        },
+        "government.vote.n/a": {
+            "template": "<arg1> voted for <arg2> on <arg3> ballot with <arg4> results in <arg5> place",
+            "roles": ["voter", "candidate", "ballot", "result", "place"]
+        },
+        "government.vote.violationspreventvote": {
+            "template": "<arg1> prevented <arg2> from voting for <arg3> on <arg4> ballot in <arg5> place",
+            "roles": ["preventer", "voter", "candidate", "ballot", "place"]
+        },
+        "inspection.sensoryobserve.inspectpeopleorganization": {
+            "template": "<arg1> inspected <arg2> in <arg3> place",
+            "roles": ["inspector", "inspectedentity", "place"]
+        },
+        "inspection.sensoryobserve.monitorelection": {
+            "template": "<arg1> monitored <arg2> taking part in an election in <arg3> place",
+            "roles": ["monitor", "monitoredentity", "place"]
+        },
+        "inspection.sensoryobserve.n/a": {
+            "template": "<arg1> observed <arg2> in <arg3> place",
+            "roles": ["observer", "observedentity", "place"]
+        },
+        "inspection.sensoryobserve.physicalinvestigateinspect": {
+            "template": "<arg1> inspected <arg2> in <arg3> place",
+            "roles": ["inspector", "inspectedentity", "place"]
+        },
+        "justice.arrestjaildetain.arrestjaildetain": {
+            "template": "<arg1> arrested or jailed <arg2> for <arg3> crime at <arg4> place",
+            "roles": ["jailer", "detainee", "crime", "place"]
+        },
+        "justice.initiatejudicialprocess.chargeindict": {
+            "template": "<arg1> charged or indicted <arg2> before <arg3> court or judge for <arg4> crime in <arg5> place",
+            "roles": ["prosecutor", "defendant", "judgecourt", "crime", "place"]
+        },
+        "justice.initiatejudicialprocess.n/a": {
+            "template": "<arg1> initiated judicial process pertaining to <arg2> before <arg3> court or judge for <arg4> crime in <arg5> place",
+            "roles": ["prosecutor", "defendant", "judgecourt", "crime", "place"]
+        },
+        "justice.initiatejudicialprocess.trialhearing": {
+            "template": "<arg1> tried <arg2> before <arg3> court or judge for <arg4> crime in <arg5> place",
+            "roles": ["prosecutor", "defendant", "judgecourt", "crime", "place"]
+        },
+        "justice.investigate.investigatecrime": {
+            "template": "<arg1> investigated <arg2> for <arg3> crime in <arg4> place",
+            "roles": ["investigator", "defendant", "crime", "place"]
+        },
+        "justice.investigate.n/a": {
+            "template": "<arg1> investigated <arg2> in <arg3> place",
+            "roles": ["investigator", "defendant", "place"]
+        },
+        "justice.judicialconsequences.convict": {
+            "template": "<arg1> court or judge convicted <arg2> of <arg3> crime in <arg4> place",
+            "roles": ["judgecourt", "defendant", "crime", "place"]
+        },
+        "justice.judicialconsequences.execute": {
+            "template": "<arg1> executed <arg2> for <arg3> crime in <arg4> place",
+            "roles": ["executioner", "defendant", "crime", "place"]
+        },
+        "justice.judicialconsequences.extradite": {
+            "template": "<arg1> extradited <arg2> for <arg3> crime from <arg4> place to <arg5> place",
+            "roles": ["extraditer", "defendant", "crime", "origin", "destination"]
+        },
+        "justice.judicialconsequences.n/a": {
+            "template": "<arg1> court or judge decided consequences of <arg3> crime, committed by <arg2>, in <arg4> place",
+            "roles": ["judgecourt", "defendant", "crime", "place"]
+        },
+        "life.die.deathcausedbyviolentevents": {
+            "template": "<arg1> killed <arg2> using <arg3> instrument or <arg5> medical issue at <arg4> place",
+            "roles": ["killer", "victim", "instrument", "place", "medicalissue"]
+        },
+        "life.die.n/a": {
+            "template": "<arg1> died at <arg2> place from <arg4> medical issue, killed by <arg3> killer",
+            "roles": ["victim", "place", "killer", "medicalissue"]
+        },
+        "life.die.nonviolentdeath": {
+            "template": "<arg1> died at <arg2> place from <arg4> medical issue, killed by <arg3> killer",
+            "roles": ["victim", "place", "killer", "medicalissue"]
+        },
+        "life.injure.illnessdegradationhungerthirst": {
+            "template": "<arg1> has extreme hunger or thirst from <arg4> medical issue imposed by <arg3> injurer at <arg2> place",
+            "roles": ["victim", "place", "injurer", "medicalissue"]
+        },
+        "life.injure.illnessdegradationphysical": {
+            "template": "<arg1> person has some physical degradation from <arg4> medical issue imposed by <arg3> injurer at <arg2> place",
+            "roles": ["victim", "place", "injurer", "medicalissue"]
+        },
+        "life.injure.injurycausedbyviolentevents": {
+            "template": "<arg1> injured <arg2> using <arg3> instrument or <arg5> medical issue at <arg4> place",
+            "roles": ["injurer", "victim", "instrument", "place", "medicalissue"]
+        },
+        "life.injure.n/a": {
+            "template": "<arg1> was injured by <arg2> with <arg4> medical issue at <arg3> place",
+            "roles": ["victim", "injurer", "place", "medicalissue"]
+        },
+        "manufacture.artifact.build": {
+            "template": "<arg1> manufactured or created or produced <arg2> using <arg3> at <arg4> place",
+            "roles": ["manufacturer", "artifact", "instrument", "place"]
+        },
+        "manufacture.artifact.createintellectualproperty": {
+            "template": "<arg1> manufactured or created or produced <arg2> using <arg3> at <arg4> place",
+            "roles": ["manufacturer", "artifact", "instrument", "place"]
+        },
+        "manufacture.artifact.createmanufacture": {
+            "template": "<arg1> manufactured or created or produced <arg2> using <arg3> at <arg4> place",
+            "roles": ["manufacturer", "artifact", "instrument", "place"]
+        },
+        "manufacture.artifact.n/a": {
+            "template": "<arg1> manufactured or created or produced <arg2> using <arg3> at <arg4> place",
+            "roles": ["manufacturer", "artifact", "instrument", "place"]
+        },
+        "movement.transportartifact.bringcarryunload": {
+            "template": "<arg1> transported <arg2> in <arg3> from <arg4> place to <arg5> place",
+            "roles": ["transporter", "artifact", "vehicle", "origin", "destination"]
+        },
+        "movement.transportartifact.disperseseparate": {
+            "template": "<arg1> transported <arg2> in <arg3> from <arg4> place to <arg5> place",
+            "roles": ["transporter", "artifact", "vehicle", "origin", "destination"]
+        },
+        "movement.transportartifact.fall": {
+            "template": "<arg1> fell from <arg2> place to <arg3> place",
+            "roles": ["artifact", "origin", "destination"]
+        },
+        "movement.transportartifact.grantentry": {
+            "template": "<arg1> grants <arg2> entry to <arg3> place from <arg4> place",
+            "roles": ["transporter", "artifact", "origin", "destination"]
+        },
+        "movement.transportartifact.hide": {
+            "template": "<arg1> concealed <arg2> in <arg3> place, transported in <arg4> vehicle from <arg5> place",
+            "roles": ["transporter", "artifact", "hidingplace", "vehicle", "origin"]
+        },
+        "movement.transportartifact.n/a": {
+            "template": "<arg1> transported <arg2> in <arg3> from <arg4> place to <arg5> place",
+            "roles": ["transporter", "artifact", "vehicle", "origin", "destination"]
+        },
+        "movement.transportartifact.nonviolentthrowlaunch": {
+            "template": "<arg1> transported <arg2> in <arg3> from <arg4> place to <arg5> place",
+            "roles": ["transporter", "artifact", "vehicle", "origin", "destination"]
+        },
+        "movement.transportartifact.prevententry": {
+            "template": "<arg1> prevents <arg2> from transporting <arg3> from <arg4> place to <arg5> place",
+            "roles": ["preventer", "transporter", "artifact", "origin", "destination"]
+        },
+        "movement.transportartifact.preventexit": {
+            "template": "<arg1> prevents <arg2> from transporting <arg3> from <arg4> place to <arg5> place",
+            "roles": ["preventer", "transporter", "artifact", "origin", "destination"]
+        },
+        "movement.transportartifact.receiveimport": {
+            "template": "<arg1> transported <arg2> in <arg3> from <arg4> place to <arg5> place",
+            "roles": ["transporter", "artifact", "vehicle", "origin", "destination"]
+        },
+        "movement.transportartifact.sendsupplyexport": {
+            "template": "<arg1> transported <arg2> in <arg3> from <arg4> place to <arg5> place",
+            "roles": ["transporter", "artifact", "vehicle", "origin", "destination"]
+        },
+        "movement.transportartifact.smuggleextract": {
+            "template": "<arg1> transported <arg2> in <arg3> from <arg4> place to <arg5> place",
+            "roles": ["transporter", "artifact", "vehicle", "origin", "destination"]
+        },
+        "movement.transportperson.bringcarryunload": {
+            "template": "<arg1> transported <arg2> in <arg3> from <arg4> place to <arg5> place",
+            "roles": ["transporter", "passenger", "vehicle", "origin", "destination"]
+        },
+        "movement.transportperson.disperseseparate": {
+            "template": "<arg1> transported <arg2> in <arg3> from <arg4> place to <arg5> place",
+            "roles": ["transporter", "passenger", "vehicle", "origin", "destination"]
+        },
+        "movement.transportperson.evacuationrescue": {
+            "template": "<arg1> transported <arg2> in <arg3> from <arg4> place to <arg5> place",
+            "roles": ["transporter", "passenger", "vehicle", "origin", "destination"]
+        },
+        "movement.transportperson.fall": {
+            "template": "<arg1> fell from <arg2> place to <arg3> place",
+            "roles": ["passenger", "origin", "destination"]
+        },
+        "movement.transportperson.grantentryasylum": {
+            "template": "<arg1> grants entry to <arg2> transporting <arg3> from <arg4> place to <arg5> place",
+            "roles": ["granter", "transporter", "passenger", "origin", "destination"]
+        },
+        "movement.transportperson.hide": {
+            "template": "<arg1> concealed <arg2> in <arg3> place, transported in <arg4> vehicle from <arg5> place",
+            "roles": ["transporter", "passenger", "hidingplace", "vehicle", "origin"]
+        },
+        "movement.transportperson.n/a": {
+            "template": "<arg1> transported <arg2> in <arg3> from <arg4> place to <arg5> place",
+            "roles": ["transporter", "passenger", "vehicle", "origin", "destination"]
+        },
+        "movement.transportperson.prevententry": {
+            "template": "<arg1> prevents <arg2> from transporting <arg3> from <arg4> place to <arg5> place",
+            "roles": ["preventer", "transporter", "passenger", "origin", "destination"]
+        },
+        "movement.transportperson.preventexit": {
+            "template": "<arg1> prevents <arg2> from transporting <arg3> from <arg4> place to <arg5> place",
+            "roles": ["preventer", "transporter", "passenger", "origin", "destination"]
+        },
+        "movement.transportperson.selfmotion": {
+            "template": "<arg1> moved in <arg2> from <arg3> place to <arg4> place",
+            "roles": ["transporter", "vehicle", "origin", "destination"]
+        },
+        "movement.transportperson.smuggleextract": {
+            "template": "<arg1> transported <arg2> in <arg3> from <arg4> place to <arg5> place",
+            "roles": ["transporter", "passenger", "vehicle", "origin", "destination"]
+        },
+        "personnel.elect.n/a": {
+            "template": "<arg1> elected <arg2> in <arg3> place",
+            "roles": ["voter", "candidate", "place"]
+        },
+        "personnel.elect.winelection": {
+            "template": "<arg1> elected <arg2> in <arg3> place",
+            "roles": ["voter", "candidate", "place"]
+        },
+        "personnel.endposition.firinglayoff": {
+            "template": "<arg1> stopped working at <arg2> in <arg3> place",
+            "roles": ["employee", "placeofemployment", "place"]
+        },
+        "personnel.endposition.n/a": {
+            "template": "<arg1> stopped working at <arg2> in <arg3> place",
+            "roles": ["employee", "placeofemployment", "place"]
+        },
+        "personnel.endposition.quitretire": {
+            "template": "<arg1> stopped working at <arg2> in <arg3> place",
+            "roles": ["employee", "placeofemployment", "place"]
+        },
+        "personnel.startposition.hiring": {
+            "template": "<arg1> started working at <arg2> in <arg3> place",
+            "roles": ["employee", "placeofemployment", "place"]
+        },
+        "personnel.startposition.n/a": {
+            "template": "<arg1> started working at <arg2> in <arg3> place",
+            "roles": ["employee", "placeofemployment", "place"]
+        },
+        "transaction.transaction.embargosanction": {
+            "template": "<arg1> prevented <arg2> from giving <arg4> to <arg3> at <arg5> place",
+            "roles": ["preventer", "giver", "recipient", "artifactmoney", "place"]
+        },
+        "transaction.transaction.giftgrantprovideaid": {
+            "template": "<arg1> gave something to <arg2> for the benefit of <arg3> at <arg4> place",
+            "roles": ["giver", "recipient", "beneficiary", "place"]
+        },
+        "transaction.transaction.n/a": {
+            "template": "A transaction occurred between <arg1> and <arg2> for the benefit of <arg3> at <arg4> place",
+            "roles": ["participant", "participant", "beneficiary", "place"]
+        },
+        "transaction.transaction.transfercontrol": {
+            "template": "<arg1> transferred control of <arg4> to <arg2> for the benefit of <arg3> in <arg5> place",
+            "roles": ["giver", "recipient", "beneficiary", "territoryorfacility", "place"]
+        },
+        "transaction.transfermoney.borrowlend": {
+            "template": "<arg1> gave <arg4> money to <arg2> for the benefit of <arg3> at <arg5> place",
+            "roles": ["giver", "recipient", "beneficiary", "money", "place"]
+        },
+        "transaction.transfermoney.embargosanction": {
+            "template": "<arg1> prevented <arg2> from giving <arg4> to <arg3> at <arg5> place",
+            "roles": ["preventer", "giver", "recipient", "money", "place"]
+        },
+        "transaction.transfermoney.giftgrantprovideaid": {
+            "template": "<arg1> gave <arg4> money to <arg2> for the benefit of <arg3> at <arg5> place",
+            "roles": ["giver", "recipient", "beneficiary", "money", "place"]
+        },
+        "transaction.transfermoney.n/a": {
+            "template": "<arg1> gave <arg4> money to <arg2> for the benefit of <arg3> at <arg5> place",
+            "roles": ["giver", "recipient", "beneficiary", "money", "place"]
+        },
+        "transaction.transfermoney.payforservice": {
+            "template": "<arg1> gave <arg4> money to <arg2> for the benefit of <arg3> at <arg5> place",
+            "roles": ["giver", "recipient", "beneficiary", "money", "place"]
+        },
+        "transaction.transfermoney.purchase": {
+            "template": "<arg1> gave <arg4> money to <arg2> for the benefit of <arg3> at <arg5> place",
+            "roles": ["giver", "recipient", "beneficiary", "money", "place"]
+        },
+        "transaction.transferownership.borrowlend": {
+            "template": "<arg1> gave <arg4> to <arg2> for the benefit of <arg3> at <arg5> place",
+            "roles": ["giver", "recipient", "beneficiary", "artifact", "place"]
+        },
+        "transaction.transferownership.embargosanction": {
+            "template": "<arg1> prevented <arg2> from giving <arg4> to <arg3> at <arg5> place",
+            "roles": ["preventer", "giver", "recipient", "artifact", "place"]
+        },
+        "transaction.transferownership.giftgrantprovideaid": {
+            "template": "<arg1> gave <arg4> to <arg2> for the benefit of <arg3> at <arg5> place",
+            "roles": ["giver", "recipient", "beneficiary", "artifact", "place"]
+        },
+        "transaction.transferownership.n/a": {
+            "template": "<arg1> gave <arg4> to <arg2> for the benefit of <arg3> at <arg5> place",
+            "roles": ["giver", "recipient", "beneficiary", "artifact", "place"]
+        },
+        "transaction.transferownership.purchase": {
+            "template": "<arg1> gave <arg4> to <arg2> for the benefit of <arg3> at <arg5> place",
+            "roles": ["giver", "recipient", "beneficiary", "artifact", "place"]
+        }
+}

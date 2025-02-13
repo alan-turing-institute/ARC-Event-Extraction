@@ -34,17 +34,15 @@ The folder should be set up as follows:
 
 The data downloaded from RAMS should be saved into the `data/RAMS/data` folder.
 
-The data in the `patters` folder, is currently saved manually from [this file](https://github.com/ej0cl6/TextEE/blob/main/TextEE/models/BartGen/pattern.py) and is in the form:
+The data in the `patterns` folder, have been saved manually from [this file](https://github.com/ej0cl6/TextEE/blob/main/TextEE/models/BartGen/pattern.py) and is in the form:
 
 ```
 {
-    "rams": {
-        "artifactexistence.damagedestroy.damage": {
-            "template": "<arg1> damaged <arg2> using <arg3> instrument in <arg4> place",
-            "roles": ['damager', 'artifact', 'instrument', 'place']
-        },
-        ...
-    }
+    "artifactexistence.damagedestroy.damage": {
+        "template": "<arg1> damaged <arg2> using <arg3> instrument in <arg4> place",
+        "roles": ['damager', 'artifact', 'instrument', 'place']
+    },
+    ...
 }
 ```
 

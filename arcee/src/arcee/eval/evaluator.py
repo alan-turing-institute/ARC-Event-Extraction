@@ -16,14 +16,13 @@ MODEL_CLS_MAP = {
 class Evaluator:
     def __init__(
         self,
-        model_id: str,  # model
-        model_type: str,  # model
-        data_path: str,  # dataset
-        prompt_constructor_cls: str,  # dataset/prompt constructor
-        pattern_file_path: str,  # dataset/prompt constructor
-        batch_size: int,  # loader
-        shuffle: bool = False,  # loader
-        # extractor: BaseExtractor,
+        model_id: str,
+        model_type: str,
+        data_path: str,
+        prompt_cls: str,
+        schema_path: str,
+        batch_size: int,
+        shuffle: bool | None,
     ):
         # Store model ID
         # TODO: handle trained models stored locally differently? stored on wandb?
@@ -43,8 +42,12 @@ class Evaluator:
         )
 
         # Get prompter and data schema
-        prompt_constructor = getattr(prompts, prompt_constructor_cls)()
-        schema = load_pattern(pattern_file_path)
+        prompt_constructor = getattr(prompts, prompt_cls)()
+        schema = load_pattern(schema_path)
+
+        # Shuffle defaults to False
+        if shuffle is None:
+            shuffle = False
 
         # Instantiate data and dataloader
         self.data = EEDataset.from_file(

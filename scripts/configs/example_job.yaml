@@ -3,7 +3,6 @@ model_kwargs:
   model_type: hf
   batch_size: 8
 data_kwargs:
-  dataset_name: rams
   data_path: data/RAMS/output/splits/split1/test.jsonlines
   schema_path: data/RAMS/patterns/pattern.json
 prompt_kwargs:

@@ -23,7 +23,7 @@ class Evaluator:
         pattern_file_path: str,  # dataset/prompt constructor
         batch_size: int,  # loader
         shuffle: bool = False,  # loader
-        model_options: dict | None = None, # model
+        model_options: dict | None = None,  # model
         **kwargs: str | int,  # prompt constructor
         # extractor: BaseExtractor,
     ):
@@ -41,7 +41,7 @@ class Evaluator:
         model_cls = MODEL_CLS_MAP[model_type]
         self.model = model_cls(
             model_id=self.model_id,
-            options = model_options,
+            options=model_options,
             # TODO: other kwargs probably needed
         )
 

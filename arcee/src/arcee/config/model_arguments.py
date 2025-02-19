@@ -9,11 +9,15 @@ class ModelArguments(BaseConfig):
         model_id: str,
         model_type: str,
         batch_size: int,
+        model_init_kwargs: dict | None = None,
     ) -> None:
         super().__init__()
         self.model_id = model_id
         self.model_type = model_type
         self.batch_size = batch_size
+        if model_init_kwargs is None:
+            model_init_kwargs = {}
+        self.model_init_kwargs = model_init_kwargs
 
     def to_dict(self) -> dict:
         """Convert the config to a dict.
@@ -25,4 +29,5 @@ class ModelArguments(BaseConfig):
             "model_id": self.model_id,
             "model_type": self.model_type,
             "batch_size": self.batch_size,
+            "model_init_kwargs": self.model_init_kwargs,
         }

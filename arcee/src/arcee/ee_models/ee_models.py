@@ -166,6 +166,7 @@ class EEHFModel(EEBaseModel):
         self,
         model_id: str,
         options: dict | None = None,
+        device_map: str = "cpu",
     ) -> None:
         super().__init__()
         # Load tokenizer
@@ -179,8 +180,11 @@ class EEHFModel(EEBaseModel):
         ]
 
         # Load model
-        # TODO additional kwargs
-        self.model = AutoModelForCausalLM.from_pretrained(model_id)
+        self.device = device_map
+        self.model = AutoModelForCausalLM.from_pretrained(
+            model_id,
+            device_map=self.device,
+        )
 
         # Options (TODO: needed?)
         if options is None:

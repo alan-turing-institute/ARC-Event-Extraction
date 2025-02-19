@@ -23,6 +23,7 @@ class Evaluator:
         schema_path: str,
         batch_size: int,
         shuffle: bool | None,
+        model_init_kwargs: dict,
     ):
         # Store model ID
         # TODO: handle trained models stored locally differently? stored on wandb?
@@ -38,6 +39,7 @@ class Evaluator:
         model_cls = MODEL_CLS_MAP[model_type]
         self.model = model_cls(
             model_id=self.model_id,
+            **model_init_kwargs,
             # TODO: other kwargs probably needed
         )
 

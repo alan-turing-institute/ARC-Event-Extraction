@@ -43,8 +43,6 @@ class EEDataset(Dataset):
         event_schema: dict,
     ) -> EEDataset:
         data = load_data(data_path)
-        # TODO: remove temporary shorterning of dataset
-        data = data[0:16]
         return cls(data, prompt_constuctor, event_schema)
 
     def __len__(self) -> int:

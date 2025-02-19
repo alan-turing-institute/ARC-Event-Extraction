@@ -18,4 +18,4 @@ module load Python/3.10.8-GCCcore-12.2.0
 source /bask/projects/v/vjgo8416-arc-extract/ARC-Event-Extraction/.venv/bin/activate
 
 # Run
-python scripts/inference.py --config_path scripts/configs/example_job.yaml
+python scripts/eval/inference.py --config_path scripts/configs/example_job.yaml

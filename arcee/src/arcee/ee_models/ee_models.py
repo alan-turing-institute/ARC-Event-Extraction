@@ -62,11 +62,10 @@ class EEOllamaModel(EEBaseModel):
         """
         super().__init__()
         if options is None:
-            # TODO: Copied this functionality over from WikiGame, do we want it here?
-            # Might want to see the difference in performance when changing the
-            # temperature, I have a feeling a lower value might be better to stop it
-            # being too creative when doing event extraction, but not 100% sure
-            options = {"temperature": 0.0}
+            # Set temperature to zero (less creative)
+            # Ollama's context window length (option `num_ctx`) defaults to 2048, which
+            # is likely to be too short for many prompts, so setting this to 8192.
+            options = {"temperature": 0.0, "num_ctx": 8192}
         self.options = options
 
         self.keep_alive = keep_alive

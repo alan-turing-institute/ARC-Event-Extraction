@@ -19,6 +19,7 @@ class EEDataset(Dataset):
         data: list[dict],
         prompt_constuctor: EEPrompt,
         event_schema: dict,
+        **kwargs: str | int,
     ):
         """
         Dataset which returns a tokenized version of the input given a tokenizer and
@@ -34,6 +35,7 @@ class EEDataset(Dataset):
         self.data = data
         self.prompt_constuctor = prompt_constuctor
         self.event_schema = event_schema
+        self.kwargs = kwargs
 
     @classmethod
     def from_file(
@@ -41,11 +43,12 @@ class EEDataset(Dataset):
         data_path: str,
         prompt_constuctor: EEPrompt,
         event_schema: dict,
+        **kwargs: str | int,
     ) -> EEDataset:
         data = load_data(data_path)
         # TODO: remove temporary shorterning of dataset
         data = data[0:16]
-        return cls(data, prompt_constuctor, event_schema)
+        return cls(data, prompt_constuctor, event_schema, **kwargs)
 
     def __len__(self) -> int:
         return len(self.data)
@@ -55,6 +58,7 @@ class EEDataset(Dataset):
             tokens=self.data[idx]["tokens"],
             event_mentions=self.data[idx]["event_mentions"],
             schema=self.event_schema,
+            **self.kwargs,
         )
         return {
             "role": "user",

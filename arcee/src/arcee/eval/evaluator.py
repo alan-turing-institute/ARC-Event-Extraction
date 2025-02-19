@@ -23,6 +23,7 @@ class Evaluator:
         pattern_file_path: str,  # dataset/prompt constructor
         batch_size: int,  # loader
         shuffle: bool = False,  # loader
+        **kwargs: str | int,  # prompt constructor
         # extractor: BaseExtractor,
     ):
         # Store model ID
@@ -51,6 +52,7 @@ class Evaluator:
             data_path=data_path,
             prompt_constuctor=prompt_constructor,
             event_schema=schema,
+            **kwargs,
         )
         self.dataloader = DataLoader(
             self.data,
@@ -66,6 +68,7 @@ class Evaluator:
         # Get model ouputs and decode using tokenzier
         # TODO: use dataloader, loop over batches to produce outputs
         outputs = []
+
         for batch in iter(self.dataloader):
             outputs.extend(self.model.predict(batch))
 

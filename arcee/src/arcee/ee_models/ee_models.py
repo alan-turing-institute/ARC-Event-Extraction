@@ -196,15 +196,15 @@ class EEHFModel(EEBaseModel):
         input: list[dict[str, str]],
     ) -> list[str]:
         # Process input into chat template
-        # TODO reconcile w/ prompt classes, data format (lost[dict[str]]) above
         text = self.tokenizer.apply_chat_template(
             input, add_generation_prompt=True, tokenize=False
         )
         tokenized_text = self.tokenizer(text, padding="longest", return_tensors="pt")
+        inputs = {key: val.to(self.model.device) for key, val in tokenized_text.items()}
 
         # Generate outputs
         gen_tokens = self.model.generate(
-            **tokenized_text,
+            **inputs,
             max_new_tokens=512,
             pad_token_id=self.tokenizer.eos_token_id,
             eos_token_id=self.terminators,

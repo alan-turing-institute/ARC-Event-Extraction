@@ -13,6 +13,11 @@ dependencies = [
     "torch>=2.5.1",
 ]
 
+[project.optional-dependencies]
+cuda = [
+    "bitsandbytes",
+]
+
 [tool.uv.sources]
 arcee = { workspace = true }
 poc = { workspace = true }

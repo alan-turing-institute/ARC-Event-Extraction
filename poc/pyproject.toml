@@ -26,10 +26,14 @@ dependencies = [
     "peft",
     "datasets",
     "wandb",
-    "bitsandbytes",
     "huggingface-hub",
     "guidance@git+https://github.com/guidance-ai/guidance#315b388357f776b9e16093063fd6a4a59b8dd392",
   ]
+
+[project.optional-dependencies]
+cuda = [
+    "bitsandbytes",
+]
 
 [build-system]
 requires = ["hatchling"]

@@ -8,21 +8,22 @@ import guidance as gi
 import pandas as pd
 from numpy.random import RandomState
 from sentence_transformers import SentenceTransformer
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
 from poc.guide import get_llm_responce, get_unguided_llm_responce
 from poc.prompt import eall_prompt, etrig_prompt, etype_prompt
 from poc.query import hand_close_examples, hand_no_examples, hand_random_examples
 
 main_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MODEL_LOC = os.path.join(main_dir, "model/FT-Llama-3.2-1B-Instruct")
+TOKEN_LOC = os.path.join(main_dir, "model/Llama-3.2-1B-Instruct")
+MODEL_LOC = os.path.join(main_dir, "model/Llama-3.2-1B-Instruct")
 DATA_PATH = "data/gpt_test.tsv"
-RESULTS_PATH = "results/guide/e_all_free_random_ft_llama3.2_1b.csv"
+RESULTS_PATH = "results/guide/eall_guide_close_llama1b.csv"
 RANDOM_SEED = 1337
-EXAMPLE_TYPE = "no_example"
+EXAMPLE_TYPE = "close_example"
 TOTAL_SAMPLES = 100
 TASK_TYPE = "event_all"
-GUIDED = False
+GUIDED = True
 SENT_TRANSFORMER_MODEL = "all-mpnet-base-v2"
 EVENT_TYPE_LIST = [
     "Clean",
@@ -183,10 +184,19 @@ def main() -> None:
     data_df = pd.read_csv(os.path.join(main_dir, DATA_PATH), sep="\t")
     data_df = data_df.reset_index().rename(columns={"index": "Index"})
 
+    # quant_config = BitsAndBytesConfig(load_in_4bit=True)
+
     hf_tokenizer = AutoTokenizer.from_pretrained(
-        MODEL_LOC, padding_side="left", trust_remote_code=True
+        TOKEN_LOC, padding_side="left", trust_remote_code=True, local_files_only=True
     )
-    hf_model = AutoModelForCausalLM.from_pretrained(MODEL_LOC, trust_remote_code=True)
+    hf_model = AutoModelForCausalLM.from_pretrained(
+        MODEL_LOC,
+        trust_remote_code=True,
+        local_files_only=True,
+        # quantization_config=quant_config,
+    )
+    hf_model.to("cuda")
+    hf_model.eval()
 
     glmodel = gi.models.Transformers(
         model=hf_model,

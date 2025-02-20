@@ -65,7 +65,7 @@ def get_unguided_llm_responce(
     with gi.user():
         lmodel += prompt[0]["content"]
     with gi.assistant():
-        lmodel += "```json\n" + gi.json(name="output", max_tokens=100)
+        lmodel += gi.json(name="output", max_tokens=100)
 
     try:
         return json.loads(lmodel["output"])

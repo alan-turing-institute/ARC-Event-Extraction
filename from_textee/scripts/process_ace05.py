@@ -378,7 +378,7 @@ def convert(
 
     # Tokenization
     sentence_tokens = [
-        tokenize(s, ent, evt, doc_id, token_map, language=language)
+        tokenize(s, ent, evt, doc_id, token_map, language)
         for s, ent, evt in zip(
             sentences, sentence_entities, sentence_events, strict=False
         )
@@ -430,7 +430,7 @@ def convert(
     )
 
 
-def tokenize(sentence, doc_id, token_map):
+def tokenize(sentence, _entities, _events, doc_id, token_map, _language):
     text, start, end = sentence
     return [
         (t[0], t[1], text[t[0] - start : t[1] - start])
@@ -565,13 +565,15 @@ def process_events(events, sentence_entities, sentences):
 TAG_PATTERN = re.compile("<[^<>]+>", re.MULTILINE)
 
 
-def read_sgm_file(path, sent_map):
-    with open(path, encoding="utf-8").read() as data:
-        # Chunk the document
-        chunks = TAG_PATTERN.sub("⁑", data).split("⁑")
+def read_sgm_file(path, _language, sent_map):
+    with open(path, encoding="utf-8") as fp:
+        data = fp.read()
 
-        # Get the offset of <TEXT>
-        data_update = data.replace("<TEXT>", "⁂")
+    # Chunk the document
+    chunks = TAG_PATTERN.sub("⁑", data).split("⁑")
+
+    # Get the offset of <TEXT>
+    data_update = data.replace("<TEXT>", "⁂")
     data_update = TAG_PATTERN.sub("", data_update)
     min_offset = max(0, data_update.find("⁂"))
     data_update = data_update.replace("⁂", "")
@@ -630,8 +632,8 @@ def read_sgm_file(path, sent_map):
 
 
 def read_apf_file(path, time_and_val, use_full_span):
-    with open(path, encoding="utf-8").read() as data:
-        soup = BeautifulSoup(data, "lxml-xml")
+    with open(path, encoding="utf-8") as fp:
+        soup = BeautifulSoup(fp.read(), "lxml-xml")
 
     # metadata
     root = soup.find("source_file")

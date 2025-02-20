@@ -43,9 +43,10 @@ class EEDataset(Dataset):
         data_path: str,
         prompt_constuctor: EEPrompt,
         event_schema: dict,
+        argument_extraction: bool = False,
         **kwargs: str | int,
     ) -> EEDataset:
-        data = load_data(data_path)
+        data = load_data(data_path, record_per_event=argument_extraction)
         # TODO: remove temporary shorterning of dataset
         data = data[0:16]
         return cls(data, prompt_constuctor, event_schema, **kwargs)

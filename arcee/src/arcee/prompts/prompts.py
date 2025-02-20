@@ -137,8 +137,9 @@ class EEPrompt(ABC):
     @abstractmethod
     def _construct_prompt(
         self,
-        tokens: list[str],
-        event_mentions: list[dict],
+        data: dict[str, str | int],
+        # tokens: list[str],
+        # event_mentions: list[dict],
         schema: dict,
     ) -> tuple[str, str]:
         """

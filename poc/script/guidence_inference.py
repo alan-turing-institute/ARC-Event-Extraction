@@ -6,9 +6,10 @@ from typing import Any
 
 import guidance as gi
 import pandas as pd
+import torch
 from numpy.random import RandomState
 from sentence_transformers import SentenceTransformer
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from poc.guide import get_llm_responce, get_unguided_llm_responce
 from poc.prompt import eall_prompt, etrig_prompt, etype_prompt
@@ -24,6 +25,7 @@ EXAMPLE_TYPE = "close_example"
 TOTAL_SAMPLES = 100
 TASK_TYPE = "event_all"
 GUIDED = True
+QUATISATION = None
 SENT_TRANSFORMER_MODEL = "all-mpnet-base-v2"
 EVENT_TYPE_LIST = [
     "Clean",
@@ -178,31 +180,63 @@ class Llama3ChatTemplate(gi.chat.ChatTemplate):
         return "<|eot_id|>"
 
 
+def load_llama3_model(model_loc: str, token_loc: str, quantisation: str | None):
+    """Loads the Llama-3 model and tokenizer and wrapps it in a guidance model."""
+
+    # Get GPU info
+    if torch.cuda.is_available():
+        device = "cuda"
+    elif torch.backends.mps.is_available():
+        device = "mps"
+    else:
+        device = "cpu"
+
+    if quantisation and device != "cuda":
+        msg = "Quantisation only available on CUDA devices."
+        raise ValueError(msg)
+
+    if quantisation:
+        try:
+            from transformers import BitsAndBytesConfig
+        except ImportError as exc:
+            msg = "Need the optional cuda dependencies to use quantisation."
+            raise ImportError(msg) from exc
+
+    # Pick the Quantisation config
+    if quantisation == "8bit":
+        quant_config = BitsAndBytesConfig(load_in_8bit=True)
+    elif quantisation == "4bit":
+        quant_config = BitsAndBytesConfig(load_in_4bit=True)
+    else:
+        quant_config = None
+
+    hf_tokenizer = AutoTokenizer.from_pretrained(
+        token_loc, padding_side="left", trust_remote_code=True, local_files_only=True
+    )
+    hf_model = AutoModelForCausalLM.from_pretrained(
+        model_loc,
+        trust_remote_code=True,
+        local_files_only=True,
+        quantization_config=quant_config,
+    )
+    if quantisation:
+        hf_model.to(device)
+    hf_model.eval()
+
+    return gi.models.Transformers(
+        model=hf_model,
+        tokenizer=hf_tokenizer,
+        chat_template=Llama3ChatTemplate,
+    )
+
+
 def main() -> None:
     main_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
     data_df = pd.read_csv(os.path.join(main_dir, DATA_PATH), sep="\t")
     data_df = data_df.reset_index().rename(columns={"index": "Index"})
 
-    # quant_config = BitsAndBytesConfig(load_in_4bit=True)
-
-    hf_tokenizer = AutoTokenizer.from_pretrained(
-        TOKEN_LOC, padding_side="left", trust_remote_code=True, local_files_only=True
-    )
-    hf_model = AutoModelForCausalLM.from_pretrained(
-        MODEL_LOC,
-        trust_remote_code=True,
-        local_files_only=True,
-        # quantization_config=quant_config,
-    )
-    hf_model.to("cuda")
-    hf_model.eval()
-
-    glmodel = gi.models.Transformers(
-        model=hf_model,
-        tokenizer=hf_tokenizer,
-        chat_template=Llama3ChatTemplate,
-    )
+    glmodel = load_llama3_model(MODEL_LOC, TOKEN_LOC, QUATISATION)
 
     if EXAMPLE_TYPE == "close_example":
         st_model = SentenceTransformer(SENT_TRANSFORMER_MODEL)

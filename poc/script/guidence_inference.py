@@ -219,7 +219,7 @@ def load_llama3_model(model_loc: str, token_loc: str, quantisation: str | None):
         local_files_only=True,
         quantization_config=quant_config,
     )
-    if quantisation:
+    if not quantisation:
         hf_model.to(device)
     hf_model.eval()
 

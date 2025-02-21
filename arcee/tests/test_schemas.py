@@ -15,7 +15,7 @@ from arcee.dataset.schemas import (
         ("Event:Attack", "Event_Attack"),
         ("naturaldisaster.n/a", "Naturaldisaster_NA"),
         ("some.event.hierarchy", "Some_Event_Hierarchy"),
-        ("NaturalDisaster.n/a", "NaturalDisaster_NA"), 
+        ("NaturalDisaster.n/a", "NaturalDisaster_NA"),
         ("multi.colon:event-type", "Multi_Colon_Eventtype"),
     ],
 )
@@ -113,4 +113,3 @@ def test_pattern_to_json_schema_duplicated_roles():
     required_fields = schema["required"]
     # We expect participant and place to both be required
     assert set(required_fields) == {"participant", "place"}
-

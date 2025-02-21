@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from arcee.dataset.load import load_data, load_pattern
+from arcee.dataset.load import load_data, load_json
 
 
 def write_temp_json_file(data: list[dict[str, Any]]) -> str:
@@ -73,35 +73,35 @@ def test_load_data_one_record_per_event(test_event_records):
     assert loaded_data[3]["event_mentions"][0]["event_subtype"] == "Collapse"
 
 
-def test_load_pattern_valid(pattern_data):
-    """Test that load_pattern correctly loads a valid JSON file."""
+def test_load_json_valid(pattern_data):
+    """Test that load_json correctly loads a valid JSON file."""
     file_path = write_temp_json_file(pattern_data)
-    loaded_data = load_pattern(file_path)
+    loaded_data = load_json(file_path)
 
     assert isinstance(loaded_data, dict)
     assert loaded_data == pattern_data[0]  # Ensure the loaded data matches the input
 
 
-def test_load_pattern_empty():
-    """Test that load_pattern correctly handles an empty JSON file."""
+def test_load_json_empty():
+    """Test that load_json correctly handles an empty JSON file."""
     file_path = write_temp_json_file([{}])  # Write an empty dictionary
-    loaded_data = load_pattern(file_path)
+    loaded_data = load_json(file_path)
 
     assert isinstance(loaded_data, dict)
     assert loaded_data == {}  # Expect an empty dictionary
 
 
-def test_load_pattern_malformed():
-    """Test that load_pattern raises JSONDecodeError for a malformed JSON file."""
+def test_load_json_malformed():
+    """Test that load_json raises JSONDecodeError for a malformed JSON file."""
     temp_file = tempfile.NamedTemporaryFile(delete=False, mode="w")
     with open(temp_file.name, "w") as f:
         f.write("{invalid_json: true")  # Write malformed JSON
 
     with pytest.raises(json.JSONDecodeError):
-        load_pattern(temp_file.name)
+        load_json(temp_file.name)
 
 
-def test_load_pattern_file_not_found():
-    """Test that load_pattern raises FileNotFoundError when the file does not exist."""
+def test_load_json_file_not_found():
+    """Test that load_json raises FileNotFoundError when the file does not exist."""
     with pytest.raises(FileNotFoundError):
-        load_pattern("non_existent_file.json")
+        load_json("non_existent_file.json")

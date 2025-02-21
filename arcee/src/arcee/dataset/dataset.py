@@ -70,9 +70,9 @@ class EEDataset(Dataset):
             idx: An integer denoting the index of the item of the dataset to return.
         """
         prompt, output_format = self.prompt_constuctor.get_prompt(
-            tokens=self.data[idx]["tokens"],
-            event_mentions=self.data[idx]["event_mentions"],
-            schema=self.event_schema,
+            data=self.data[idx],
+            # event_mentions=self.data[idx]["event_mentions"],
+            # schema=self.event_schema,
             **self.kwargs,
         )
         return {

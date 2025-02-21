@@ -47,10 +47,10 @@ def load_data(dataset_file_path: str, record_per_event: bool = False) -> list[An
     return new_lines
 
 
-def load_pattern(pattern_file_path: str) -> dict:
+def load_json(pattern_file_path: str) -> dict:
     """
-    This function loads a schema for a given dataset
-    The file is expected to be in txt format
+    This function loads a json file from the specified location
+    The file is expected to be in JSON format
 
     Parameters
     ----------

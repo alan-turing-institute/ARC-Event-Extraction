@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
+from arcee.dataset.load import load_json
+
 
 class EEPrompt(ABC):
     """
@@ -120,11 +122,11 @@ class EEPrompt(ABC):
             "There will be at most one argument for each role "
             "and there may be no arguments for a given role. "
         )
-
-        if len(arg_roles) != len(set(arg_roles)):
+        unique_arg_roles = set(arg_roles)
+        if len(arg_roles) != len(unique_arg_roles):
             # There could be more than one argument per role
             number_of_args_str = ""
-            for role in set(arg_roles):
+            for role in unique_arg_roles:
                 number_of_args_str += (
                     "There may be between zero and "
                     + str(arg_roles.count(role))
@@ -135,33 +137,86 @@ class EEPrompt(ABC):
         return number_of_args_str
 
     @abstractmethod
-    def _construct_prompt(
-        self,
-        data: dict[str, str | int],
-        # tokens: list[str],
-        # event_mentions: list[dict],
-        schema: dict,
-    ) -> tuple[str, str]:
-        """
-        This method will construct a prompt given a list of tokens, a list of
-        dictionary event mentions (assumed to be the same format as the processed
-        data from TextEE) and a json schema.
-        """
-
-    @abstractmethod
     def get_prompt(
         self,
-        tokens: list[str],
-        event_mentions: list[dict],
-        schema: dict,
+        data: dict[str, str | int],
+        # event_mentions: list[dict],
+        # schema: dict,
         **kwargs: str | int,
     ) -> tuple[str, str]:
         """
-        This method returns a prompt given a list of tokens, a list of
-        dictionary event mentions (assumed to be the same format as the processed
-        data from TextEE) and a json schema.
+        This method returns a prompt given a data record.
         The event mention data might not be used by all classes that inherit (e.g., if
         only doing event detection)
         The kwargs may contain other required data, such as a file path for example
         dataset
         """
+
+
+class EDPrompter1(EEPrompt):
+    """
+    Class to construct prompts for event trigger detection:
+    - does NOT use any examples in the prompt
+    - requests JSON output with a description of the schema
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    def _get_system_content(self) -> str:
+        """
+        This method will return the system content message to be used
+        """
+        return (
+            "You are an assistant that extracts event triggers and their associated"
+            "event types from input text. Many triggers are verbs and represent a "
+            "change of state or action in the text."
+            "\n"
+            "---\n"
+        )
+
+    def _construct_prompt(
+        self, data: dict[str, str | int], event_type_path: str
+    ) -> tuple[str, str]:
+        """
+        Construct a prompt for event trigger detection.
+
+        Parameters
+        ----------
+        data : dict[str, str | int]
+            A dictionary containing the data record.
+        event_type_path : str
+            A path to a file containing event types and their definitions.
+
+        Returns
+        -------
+        tuple[str, str]
+            A tuple containing the prompt and the output format.
+        """
+        # Set input text from data record
+        input_text = str(data["text"])  # type: str
+        # Load event type definitions
+        event_type_defs = load_json(event_type_path)
+        # Concatenate event type definitions into a single string, with a line break
+        # between each definition
+        event_type_defs_text = "\n".join(
+            [key + ": " + event_type_defs[key] for key in event_type_defs]
+        )
+        # Return the constructed prompt
+        return (
+            (
+                self._get_system_content()
+                + "These are the possible event types you can chose from:\n"
+                + event_type_defs_text
+                + "\nGiven this text:\n```"
+                + input_text
+                + "```\n"
+                "Do any of the event types appear in the text?\n"
+                "If you identify one or more event type, then what is the trigger "
+                "word or words in the input text?"
+                + "\nFormat the output strictly as JSON, ensuring the detected "
+                "event types are the keys and the trigger words are the values. "
+                "The values must be a string type and not an array."
+            ),
+            "json",
+        )

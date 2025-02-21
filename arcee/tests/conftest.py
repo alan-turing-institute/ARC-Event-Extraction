@@ -294,5 +294,7 @@ def pattern_data():
             },
         }
     ]
+
+
 def dummy_experment_config():
     return ExperimentConfig.from_yaml(TEST_CONFIG_DIR / "dummy_experiment.yaml")

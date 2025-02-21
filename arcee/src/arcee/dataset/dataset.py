@@ -31,7 +31,6 @@ class EEDataset(Dataset):
         self.data = data
         self.prompt_constuctor = prompt_constuctor
         self.event_schema = event_schema
-        self.kwargs = kwargs
 
     @classmethod
     def from_file(
@@ -42,8 +41,6 @@ class EEDataset(Dataset):
         argument_extraction: bool = False,
         **kwargs: str | int,
     ) -> EEDataset:
-<<<<<<< HEAD
-=======
         """
         A function for instantiating an EEDataset from a .jsonlines file.
 
@@ -57,7 +54,6 @@ class EEDataset(Dataset):
         """
         data = load_data(data_path, record_per_event=argument_extraction)
         return cls(data, prompt_constuctor, event_schema, **kwargs)
->>>>>>> 25-hf-batch-inference
 
     def __len__(self) -> int:
         """
@@ -65,9 +61,7 @@ class EEDataset(Dataset):
         """
         return len(self.data)
 
-<<<<<<< HEAD
-
-    def __getitem__(self, idx: int) -> dict[str, str]:
+    def __getitem__(self, idx: int) -> tuple[dict[str, str], str]:
         """
         Gets the `idx`th item of the dataset, applies the prompt to it, then returns
         in a dictionary ready for passing to a model.
@@ -76,7 +70,6 @@ class EEDataset(Dataset):
             idx: An integer denoting the index of the item of the dataset to return.
         """
         prompt, output_format = self.prompt_constuctor.get_prompt(
->>>>>>> 25-hf-batch-inference
             tokens=self.data[idx]["tokens"],
             event_mentions=self.data[idx]["event_mentions"],
             schema=self.event_schema,

@@ -10,17 +10,14 @@ poc/model/*
 data/RAMS/*
 !data/RAMS/README.md
 data/RAMS/patterns/*
-!data/RAMS/patterns/
 !data/RAMS/patterns/pattern.json
 data/WikiEvents/*
 !data/WikiEvents/README.md
 data/WikiEvents/patterns/*
-!data/WikiEvents/patterns/
 !data/WikiEvents/patterns/pattern.json
 data/ACE05/*
 !data/ACE05/README.md
 data/ACE05/patterns/*
-!data/ACE05/patterns/
 !data/ACE05/patterns/pattern.json
 
 # Scratch file and folder

@@ -4,6 +4,14 @@ from arcee.config.base_config import BaseConfig
 
 
 class PromptArguments(BaseConfig):
+    """
+    Config arguments for prompt construction.
+
+    Attributes:
+        prompt_cls: The prompt class to use. String should match a class inside
+            arcee.prompts.prompts.
+    """
+
     def __init__(
         self,
         prompt_cls: str,

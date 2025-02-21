@@ -4,6 +4,18 @@ from arcee.config.base_config import BaseConfig
 
 
 class DataArguments(BaseConfig):
+    """
+    Config arguments for a dataset.
+
+    Attributes:
+        data_path: A path giving the location of a dataset to be loaded using
+            `arcee.dataset.load.load_data`
+        schema_path: A path giving the location of a dataset schema to be loaded using
+            `arcee.dataset.load.load_schema`
+        shuffle: A boolean denoting whether or not to shuffle examples in a dataloader.
+            Defaults to `False` if set to `None`.
+    """
+
     def __init__(
         self,
         data_path: str,

@@ -7,6 +7,15 @@ from arcee.config.prompt_arguments import PromptArguments
 
 
 class ExperimentConfig(BaseConfig):
+    """
+    Config class for a single experiment.
+
+    Attributes:
+        data_kwargs: An instance of arcee.config.data_arguments.DataArguments
+        model_kwargs: An instance of arcee.config.model_arguments.ModelArguments
+        prompt_kwargs: An instance of arcee.config.prompt_arguments.PromptArguments
+    """
+
     def __init__(
         self,
         data_kwargs: dict,

@@ -162,6 +162,22 @@ class EEMockOllamaModel(EEOllamaModel):
 
 
 class EEHFModel(EEBaseModel):
+    """
+    Wrapper class for performing event extraction using HuggingFace transformers.
+
+    Attributes:
+        model: An instance of a `transformers.AutoModelForCausalLM`. Should be an
+            instruction-tuned model whose tokenizer has a chat template.
+        device: A string denoting what device to place the model on, defaults to `cpu`.
+            Pass `device_map="auto"` to init to automatically place on any available
+            GPU.
+        tokenizer: An instance of a `transfomers.AutoTokenizer`, corresponding to the
+            model. Should contain a chat template.
+        terminators: A list of strings, each of which is a terminating token for
+            generation.
+        options: Currently ignored, kept in to match base class signature.
+    """
+
     def __init__(
         self,
         model_id: str,
@@ -173,10 +189,16 @@ class EEHFModel(EEBaseModel):
         tokenizer = AutoTokenizer.from_pretrained(model_id)
         if tokenizer.pad_token_id is None:
             tokenizer.pad_token_id = tokenizer.eos_token_id
+        if tokenizer.chat_template is None:
+            exception_text = (
+                "EEHFModel is designed only to use instruction-tuned models whose "
+                "tokenizers contain a chat template. Try another model instead."
+            )
+            raise NotImplementedError(exception_text)
         self.tokenizer = tokenizer
         self.terminators = [
             tokenizer.eos_token_id,
-            tokenizer.convert_tokens_to_ids("<|eot_id|>"),  # TODO: Llama only?
+            tokenizer.convert_tokens_to_ids("<|eot_id|>"),
         ]
 
         # Load model
@@ -186,15 +208,20 @@ class EEHFModel(EEBaseModel):
             device_map=self.device,
         )
 
-        # Options (TODO: needed?)
-        if options is None:
-            options = {"temperature": 0.0}
+        # Options
         self.options = options
 
     def predict(
         self,
         input: list[dict[str, str]],
     ) -> list[str]:
+        """
+        Method for making predictions with a transformers model. Inputs should come
+        from an `arcee.dataset.dataset.EEDataset`.
+
+        Args:
+            input: A list of dictionaries of format {"role: role, "content": content}.
+        """
         # Process input into chat template
         text = self.tokenizer.apply_chat_template(
             input, add_generation_prompt=True, tokenize=False
@@ -214,5 +241,4 @@ class EEHFModel(EEBaseModel):
         )
 
         # Decode
-        # TODO: needs class wrapped around output?
         return self.tokenizer.batch_decode(gen_tokens, skip_special_tokens=True)

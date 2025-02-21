@@ -15,7 +15,7 @@ class BaseConfig(ABC):
 
     @classmethod
     def from_dict(cls, dict: dict) -> BaseConfig:
-        """Create a Config from a config dict.
+        """Create a Config from a dict.
 
         Args:
             config: Dict containing arguments with which to initialise the Config.

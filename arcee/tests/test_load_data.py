@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from arcee.dataset.load import load_data, load_pattern
+from arcee.dataset.load import format_event_type, load_data, load_pattern
 
 
 def write_temp_json_file(data: list[dict[str, Any]]) -> str:
@@ -105,3 +105,17 @@ def test_load_pattern_file_not_found():
     """Test that load_pattern raises FileNotFoundError when the file does not exist."""
     with pytest.raises(FileNotFoundError):
         load_pattern("non_existent_file.json")
+
+
+@pytest.mark.parametrize(
+    ("input_event_type", "expected_output"),
+    [
+        ("Event:Attack", "Event_Attack"),
+        ("naturaldisaster.typhoon.n/a", "Naturaldisaster_Typhoon_NA"),
+        ("NaturalDisaster.Typhoon.n/a", "NaturalDisaster_Typhoon_NA"),
+        ("cyber-attack:phishing", "Cyberattack_Phishing"),
+        ("Cyber-Attack:Phishing", "CyberAttack_Phishing"),
+    ],
+)
+def test_format_event_type(input_event_type, expected_output):
+    assert format_event_type(input_event_type) == expected_output

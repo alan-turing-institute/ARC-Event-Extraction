@@ -8,7 +8,10 @@ EXPECTED_SHUFFLE = None
 EXPECTED_MODEL_ID = "meta-llama/Llama-3.2-1B-Instruct"
 EXPECTED_MODEL_TYPE = "hf"
 EXPECTED_BATCH_SIZE = 8
-EXPECTED_INIT_KWARGS = {"device_map": "cpu"}
+EXPECTED_INIT_KWARGS = {
+    "device_map": "cpu",
+    "terminators": "<|eot_id|>",
+}
 EXPECTED_PROMPT_CLS = "DummyEAEPrompter"
 
 

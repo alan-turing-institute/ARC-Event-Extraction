@@ -41,7 +41,7 @@ def format_event_type(event_type: str) -> str:
     )
 
 
-def pattern_to_class_schema(event_type: str, pattern_record: list[str]) -> dict:
+def pattern_to_json_schema(event_type: str, pattern_record: list[str]) -> dict:
     """
     Converts a pattern record, which is a list of strings of arguments, into a
     JSON schema dictionary

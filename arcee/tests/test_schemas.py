@@ -5,7 +5,7 @@ import pytest
 from arcee.dataset.schemas import (
     create_fixed_length_tuple_type,
     format_event_type,
-    pattern_to_class_schema,
+    pattern_to_json_schema,
 )
 
 
@@ -60,7 +60,7 @@ def test_pattern_to_class_schema_single_role():
     """
     Test pattern_to_class_schema with a single role in the pattern record.
     """
-    schema = pattern_to_class_schema("TestEvent", ["place"])
+    schema = pattern_to_json_schema("TestEvent", ["place"])
     assert schema["title"] == "TestEvent"
     assert schema["type"] == "object"
 
@@ -76,11 +76,11 @@ def test_pattern_to_class_schema_single_role():
     assert "place" in schema["required"]
 
 
-def test_pattern_to_class_schema_duplicated_roles():
+def test_pattern_to_json_schema_duplicated_roles():
     """
     Test pattern_to_class_schema with repeated roles.
     """
-    schema = pattern_to_class_schema("MyEvent", ["participant", "participant", "place"])
+    schema = pattern_to_json_schema("MyEvent", ["participant", "participant", "place"])
     assert schema["title"] == "MyEvent"
     assert schema["type"] == "object"
 

@@ -1,0 +1,11 @@
+model_kwargs:
+  model_id: meta-llama/Llama-3.2-1B-Instruct
+  model_type: hf
+  batch_size: 8
+  model_init_kwargs:
+    device_map: cuda
+data_kwargs:
+  data_path: data/RAMS/output/splits/split1/test.jsonlines
+  schema_path: data/RAMS/patterns/pattern.json
+prompt_kwargs:
+  prompt_cls: DummyEAEPrompter

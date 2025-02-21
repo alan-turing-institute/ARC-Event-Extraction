@@ -14,19 +14,37 @@ MODEL_CLS_MAP = {
 
 
 class Evaluator:
+    """
+    A class which manages and runs evaluations.
+
+    Attributes:
+        model_id: A string denoting the id or path of the model being used. Should be a
+            hugggingface model id, an ollama model id, or a path to a model.
+        model: A model whose class inherits from EEBaseModel. The model type is selected
+            using the `model_type` argument, which should one one of `"hf"` or
+            `"ollama"`. Additional arguments conditional on the model class can be
+            passed via the `model_init_kwargs` dictionary
+        data: An EEDataset. It is initialised using the `data_path` argument denoting a
+            dataset to be loaded, the `prompt_cls` which is a string for a prompt
+            construction class in arcee.prompts.prompts.py, and the `schema_path` path
+            argument which is the path to the event schema for that dataset.
+        dataloader: A torch.DataLoader, used for batching the dataset. It is initialised
+            using the dataset, the `shuffle` argument` and the `batch_size` argument.
+            See the torch documentation for details.
+    """
+
     def __init__(
         self,
-        model_id: str,  # model
-        model_type: str,  # model
-        data_path: str,  # dataset
-        prompt_constructor_cls: str,  # dataset/prompt constructor
-        pattern_file_path: str,  # dataset/prompt constructor
-        batch_size: int,  # loader
+        model_id: str,
+        model_type: str,
+        data_path: str,
+        prompt_cls: str,
+        schema_path: str,
+        batch_size: int,
+        shuffle: bool | None,
+        model_init_kwargs: dict,
         argument_extraction: bool = False,  # dataset
-        shuffle: bool = False,  # loader
-        model_options: dict | None = None,  # model
         **kwargs: str | int,  # prompt constructor
-        # extractor: BaseExtractor,
     ):
         # Store model ID
         # TODO: handle trained models stored locally differently? stored on wandb?
@@ -42,13 +60,16 @@ class Evaluator:
         model_cls = MODEL_CLS_MAP[model_type]
         self.model = model_cls(
             model_id=self.model_id,
-            options=model_options,
-            # TODO: other kwargs probably needed
+            **model_init_kwargs,
         )
 
         # Get prompter and data schema
-        prompt_constructor = getattr(prompts, prompt_constructor_cls)()
-        schema = load_pattern(pattern_file_path)
+        prompt_constructor = getattr(prompts, prompt_cls)()
+        schema = load_pattern(schema_path)
+
+        # Shuffle defaults to False
+        if shuffle is None:
+            shuffle = False
 
         # Instantiate data and dataloader
         self.data = EEDataset.from_file(
@@ -69,8 +90,11 @@ class Evaluator:
         # self.extractor= extractor
 
     def evaluate(self) -> list[str]:
+        """
+        When this method is called, the evaluator will perform evaluation by batching
+        over the dataset and passing inputs to the model.
+        """
         # Get model ouputs and decode using tokenzier
-        # TODO: use dataloader, loop over batches to produce outputs
         outputs = []
 
         for batch in iter(self.dataloader):
@@ -86,5 +110,6 @@ class Evaluator:
         # Log scores
         # TODO: get wandb setup
 
-        # TODO: remove return statement
+        # TODO: remove return statement once metrics are being logged (and set return
+        # to None type)
         return outputs

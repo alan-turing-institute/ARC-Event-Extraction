@@ -9,9 +9,16 @@ from arcee.prompts.prompts import EEPrompt
 # Please ignore docstrings for now - I'm ripping this off selective forgetting
 class EEDataset(Dataset):
     """
-    Dataset class used for conventionally fine-tuning models on a whole question-answer
-    dataset. __getitem__ returns a single tokenized & formatted question--answer pair
-    (conctenated to a single string).
+    Dataset class used for iterating over event extraction data while applying a valid
+    prompt. Inherits from torch Dataset to enable use of the torch DataLoader
+
+    Attributes:
+        data: A list of dictionaries where each dictionary contains one piece of event
+            extraction data, loaded by `arcee.dataset.load.load_dataset`
+        prompt_constructor: An instance of a class inheriting from
+            `arcee.prompts.prompts.EEPrompt`
+        event_schema: A dict describing an event schema, loaded by
+            `arcee.dataset.load.load_scehma`
     """
 
     def __init__(
@@ -19,18 +26,7 @@ class EEDataset(Dataset):
         data: list[dict],
         prompt_constuctor: EEPrompt,
         event_schema: dict,
-        **kwargs: str | int,
     ):
-        """
-        Dataset which returns a tokenized version of the input given a tokenizer and
-        question-answer formatting function.
-
-        Args:
-            data: torch Dataset containing data for the dataset
-            tokenizer : Used to tokenize the input
-            qa_formatter : QAFormatter instance used to format input before passing it
-                to the model
-        """
         super().__init__()
         self.data = data
         self.prompt_constuctor = prompt_constuctor
@@ -46,16 +42,41 @@ class EEDataset(Dataset):
         argument_extraction: bool = False,
         **kwargs: str | int,
     ) -> EEDataset:
+<<<<<<< HEAD
+=======
+        """
+        A function for instantiating an EEDataset from a .jsonlines file.
+
+        Args:
+        data_path: String denoting a path to a .jsolines file with which to
+            instantiate the dataset by loading using `arcee.dataset.load.load_dataset`
+        prompt_constructor: An instance of a class inheriting from
+            `arcee.prompts.prompts.EEPrompt`
+        event_schema: A dict describing an event schema, loaded by
+            `arcee.dataset.load.load_scehma`
+        """
         data = load_data(data_path, record_per_event=argument_extraction)
-        # TODO: remove temporary shorterning of dataset
-        data = data[0:16]
         return cls(data, prompt_constuctor, event_schema, **kwargs)
+>>>>>>> 25-hf-batch-inference
 
     def __len__(self) -> int:
+        """
+        Returns the length of the dataset.
+        """
         return len(self.data)
 
-    def __getitem__(self, idx: int) -> tuple[dict[str, str], str]:
+<<<<<<< HEAD
+
+    def __getitem__(self, idx: int) -> dict[str, str]:
+        """
+        Gets the `idx`th item of the dataset, applies the prompt to it, then returns
+        in a dictionary ready for passing to a model.
+
+        Args:
+            idx: An integer denoting the index of the item of the dataset to return.
+        """
         prompt, output_format = self.prompt_constuctor.get_prompt(
+>>>>>>> 25-hf-batch-inference
             tokens=self.data[idx]["tokens"],
             event_mentions=self.data[idx]["event_mentions"],
             schema=self.event_schema,

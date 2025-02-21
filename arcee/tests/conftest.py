@@ -1,6 +1,14 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
+
+from arcee.config.experiment import ExperimentConfig
+
+TEST_DIR = Path(__file__, "..").resolve()
+TEST_CONFIG_DIR = TEST_DIR / "configs"
+TEST_DATA_DIR = TEST_DIR / "data"
 
 
 @pytest.fixture(scope="module")
@@ -286,3 +294,5 @@ def pattern_data():
             },
         }
     ]
+def dummy_experment_config():
+    return ExperimentConfig.from_yaml(TEST_CONFIG_DIR / "dummy_experiment.yaml")

@@ -21,8 +21,8 @@ The folder should be set up as follows:
         │   │   ├── test.jsonlines
         │   │   └── train.jsonlines
         │   └── ...
-        ├── patterns/
-        │   ├── pattern.txt
+        ├── schema/
+        │   ├── pattern.json
         ├── splits/
         │   ├── split1/
         │   │   ├── dev.txt
@@ -34,7 +34,7 @@ The folder should be set up as follows:
 
 The data downloaded from RAMS should be saved into the `data/RAMS/data` folder.
 
-The data in the `patterns` folder, have been saved manually from [this file](https://github.com/ej0cl6/TextEE/blob/main/TextEE/models/BartGen/pattern.py) and is in the form:
+The data in the `schema` folder, have been saved manually from [this file](https://github.com/ej0cl6/TextEE/blob/main/TextEE/models/BartGen/pattern.py) and is in the form:
 
 ```
 {

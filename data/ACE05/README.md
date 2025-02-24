@@ -52,6 +52,9 @@ The folder should be set up as follows:
     │   │   ├── test.jsonlines
     │   │   └── train.jsonlines
     │   └── ...
+    ├── schema/
+    │   ├── event_type_definitions.json
+    │   ├── pattern.json
     ├── splits/
     │   ├── split1/
     │   │   ├── dev.txt
@@ -68,3 +71,16 @@ ACE 2005 also comes with documentation, this should be saved in the `docs` folde
 The DTD files should be saved in the `dtd` folder.
 
 The sentence and token map and the splits we have used were downloaded from TextEE, these are found in this repo <https://github.com/ej0cl6/TextEE>
+
+The `pattern.json` file in the `schema` folder, has been saved manually from [this file](https://github.com/ej0cl6/TextEE/blob/main/TextEE/models/BartGen/pattern.py) and is in the form:
+
+```
+{
+    "Business:Declare-Bankruptcy": {
+            "template": "<arg1> declared bankruptcy at <arg2> place",
+            "roles": ["Org", "Place"]
+        },
+    ...
+}
+
+The `event_type_definitions.json` file in the `schema` folder has been constructed manually from the ACE05 documentation.

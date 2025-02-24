@@ -30,6 +30,11 @@ def test_tokens() -> list[str]:
 
 
 @pytest.fixture(scope="module")
+def dummy_experment_config():
+    return ExperimentConfig.from_yaml(TEST_CONFIG_DIR / "dummy_experiment.yaml")
+
+
+@pytest.fixture(scope="module")
 def test_event_mentions() -> list:
     return [{"event_type": "hire", "trigger": {"text": "hired", "start": 2, "end": 3}}]
 
@@ -294,7 +299,3 @@ def pattern_data():
             },
         }
     ]
-
-
-def dummy_experment_config():
-    return ExperimentConfig.from_yaml(TEST_CONFIG_DIR / "dummy_experiment.yaml")

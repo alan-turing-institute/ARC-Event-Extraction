@@ -46,31 +46,27 @@ def test_load_data_one_record_per_event(test_event_records):
     loaded_data = load_data(file_path, record_per_event=True)
 
     # Expected number of records:
-    # - doc_001 (1, unchanged)
+    # - doc_001 (0, not included)
     # - doc_002 (1 event mention → unchanged)
     # - doc_003 (2 event mentions → split into 2 records)
-    # - doc_004 (1, unchanged)
+    # - doc_004 (0, not included)
     # - doc_005 (1 event mention → unchanged)
-    expected_num_records = 1 + 1 + 2 + 1 + 1  # Total: 6
+    expected_num_records = 0 + 1 + 2 + 0 + 1  # Total: 6
     assert isinstance(loaded_data, list)
     assert len(loaded_data) == expected_num_records
 
-    # Ensure first record (empty event_mentions) is unchanged
-    assert loaded_data[0]["doc_id"] == "doc_001"
-    assert loaded_data[0]["event_mentions"] == []
+    # Ensure first doc is not loaded and the second doc is loaded first
+    assert loaded_data[0]["doc_id"] == "doc_002"
+    assert len(loaded_data[0]["event_mentions"]) == 1
 
-    # Ensure second record is unchanged
-    assert loaded_data[1]["doc_id"] == "doc_002"
+    # Ensure second and third records are correctly split
+    assert loaded_data[1]["doc_id"] == "doc_003"
     assert len(loaded_data[1]["event_mentions"]) == 1
+    assert loaded_data[1]["event_mentions"][0]["event_subtype"] == "Earthquake"
 
-    # Ensure third and fourth records are correctly split
     assert loaded_data[2]["doc_id"] == "doc_003"
     assert len(loaded_data[2]["event_mentions"]) == 1
-    assert loaded_data[2]["event_mentions"][0]["event_subtype"] == "Earthquake"
-
-    assert loaded_data[3]["doc_id"] == "doc_003"
-    assert len(loaded_data[3]["event_mentions"]) == 1
-    assert loaded_data[3]["event_mentions"][0]["event_subtype"] == "Collapse"
+    assert loaded_data[2]["event_mentions"][0]["event_subtype"] == "Collapse"
 
 
 def test_load_json_valid(pattern_data):

@@ -8,9 +8,11 @@ dependencies = [
     "arcee",
     "poc",
     "from_textee",
-    "jinja2>=3.1.5",
-    "transformers>=4.48.1",
-    "torch>=2.5.1",
+]
+
+[project.optional-dependencies]
+cuda = [
+    "bitsandbytes",
 ]
 
 [tool.uv.sources]

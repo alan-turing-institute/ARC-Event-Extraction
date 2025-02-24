@@ -12,6 +12,8 @@ dependencies = [
     "torch",
     "ollama",
     "transformers>=4.48.1",
+    "jinja2>=3.1.5",
+    "torch>=2.5.1",
 ]
 
 [build-system]

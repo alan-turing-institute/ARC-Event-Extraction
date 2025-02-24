@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import os
 
+import wandb
 from datasets import load_dataset
 from peft import LoraConfig, PeftModel
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from trl import DataCollatorForCompletionOnlyLM, SFTConfig, SFTTrainer
+
+wandb.login()
 
 main_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODEL_LOC = os.path.join(main_dir, "model/Llama-3.2-1B-Instruct")
@@ -93,7 +96,7 @@ def main():
         # packing=True,
         num_train_epochs=3,
         per_device_train_batch_size=4,
-        logging_dir=LOG_DIR,
+        report_to="wandb",
         log_level="info",
         logging_steps=30,
         do_eval=True,

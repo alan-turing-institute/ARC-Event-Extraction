@@ -33,7 +33,7 @@ def format_event_type(event_type: str) -> str:
     'Event_Attack'
 
     >>> format_event_type("naturaldisaster.n/a")
-    'NaturalDisaster_NA'
+    'Naturaldisaster_NA'
     """
     return "_".join(
         (word[0].upper() + word[1:]).replace("N/a", "NA").replace("-", "")

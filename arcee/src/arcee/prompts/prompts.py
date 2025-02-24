@@ -22,6 +22,31 @@ class EEPrompt(ABC):
             "from input text.\n"
         )
 
+    def _confirm_data_format(
+        self, data: dict[str, str | int | list]
+    ) -> tuple[dict, list]:
+        # Double check keys and types of data
+        if "event_mentions" not in data:
+            err_msg = "Key 'event_mentions' is missing from the data."
+            raise KeyError(err_msg)
+        if not isinstance(data["event_mentions"], list):
+            err_msg = (
+                "Expected 'event_mentions' to be a list, but got "
+                f"{type(data['event_mentions']).__name__}."
+            )
+            raise TypeError(err_msg)
+        if "tokens" not in data:
+            err_msg = "Key 'tokens' is missing from the data."
+            raise KeyError(err_msg)
+        if not isinstance(data["tokens"], list):
+            err_msg = (
+                "Expected 'tokens' to be a string, but got "
+                f"{type(data['tokens']).__name__}."
+            )
+            raise TypeError(err_msg)
+
+        return data["event_mentions"][0], data["tokens"]
+
     def _get_event_trigger(
         self, event_mention: dict[str, dict[str, int] | str]
     ) -> tuple[int, int, str]:
@@ -137,7 +162,7 @@ class EEPrompt(ABC):
     @abstractmethod
     def _construct_prompt(
         self,
-        data: dict[str, str | int],
+        data: dict[str, str | int | list],
         schema: dict,
     ) -> tuple[str, str]:
         """
@@ -146,7 +171,7 @@ class EEPrompt(ABC):
 
     def get_prompt(
         self,
-        data: dict[str, str | int],
+        data: dict[str, str | int | list],
         schema: dict,
         **kwargs: str | int,
     ) -> tuple[str, str]:
@@ -198,7 +223,7 @@ class EDPrompter1(EEPrompt):
 
     def _construct_prompt(
         self,
-        data: dict[str, str | int],
+        data: dict[str, str | int | list],
         schema: dict,
     ) -> tuple[str, str]:
         """
@@ -208,8 +233,8 @@ class EDPrompter1(EEPrompt):
         ----------
         data : dict[str, str | int]
             A dictionary containing the data record.
-        event_type_path : str
-            A path to a file containing event types and their definitions.
+        schema: dict
+            A dictionary of the possible event types and their definitions.
 
         Returns
         -------
@@ -240,4 +265,109 @@ class EDPrompter1(EEPrompt):
                 "The values must be a string type and not an array."
             ),
             "json",
+        )
+
+
+class EAEPrompter1(EEPrompt):
+    """
+    Event argument extraction:
+    - only takes a SINGLE event trigger
+    - predicts multiple argument roles
+    - does NOT use examples in the prompt
+    - requests JSON output
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    def _get_arg_roles(self, schema: dict, event_type: str) -> list[str]:
+        """
+        Retrieves the list of argument roles associated with a given event type.
+
+        Parameters
+        ----------
+        schema : dict
+            A dictionary mapping event types to their respective schemas,
+            including argument roles.
+        event_type : str
+            The event type whose argument roles should be retrieved.
+
+        Returns
+        -------
+        list of str
+            A list of argument roles associated with the specified event type.
+
+        Raises
+        ------
+        KeyError
+            If the given event_type is not found in the schema.
+        """
+        if event_type not in schema:
+            err_msg = f"Event type '{event_type}' not found in schema."
+            raise KeyError(err_msg)
+
+        return schema[event_type]["roles"]
+
+    def _get_system_content(self) -> str:
+        return (
+            "You are an assistant that extracts event arguments from input text. "
+            "Event arguments are the key entities, participants, and attributes "
+            "associated with an event in a text. They provide context and specific "
+            "details about what happened, who was involved, and where it occurred. "
+            "\n"
+            "---\n"
+        )
+
+    def _construct_prompt(
+        self,
+        data: dict[str, str | int | list],
+        schema: dict,
+    ) -> tuple[str, str]:
+        """
+        Construct a prompt for event trigger detection.
+
+        Parameters
+        ----------
+        data : dict[str, str | int]
+            A dictionary containing the data record.
+        schema: dict
+            A dictionary of the possible event types and their definitions.
+
+        Returns
+        -------
+        tuple[str, str]
+            A tuple containing the prompt and the output format.
+        """
+
+        event_mention, tokens = self._confirm_data_format(data)
+
+        # Get trigger span for 1st event mention (should be only event mention)
+        trig_start, trig_end, event_type = self._get_event_trigger(event_mention)
+
+        # Get trigger based on tagged tokens
+        input_text = self._get_tagged_text(tokens, trig_start, trig_end)
+
+        # Get additional details for the prompt
+        arg_roles = self._get_arg_roles(schema, event_type)
+        number_of_args_str = self._get_arg_schema_description(arg_roles)
+
+        return (
+            (
+                self._get_system_content()
+                + "An event type of "
+                + event_type
+                + " has been detected in the input "
+                "text. The trigger word is identified with a <trigger> tag.\n"
+                "Input text:\n```" + input_text + "```\n"
+                "What are the words in the input text that represent the following "
+                "argument roles? \n"
+                + "\n".join(set(arg_roles))
+                + "\n"
+                + number_of_args_str
+                + "\nFormat the output strictly as JSON, ensuring each argument "
+                "role has a corresponding key. "
+                "If an argument is not explicitly mentioned, return `null` for "
+                "that role.\n"
+            ),
+            event_type,
         )

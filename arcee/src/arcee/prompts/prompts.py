@@ -222,7 +222,7 @@ class EDPrompter1(EEPrompt):
         )
 
     def get_prompt(
-        self, data: dict[str, str | int], event_type_path: str, **kwargs: str | int
+        self, data: dict[str, str | int], **kwargs: str | int
     ) -> tuple[str, str]:
         """
         Parameters
@@ -237,6 +237,20 @@ class EDPrompter1(EEPrompt):
         str, str
             Returns the prompt and the output format
         """
+        if "event_type_path" in kwargs:
+            event_type_path = kwargs["event_type_path"]
+        else:
+            err_msg = "The event_type_path argument is required."
+            raise TypeError(err_msg)
+
+        # Ensure the type is str
+        if not isinstance(event_type_path, str):
+            err_msg = (
+                "Expected 'event_type_path' to be a str, "
+                "but got {type(event_type_path).__name__}"
+            )
+            raise TypeError(err_msg)
+
         prompt, output_format = self._construct_prompt(data, event_type_path)
 
         return prompt, output_format

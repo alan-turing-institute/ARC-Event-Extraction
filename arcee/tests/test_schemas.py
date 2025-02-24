@@ -2,11 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from arcee.dataset.schemas import (
-    create_fixed_length_tuple_type,
-    format_event_type,
-    pattern_to_json_schema,
-)
+from arcee.dataset.schemas import format_event_type, pattern_to_json_schema
 
 
 @pytest.mark.parametrize(
@@ -25,35 +21,6 @@ def test_format_event_type(input_event_type, expected):
     """
     result = format_event_type(input_event_type)
     assert result == expected
-
-
-def test_create_fixed_length_tuple_type_count_less_than_one():
-    """
-    Ensure create_fixed_length_tuple_type raises ValueError for invalid count < 1.
-    """
-    with pytest.raises(ValueError, match="must be >= 1") as exc_info:
-        create_fixed_length_tuple_type(0)  # count < 1
-    assert "must be >= 1" in str(exc_info.value)
-
-
-def test_create_fixed_length_tuple_type_count_eq_one():
-    """
-    For count == 1, it should return the union type: str | None.
-    """
-    result = create_fixed_length_tuple_type(1)
-    assert str(result) == "str | None"
-
-
-def test_create_fixed_length_tuple_type_count_eq_two():
-    """
-    For count == 2, returns tuple[str | None, str | None].
-    """
-    result = create_fixed_length_tuple_type(2)
-    # Check the string representation
-    # In Python 3.12.8, str(result) might be "tuple[str | NoneType, str | NoneType]"
-    # We do a partial substring check:
-    assert "tuple" in str(result)
-    assert "str | None" in str(result)
 
 
 def test_pattern_to_class_schema_single_role():

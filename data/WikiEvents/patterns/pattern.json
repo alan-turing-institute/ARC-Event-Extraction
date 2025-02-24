@@ -1,0 +1,202 @@
+{
+        "ArtifactExistence.DamageDestroyDisableDismantle.Damage": {
+            "template": "<arg1> damaged <arg2> using <arg3> instrument in <arg4> place",
+            "roles": ["Damager", "Artifact", "Instrument", "Place"]
+        },
+        "ArtifactExistence.DamageDestroyDisableDismantle.Destroy": {
+            "template": "<arg1> destroyed <arg2> using <arg3> instrument in <arg4> place",
+            "roles": ["Destroyer", "Artifact", "Instrument", "Place"]
+        },
+        "ArtifactExistence.DamageDestroyDisableDismantle.DisableDefuse": {
+            "template": "<arg1> disabled or defused <arg2> using <arg3> instrument in <arg4> place",
+            "roles": ["Disabler", "Artifact", "Instrument", "Place"]
+        },
+        "ArtifactExistence.DamageDestroyDisableDismantle.Dismantle": {
+            "template": "<arg1> dismantled <arg2> using <arg3> instrument in <arg4> place",
+            "roles": ["Dismantler", "Artifact", "Instrument", "Components", "Place"]
+        },
+        "ArtifactExistence.DamageDestroyDisableDismantle.Unspecified": {
+            "template": "<arg1> damaged or destroyed <arg2> using <arg3> instrument in <arg4> place",
+            "roles": ["DamagerDestroyer", "Artifact", "Instrument", "Place"]
+        },
+        "ArtifactExistence.ManufactureAssemble.Unspecified": {
+            "template": "<arg1> manufactured or assembled or produced <arg2> from <arg3> components using <arg4> at <arg5> place",
+            "roles": ["ManufacturerAssembler", "Artifact", "Components", "Instrument", "Place"]
+        },
+        "Cognitive.IdentifyCategorize.Unspecified": {
+            "template": "<arg1> identified <arg2> as <arg3> at <arg4> place",
+            "roles": ["Identifier", "IdentifiedObject", "IdentifiedRole", "Place"]
+        },
+        "Cognitive.Inspection.SensoryObserve": {
+            "template": "<arg1> observed <arg2> using <arg3> in <arg4> place",
+            "roles": ["Observer", "ObservedEntity", "Instrument", "Place"]
+        },
+        "Cognitive.Research.Unspecified": {
+            "template": "<arg1> researched <arg2> subject using <arg3> at <arg4> place",
+            "roles": ["Researcher", "Subject", "Means", "Place"]
+        },
+        "Cognitive.TeachingTrainingLearning.Unspecified": {
+            "template": "<arg1> taught <arg2> field of knowledge to <arg3> using <arg4> at <arg5> institution in <arg6> place",
+            "roles": ["TeacherTrainer", "FieldOfKnowledge", "Learner", "Means", "Institution", "Place"]
+        },
+        "Conflict.Attack.DetonateExplode": {
+            "template": "<arg1> detonated or exploded <arg4> explosive device using <arg3> to attack <arg2> target at <arg5> place",
+            "roles": ["Attacker", "Target", "Instrument", "ExplosiveDevice", "Place"]
+        },
+        "Conflict.Attack.Unspecified": {
+            "template": "<arg1> attacked <arg2> using <arg3> at <arg4> place",
+            "roles": ["Attacker", "Target", "Instrument", "Place"]
+        },
+        "Conflict.Defeat.Unspecified": {
+            "template": "<arg1> defeated <arg2> in <arg3> conflict at <arg4> place",
+            "roles": ["Victor", "Defeated", "ConflictOrElection", "Place"]
+        },
+        "Conflict.Demonstrate.DemonstrateWithViolence": {
+            "template": "<arg1> was in a demonstration involving violence for <arg4> topic with <arg3> visual display against <arg5> at <arg6> place, with potential involvement of <arg2> police or military",
+            "roles": ["Demonstrator", "Regulator", "VisualDisplay", "Topic", "Target", "Place"]
+        },
+        "Conflict.Demonstrate.Unspecified": {
+            "template": "<arg1> was in a demonstration for <arg4> topic with <arg3> visual display against <arg5> at <arg6> place, with potential involvement of <arg2> police or military",
+            "roles": ["Demonstrator", "Regulator", "VisualDisplay", "Topic", "Target", "Place"]
+        },
+        "Contact.Contact.Broadcast": {
+            "template": "<arg1> communicated to <arg2> about <arg4> topic using <arg3> at <arg5> place (one-way communication)",
+            "roles": ["Communicator", "Recipient", "Instrument", "Topic", "Place"]
+        },
+        "Contact.Contact.Correspondence": {
+            "template": "<arg1> communicated remotely with <arg2> about <arg4> topic using <arg3> at <arg5> place",
+            "roles": ["Participant", "Participant", "Instrument", "Topic", "Place"]
+        },
+        "Contact.Contact.Meet": {
+            "template": "<arg1> met face-to-face with <arg2> about <arg3> topic at <arg4> place",
+            "roles": ["Participant", "Participant", "Topic", "Place"]
+        },
+        "Contact.Contact.Unspecified": {
+            "template": "<arg1> communicated with <arg2> about <arg3> topic at <arg4> place (document does not specify in person or not, or one-way or not)",
+            "roles": ["Participant", "Participant", "Topic", "Place"]
+        },
+        "Contact.RequestCommand.Broadcast": {
+            "template": "<arg1> communicated with <arg2> about <arg3> topic at <arg4> place (document does not specify in person or not, or one-way or not)",
+            "roles": ["Communicator", "Recipient", "Topic", "Place"]
+        },
+        "Contact.RequestCommand.Correspondence": {
+            "template": "<arg1> communicated with <arg2> about <arg3> topic at <arg4> place (document does not specify in person or not, or one-way or not)",
+            "roles": ["Communicator", "Recipient", "Topic", "Place"]
+        },
+        "Contact.RequestCommand.Meet": {
+            "template": "<arg1> communicated with <arg2> about <arg3> topic at <arg4> place (document does not specify in person or not, or one-way or not)",
+            "roles": ["Communicator", "Recipient", "Topic", "Place"]
+        },
+        "Contact.RequestCommand.Unspecified": {
+            "template": "<arg1> communicated with <arg2> about <arg3> topic at <arg4> place (document does not specify in person or not, or one-way or not)",
+            "roles": ["Communicator", "Recipient", "Topic", "Place"]
+        },
+        "Contact.ThreatenCoerce.Broadcast": {
+            "template": "<arg1> communicated with <arg2> about <arg3> topic at <arg4> place (document does not specify in person or not, or one-way or not)",
+            "roles": ["Communicator", "Recipient", "Topic", "Place"]
+        },
+        "Contact.ThreatenCoerce.Correspondence": {
+            "template": "<arg1> communicated with <arg2> about <arg3> topic at <arg4> place (document does not specify in person or not, or one-way or not)",
+            "roles": ["Communicator", "Recipient", "Topic", "Place"]
+        },
+        "Contact.ThreatenCoerce.Unspecified": {
+            "template": "<arg1> communicated with <arg2> about <arg3> topic at <arg4> place (document does not specify in person or not, or one-way or not)",
+            "roles": ["Communicator", "Recipient", "Topic", "Place"]
+        },
+        "Control.ImpedeInterfereWith.Unspecified": {
+            "template": "<arg1> impeded or interfered with <arg2> event at <arg3> place",
+            "roles": ["Impeder", "ImpededEvent", "Place"]
+        },
+        "Disaster.Crash.Unspecified": {
+            "template": "<arg1> person in <arg2> vehicle crashed into <arg3> at <arg4> place",
+            "roles": ["DriverPassenger", "Vehicle", "CrashObject", "Place"]
+        },
+        "Disaster.DiseaseOutbreak.Unspecified": {
+            "template": "<arg1> disease broke out among <arg2> victims or population at <arg3> place",
+            "roles": ["Disease", "Victim", "Place"]
+        },
+        "GenericCrime.GenericCrime.GenericCrime": {
+            "template": "<arg1> committed a crime against <arg2> at <arg3> place",
+            "roles": ["Perpetrator", "Victim", "Place"]
+        },
+        "Justice.Acquit.Unspecified": {
+            "template": "<arg1> court or judge acquitted <arg2> of <arg3> crime in <arg4> place",
+            "roles": ["JudgeCourt", "Defendant", "Crime", "Place"]
+        },
+        "Justice.ArrestJailDetain.Unspecified": {
+            "template": "<arg1> arrested or jailed <arg2> for <arg3> crime at <arg4> place",
+            "roles": ["Jailer", "Detainee", "Crime", "Place"]
+        },
+        "Justice.ChargeIndict.Unspecified": {
+            "template": "<arg1> charged or indicted <arg2> before <arg3> court or judge for <arg4> crime in <arg5> place",
+            "roles": ["Prosecutor", "Defendant", "JudgeCourt", "Crime", "Place"]
+        },
+        "Justice.Convict.Unspecified": {
+            "template": "<arg1> court or judge convicted <arg2> of <arg3> crime in <arg4> place",
+            "roles": ["JudgeCourt", "Defendant", "Crime", "Place"]
+        },
+        "Justice.InvestigateCrime.Unspecified": {
+            "template": "<arg1> investigated <arg2> for <arg3> crime in <arg4> place",
+            "roles": ["Investigator", "Defendant", "Crime", "Place"]
+        },
+        "Justice.ReleaseParole.Unspecified": {
+            "template": "<arg1> court or judge released or paroled <arg2> from <arg3> crime in <arg4> place",
+            "roles": ["JudgeCourt", "Defendant", "Crime", "Place"]
+        },
+        "Justice.Sentence.Unspecified": {
+            "template": "<arg1> court or judge sentenced <arg2> for <arg3> crime to <arg4> sentence in <arg5> place",
+            "roles": ["JudgeCourt", "Defendant", "Crime", "Sentence", "Place"]
+        },
+        "Justice.TrialHearing.Unspecified": {
+            "template": "<arg1> tried <arg2> before <arg3> court or judge for <arg4> crime in <arg5> place",
+            "roles": ["Prosecutor", "Defendant", "JudgeCourt", "Crime", "Place"]
+        },
+        "Life.Die.Unspecified": {
+            "template": "<arg1> died at <arg2> place from <arg4> medical issue, killed by <arg3> killer",
+            "roles": ["Victim", "Place", "Killer", "MedicalIssue"]
+        },
+        "Life.Infect.Unspecified": {
+            "template": "<arg1> was infected with <arg2> from <arg3> at <arg4> place",
+            "roles": ["Victim", "InfectingAgent", "Source", "Place"]
+        },
+        "Life.Injure.Unspecified": {
+            "template": "<arg1> was injured by <arg2> using <arg3> in <arg4> body part with <arg5> medical issue at <arg6> place",
+            "roles": ["Victim", "Injurer", "Instrument", "BodyPart", "MedicalCondition", "Place"]
+        },
+        "Medical.Intervention.Unspecified": {
+            "template": "<arg1> treater treated <arg2> patient for <arg3> medical issue with <arg4> means at <arg5> place",
+            "roles": ["Treater", "Patient", "MedicalIssue", "Instrument", "Place"]
+        },
+        "Movement.Transportation.Evacuation": {
+            "template": "<arg1> transported <arg2> in <arg3> from <arg4> place to <arg5> place",
+            "roles": ["Transporter", "PassengerArtifact", "Vehicle", "Origin", "Destination"]
+        },
+        "Movement.Transportation.IllegalTransportation": {
+            "template": "<arg1> illegally transported <arg2> in <arg3> from <arg4> place to <arg5> place",
+            "roles": ["Transporter", "PassengerArtifact", "Vehicle", "Origin", "Destination"]
+        },
+        "Movement.Transportation.PreventPassage": {
+            "template": "<arg4> prevents <arg1> from entering <arg6> place from <arg5> place to transport <arg2> using <arg3> vehicle",
+            "roles": ["Transporter", "PassengerArtifact", "Vehicle", "Preventer", "Origin", "Destination"]
+        },
+        "Movement.Transportation.Unspecified": {
+            "template": "<arg1> transported <arg2> in <arg3> from <arg4> place to <arg5> place",
+            "roles": ["Transporter", "PassengerArtifact", "Vehicle", "Origin", "Destination"]
+        },
+        "Personnel.EndPosition.Unspecified": {
+            "template": "<arg1> stopped working in <arg3> position at <arg2> organization in <arg4> place",
+            "roles": ["Employee", "PlaceOfEmployment", "Position", "Place"]
+        },
+        "Personnel.StartPosition.Unspecified": {
+            "template": "<arg1> started working in <arg3> position at <arg2> organization in <arg4> place",
+            "roles": ["Employee", "PlaceOfEmployment", "Position", "Place"]
+        },
+        "Transaction.Donation.Unspecified": {
+            "template": "<arg1> gave <arg4> to <arg2> for the benefit of <arg3> at <arg5> place",
+            "roles": ["Giver", "Recipient", "Beneficiary", "ArtifactMoney", "Place"]
+        },
+        "Transaction.ExchangeBuySell.Unspecified": {
+            "template": "<arg1> bought, sold, or traded <arg3> to <arg2> in exchange for <arg4> for the benefit of <arg5> at <arg6> place",
+            "roles": ["Giver", "Recipient", "AcquiredEntity", "PaymentBarter", "Beneficiary", "Place"]
+        }
+}

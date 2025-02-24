@@ -43,8 +43,8 @@ class Evaluator:
         batch_size: int,
         shuffle: bool | None,
         model_init_kwargs: dict,
+        prompt_const_kwargs: dict,
         argument_extraction: bool = False,  # dataset
-        **kwargs: str | int,  # prompt constructor
     ):
         # Store model ID
         # TODO: handle trained models stored locally differently? stored on wandb?
@@ -77,7 +77,7 @@ class Evaluator:
             prompt_constuctor=prompt_constructor,
             event_schema=schema,
             argument_extraction=argument_extraction,
-            **kwargs,
+            **prompt_const_kwargs,
         )
         self.dataloader = DataLoader(
             self.data,
@@ -86,9 +86,11 @@ class Evaluator:
             collate_fn=lambda x: x,
         )
 
+        # This will be needed when we want to know how to extract the results
+        # i.e., trigger or arg extraction
+        self.argument_extraction = argument_extraction
         # TODO: handle result extraction
         # self.extractor= extractor
-        self.argument_extraction = argument_extraction
 
     def evaluate(self) -> list[str]:
         """

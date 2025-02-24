@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from arcee.dataset.load import load_json
-
 
 class EEPrompt(ABC):
     """
@@ -137,20 +135,43 @@ class EEPrompt(ABC):
         return number_of_args_str
 
     @abstractmethod
+    def _construct_prompt(
+        self,
+        data: dict[str, str | int],
+        schema: dict,
+    ) -> tuple[str, str]:
+        """
+        Abstract method for constructing the prompt
+        """
+
     def get_prompt(
         self,
         data: dict[str, str | int],
-        # event_mentions: list[dict],
-        # schema: dict,
+        schema: dict,
         **kwargs: str | int,
     ) -> tuple[str, str]:
         """
-        This method returns a prompt given a data record.
-        The event mention data might not be used by all classes that inherit (e.g., if
-        only doing event detection)
-        The kwargs may contain other required data, such as a file path for example
-        dataset
+        Method to return a prompt, this may get overwritten by child classes
+
+        Parameters
+        ----------
+        tokens: list[str]
+            The input text in token form
+        schema: dict[str, str]
+            A schema which is a dictionary. For event type detection, this
+            dictionary will contain the event types and their definitions.
+            For argument extraction, it will contain the event types and
+            the possible arguemnt roles for each event type.
+
+        Returns
+        -------
+        str, str
+            Returns the prompt and the output format
         """
+
+        prompt, output_format = self._construct_prompt(data, schema)
+
+        return prompt, output_format
 
 
 class EDPrompter1(EEPrompt):
@@ -168,7 +189,7 @@ class EDPrompter1(EEPrompt):
         This method will return the system content message to be used
         """
         return (
-            "You are an assistant that extracts event triggers and their associated"
+            "You are an assistant that extracts event triggers and their associated "
             "event types from input text. Many triggers are verbs and represent a "
             "change of state or action in the text."
             "\n"
@@ -176,7 +197,9 @@ class EDPrompter1(EEPrompt):
         )
 
     def _construct_prompt(
-        self, data: dict[str, str | int], event_type_path: str
+        self,
+        data: dict[str, str | int],
+        schema: dict,
     ) -> tuple[str, str]:
         """
         Construct a prompt for event trigger detection.
@@ -195,19 +218,17 @@ class EDPrompter1(EEPrompt):
         """
         # Set input text from data record
         input_text = str(data["text"])  # type: str
-        # Load event type definitions
-        event_type_defs = load_json(event_type_path)
+
+        # For event detection the schema is the list of events with definitions
         # Concatenate event type definitions into a single string, with a line break
         # between each definition
-        event_type_defs_text = "\n".join(
-            [key + ": " + event_type_defs[key] for key in event_type_defs]
-        )
+        event_type_defs = "\n".join([key + ": " + schema[key] for key in schema])
         # Return the constructed prompt
         return (
             (
                 self._get_system_content()
                 + "These are the possible event types you can chose from:\n"
-                + event_type_defs_text
+                + event_type_defs
                 + "\nGiven this text:\n```"
                 + input_text
                 + "```\n"
@@ -220,37 +241,3 @@ class EDPrompter1(EEPrompt):
             ),
             "json",
         )
-
-    def get_prompt(
-        self, data: dict[str, str | int], **kwargs: str | int
-    ) -> tuple[str, str]:
-        """
-        Parameters
-        ----------
-        tokens: list[str]
-            The input text in token form
-        event_type_path : str
-            A path to a file containing event types and their definitions.
-
-        Returns
-        -------
-        str, str
-            Returns the prompt and the output format
-        """
-        if "event_type_path" in kwargs:
-            event_type_path = kwargs["event_type_path"]
-        else:
-            err_msg = "The event_type_path argument is required."
-            raise TypeError(err_msg)
-
-        # Ensure the type is str
-        if not isinstance(event_type_path, str):
-            err_msg = (
-                "Expected 'event_type_path' to be a str, "
-                "but got {type(event_type_path).__name__}"
-            )
-            raise TypeError(err_msg)
-
-        prompt, output_format = self._construct_prompt(data, event_type_path)
-
-        return prompt, output_format

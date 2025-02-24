@@ -26,11 +26,13 @@ class EEDataset(Dataset):
         data: list[dict],
         prompt_constuctor: EEPrompt,
         event_schema: dict,
+        **kwargs: str | int,
     ):
         super().__init__()
         self.data = data
         self.prompt_constuctor = prompt_constuctor
         self.event_schema = event_schema
+        self.kwargs = kwargs
 
     @classmethod
     def from_file(
@@ -71,8 +73,7 @@ class EEDataset(Dataset):
         """
         prompt, output_format = self.prompt_constuctor.get_prompt(
             data=self.data[idx],
-            # event_mentions=self.data[idx]["event_mentions"],
-            # schema=self.event_schema,
+            schema=self.event_schema,
             **self.kwargs,
         )
         return {

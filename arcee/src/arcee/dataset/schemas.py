@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import cast
+from typing import Any, cast
 
 from pydantic import BaseModel
 
@@ -105,10 +105,13 @@ def pattern_to_json_schema(event_type: str, pattern_record: list[str]) -> dict:
     ```
     """
 
-    role_dict = {}
+    role_dict: dict[str, Any] = {}
     for role in set(pattern_record):
         count_role = pattern_record.count(role)
-        role_dict[role] = create_fixed_length_tuple_type(count_role)
+        if count_role == 1:
+            role_dict[role] = str | None
+        else:
+            role_dict[role] = tuple[*(str | None,) * count_role]  # type: ignore[misc]
 
     attributes = {"__annotations__": role_dict}
 
@@ -117,59 +120,3 @@ def pattern_to_json_schema(event_type: str, pattern_record: list[str]) -> dict:
     ModelClass = cast(type[BaseModel], dynamic_class)
 
     return ModelClass.model_json_schema()
-
-
-def create_fixed_length_tuple_type(count: int) -> object:
-    """
-    Dynamically construct a fixed-length tuple type consisting of `count` elements,
-    where each element is `str | None`.
-
-    Parameters
-    ----------
-    count : int
-        The number of elements in the tuple. Each element is `str | None`.
-
-    Returns
-    -------
-    object
-        If `count` is 1, returns the union type `str | None`.
-        Otherwise returns a built-in tuple type, e.g. `tuple[str | None, str | None]`.
-
-    Raises
-    ------
-    ValueError
-        If ``count < 1``, indicating an invalid tuple size.
-
-    Examples
-    --------
-    >>> create_fixed_length_tuple_type(1)
-    str | None
-
-    >>> create_fixed_length_tuple_type(2)
-    tuple[str | None, str | None]
-
-    Notes
-    -----
-    - This function uses `eval` internally to build the type string, which is
-      generally safe as long as `count` remains an integer from a trusted source.
-    - Mypy and other static type checkers usually cannot infer types from dynamically
-      created type objects.
-    """
-    if count < 1:
-        err_msg = ValueError(f"'count' must be >= 1, got {count}.")
-        raise err_msg
-
-    if count == 1:
-        return str | None
-
-    # Build something like "tuple[str | None, str | None, str | None]" for count=3
-    joined = ", ".join(["str | NoneType"] * count)
-    type_str = f"tuple[{joined}]"
-
-    # Evaluate the constructed string in a controlled environment
-    local_ns = {
-        "str": str,
-        "NoneType": type(None),
-    }
-
-    return eval(type_str, {}, local_ns)

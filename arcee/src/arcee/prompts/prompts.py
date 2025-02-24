@@ -369,5 +369,5 @@ class EAEPrompter1(EEPrompt):
                 "If an argument is not explicitly mentioned, return `null` for "
                 "that role.\n"
             ),
-            event_type,
+            "json",
         )

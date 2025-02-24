@@ -32,17 +32,13 @@ def load_data(dataset_file_path: str, record_per_event: bool = False) -> list[An
     if not record_per_event:
         return json_lines
 
-    new_lines = []
+    new_lines: list[Any] = []
     for line in json_lines:
-        if not line["event_mentions"]:
-            # Keep records with empty event_mentions as-is
-            new_lines.append(line)
-        else:
-            # Make one record per event mention
-            new_lines.extend(
-                {**copy.deepcopy(line), "event_mentions": [event_mention]}
-                for event_mention in line["event_mentions"]
-            )
+        # Make one record per event mention, ignores any records without events
+        new_lines.extend(
+            {**copy.deepcopy(line), "event_mentions": [event_mention]}
+            for event_mention in line["event_mentions"]
+        )
 
     return new_lines
 

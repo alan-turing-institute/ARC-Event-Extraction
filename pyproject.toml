@@ -10,6 +10,11 @@ dependencies = [
     "from_textee",
 ]
 
+[project.optional-dependencies]
+cuda = [
+    "bitsandbytes",
+]
+
 [tool.uv.sources]
 arcee = { workspace = true }
 poc = { workspace = true }

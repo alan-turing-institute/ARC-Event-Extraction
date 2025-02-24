@@ -53,7 +53,7 @@ def load_json(pattern_file_path: str) -> dict:
     pattern_file_path: str
         The file path where the pattern file is stored for the dataset, this should
         include the file name and extension, expected to be JSON format
-        e.g. "data/RAMS/patterns/pattern.josn"
+        e.g. "data/RAMS/patterns/pattern.json"
 
     Returns
     -------

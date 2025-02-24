@@ -88,6 +88,7 @@ class Evaluator:
 
         # TODO: handle result extraction
         # self.extractor= extractor
+        self.argument_extraction = argument_extraction
 
     def evaluate(self) -> list[str]:
         """

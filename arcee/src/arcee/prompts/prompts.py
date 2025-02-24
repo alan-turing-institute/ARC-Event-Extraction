@@ -220,3 +220,23 @@ class EDPrompter1(EEPrompt):
             ),
             "json",
         )
+
+    def get_prompt(
+        self, data: dict[str, str | int], event_type_path: str, **kwargs: str | int
+    ) -> tuple[str, str]:
+        """
+        Parameters
+        ----------
+        tokens: list[str]
+            The input text in token form
+        event_type_path : str
+            A path to a file containing event types and their definitions.
+
+        Returns
+        -------
+        str, str
+            Returns the prompt and the output format
+        """
+        prompt, output_format = self._construct_prompt(data, event_type_path)
+
+        return prompt, output_format

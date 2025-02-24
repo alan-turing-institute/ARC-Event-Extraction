@@ -179,12 +179,18 @@ class EEHFModel(EEBaseModel):
     def __init__(
         self,
         model_id: str,
-        options: dict | None = None,
+        tokenizer_path: str | None = None,
+        terminators: str | list[str] | None = None,
         device_map: str = "cpu",
+        options: dict | None = None,
     ) -> None:
         super().__init__()
         # Load tokenizer
-        tokenizer = AutoTokenizer.from_pretrained(model_id)
+        if tokenizer_path is None:
+            tokenizer_path = model_id
+        tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
+
+        # Setup special tokens and chat template
         if tokenizer.pad_token_id is None:
             tokenizer.pad_token_id = tokenizer.eos_token_id
         if tokenizer.chat_template is None:
@@ -194,9 +200,15 @@ class EEHFModel(EEBaseModel):
             )
             raise NotImplementedError(exception_text)
         self.tokenizer = tokenizer
+
+        # Setup terminators
+        if terminators is None:
+            terminators = []
+        if type(terminators) is str:
+            terminators = [terminators]
         self.terminators = [
             tokenizer.eos_token_id,
-            tokenizer.convert_tokens_to_ids("<|eot_id|>"),
+            *terminators,
         ]
 
         # Load model

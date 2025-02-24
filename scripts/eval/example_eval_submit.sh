@@ -11,8 +11,6 @@
 # Load required modules here
 module purge
 module load baskerville
-module load bask-apps/live
-module load Python/3.10.8-GCCcore-12.2.0
 
 # Activate venv
 source /bask/projects/v/vjgo8416-arc-extract/ARC-Event-Extraction/.venv/bin/activate

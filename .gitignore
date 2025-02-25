@@ -10,17 +10,14 @@ poc/model/*
 data/RAMS/*
 !data/RAMS/README.md
 data/RAMS/schema/*
-!data/RAMS/schema/
 !data/RAMS/schema/pattern.json
 data/WikiEvents/*
 !data/WikiEvents/README.md
 data/WikiEvents/schema/*
-!data/WikiEvents/schema/
 !data/WikiEvents/schema/pattern.json
 data/ACE05/*
 !data/ACE05/README.md
 data/ACE05/schema/*
-!data/ACE05/schema/
 !data/ACE05/schema/pattern.json
 !data/ACE05/schema/event_type_definitions.json
 

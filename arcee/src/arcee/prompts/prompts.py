@@ -24,7 +24,7 @@ class EEPrompt(ABC):
 
     def _confirm_data_format(
         self, data: dict[str, str | int | list]
-    ) -> tuple[dict, list]:
+    ) -> tuple[dict, list, str]:
         # Double check keys and types of data
         if "event_mentions" not in data:
             err_msg = "Key 'event_mentions' is missing from the data."
@@ -35,17 +35,32 @@ class EEPrompt(ABC):
                 f"{type(data['event_mentions']).__name__}."
             )
             raise TypeError(err_msg)
+        if not isinstance(data["event_mentions"][0], dict):
+            err_msg = (
+                "Expected 'event_mentions' to contain a dict, but got "
+                f"{type(data['event_mentions'][0]).__name__}."
+            )
+            raise TypeError(err_msg)
         if "tokens" not in data:
             err_msg = "Key 'tokens' is missing from the data."
             raise KeyError(err_msg)
         if not isinstance(data["tokens"], list):
             err_msg = (
-                "Expected 'tokens' to be a string, but got "
+                "Expected 'tokens' to be a list, but got "
                 f"{type(data['tokens']).__name__}."
             )
             raise TypeError(err_msg)
+        if "text" not in data:
+            err_msg = "Key 'text' is missing from the data."
+            raise KeyError(err_msg)
+        if not isinstance(data["text"], str):
+            err_msg = (
+                "Expected 'text' to be a string, but got "
+                f"{type(data['text']).__name__}."
+            )
+            raise TypeError(err_msg)
 
-        return data["event_mentions"][0], data["tokens"]
+        return data["event_mentions"][0], data["tokens"], data["text"]
 
     def _get_event_trigger(
         self, event_mention: dict[str, dict[str, int] | str]
@@ -164,7 +179,7 @@ class EEPrompt(ABC):
         self,
         data: dict[str, str | int | list],
         schema: dict,
-    ) -> tuple[str, str]:
+    ) -> tuple[str, str | dict]:
         """
         Abstract method for constructing the prompt
         """
@@ -174,7 +189,7 @@ class EEPrompt(ABC):
         data: dict[str, str | int | list],
         schema: dict,
         **kwargs: str | int,
-    ) -> tuple[str, str]:
+    ) -> tuple[str, str | dict]:
         """
         Method to return a prompt, this may get overwritten by child classes
 
@@ -190,8 +205,9 @@ class EEPrompt(ABC):
 
         Returns
         -------
-        str, str
-            Returns the prompt and the output format
+        str, str | dict
+            Returns the prompt and the output format. The output format could be
+            a string, i.e. "json" or a dictionary representing a JSON schema.
         """
 
         prompt, output_format = self._construct_prompt(data, schema)
@@ -221,11 +237,27 @@ class EDPrompter1(EEPrompt):
             "---\n"
         )
 
+    def _get_event_types_defs(self, schema: dict) -> str:
+        """
+        Get the event types and definitions from the schema and return them as a string.
+
+        Parameters
+        ----------
+        schema : dict
+            A dictionary of event types and their definitions.
+
+        Returns
+        -------
+        str
+            A string containing the event type definitions.
+        """
+        return "\n".join([key + ": " + schema[key] for key in schema])
+
     def _construct_prompt(
         self,
         data: dict[str, str | int | list],
         schema: dict,
-    ) -> tuple[str, str]:
+    ) -> tuple[str, str | dict]:
         """
         Construct a prompt for event trigger detection.
 
@@ -242,12 +274,92 @@ class EDPrompter1(EEPrompt):
             A tuple containing the prompt and the output format.
         """
         # Set input text from data record
-        input_text = str(data["text"])  # type: str
+        _, _, input_text = self._confirm_data_format(data)
 
         # For event detection the schema is the list of events with definitions
         # Concatenate event type definitions into a single string, with a line break
         # between each definition
-        event_type_defs = "\n".join([key + ": " + schema[key] for key in schema])
+        event_type_defs = self._get_event_types_defs(schema)
+
+        # Return the constructed prompt
+        return (
+            (
+                self._get_system_content()
+                + "These are the possible event types you can chose from:\n"
+                + event_type_defs
+                + "\nGiven this input text:\n```"
+                + input_text
+                + "```\n"
+                "Do any of the event types appear in the text? "
+                "Not all event types will appear in the text, there may be some "
+                "that appear multiple times and there may be no event types "
+                "in the text.\n"
+                "If you identify one or more event type, then what is the trigger "
+                "word or words in the input text?"
+                "\nFormat the output strictly as JSON. The output is an array of "
+                "JSON objects with exactly one key-value pair. The valid keys are "
+                "the event types and the values are the trigger words from the input "
+                "text."
+            ),
+            "json",
+        )
+
+
+class EDPrompter2(EDPrompter1):
+    """
+    Class to construct prompts for event trigger detection:
+    - does NOT use any examples in the prompt
+    - requests JSON output with a defined JSON schema
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    def _construct_prompt(
+        self,
+        data: dict[str, str | int | list],
+        schema: dict,
+    ) -> tuple[str, str | dict]:
+        """
+        Construct a prompt for event trigger detection.
+
+        Parameters
+        ----------
+        data : dict[str, str | int]
+            A dictionary containing the data record.
+        schema: dict
+            A dictionary of the possible event types and their definitions.
+
+        Returns
+        -------
+        tuple[str, str]
+            A tuple containing the prompt and the output format.
+        """
+        # Set input text from data record
+        _, _, input_text = self._confirm_data_format(data)
+
+        # For event detection the schema is the list of events with definitions
+        # Concatenate event type definitions into a single string, with a line break
+        # between each definition
+        event_type_defs = self._get_event_types_defs(schema)
+
+        # Define the JSON schema for the output
+        json_schema = {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "minProperties": 1,
+                "maxProperties": 1,
+                "additionalProperties": False,
+                "properties": {key: {"type": "string"} for key in schema},
+            },
+            "minItems": 0,
+            "description": (
+                "An array of objects, where each object contains exactly one key-value "
+                "pair with predefined keys."
+            ),
+        }
+
         # Return the constructed prompt
         return (
             (
@@ -257,14 +369,18 @@ class EDPrompter1(EEPrompt):
                 + "\nGiven this text:\n```"
                 + input_text
                 + "```\n"
-                "Do any of the event types appear in the text?\n"
+                "Do any of the event types appear in the text? "
+                "Not all event types will appear in the text, there may be some "
+                "that appear multiple times and there may be no event types "
+                "in the text.\n"
                 "If you identify one or more event type, then what is the trigger "
                 "word or words in the input text?"
-                + "\nFormat the output strictly as JSON, ensuring the detected "
-                "event types are the keys and the trigger words are the values. "
-                "The values must be a string type and not an array."
+                + "\nFormat the output strictly as JSON. The output is an array of "
+                "JSON objects with exactly one key-value pair. The valid keys are "
+                "the event types and the values are the trigger words from the input "
+                "text."
             ),
-            "json",
+            json_schema,
         )
 
 
@@ -339,7 +455,7 @@ class EAEPrompter1(EEPrompt):
             A tuple containing the prompt and the output format.
         """
 
-        event_mention, tokens = self._confirm_data_format(data)
+        event_mention, tokens, _ = self._confirm_data_format(data)
 
         # Get trigger span for 1st event mention (should be only event mention)
         trig_start, trig_end, event_type = self._get_event_trigger(event_mention)

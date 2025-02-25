@@ -63,7 +63,7 @@ class EEDataset(Dataset):
         """
         return len(self.data)
 
-    def __getitem__(self, idx: int) -> tuple[dict[str, str], str]:
+    def __getitem__(self, idx: int) -> tuple[dict[str, str], str | dict]:
         """
         Gets the `idx`th item of the dataset, applies the prompt to it, then returns
         in a dictionary ready for passing to a model.

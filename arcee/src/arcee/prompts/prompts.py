@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from arcee.dataset.schemas import pattern_to_json_schema
+from arcee.dataset.schemas import get_arg_roles, pattern_to_json_schema
 
 
 class EEPrompt(ABC):
@@ -450,49 +450,6 @@ class EAEPrompter1(EEPrompt):
         ids["evt_id"] = data["event_mentions"][0]["id"]
         return ids
 
-    def _get_arg_roles(self, schema: dict, event_type: str) -> list[str]:
-        """
-        Retrieves the list of argument roles associated with a given event type.
-
-        Parameters
-        ----------
-        schema : dict
-            A dictionary mapping event types to their respective schemas,
-            including argument roles.
-        event_type : str
-            The event type whose argument roles should be retrieved.
-
-        Returns
-        -------
-        list of str
-            A list of argument roles associated with the specified event type.
-            If there are duplicate roles, then the roles are renamed to ensure
-            uniqueness, .e.g. "participant_1", "participant_2", etc.
-
-        Raises
-        ------
-        KeyError
-            If the given event_type is not found in the schema.
-        """
-        if event_type not in schema:
-            err_msg = f"Event type '{event_type}' not found in schema."
-            raise KeyError(err_msg)
-
-        arg_roles = schema[event_type]["roles"]
-
-        unique_arg_roles = set(arg_roles)
-        if len(arg_roles) != len(unique_arg_roles):
-            new_arg_roles = []
-            for role in unique_arg_roles:
-                if arg_roles.count(role) == 1:
-                    new_arg_roles.append(role)
-                else:
-                    for i in range(arg_roles.count(role)):
-                        new_arg_roles.append(role + "_" + str(i + 1))
-
-            return new_arg_roles
-        return arg_roles
-
     def _get_system_content(self) -> str:
         return (
             "You are an assistant that extracts event arguments from input text. "
@@ -533,7 +490,7 @@ class EAEPrompter1(EEPrompt):
         input_text = self._get_tagged_text(tokens, trig_start, trig_end)
 
         # Get additional details for the prompt
-        arg_roles = self._get_arg_roles(schema, event_type)
+        arg_roles = get_arg_roles(schema, event_type)
         number_of_args_str = (
             "There will be at most one argument for each role "
             "and there may be no arguments for a given role. "
@@ -604,7 +561,7 @@ class EAEPrompter2(EAEPrompter1):
         input_text = self._get_tagged_text(tokens, trig_start, trig_end)
 
         # Get additional details for the prompt
-        arg_roles = self._get_arg_roles(schema, event_type)
+        arg_roles = get_arg_roles(schema, event_type)
         number_of_args_str = (
             "There will be at most one argument for each role "
             "and there may be no arguments for a given role. "

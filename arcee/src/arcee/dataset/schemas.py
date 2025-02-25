@@ -7,6 +7,40 @@ from pydantic import BaseModel
 from arcee.dataset.load import load_json
 
 
+def get_ed_schema(schema: dict) -> dict:
+    """
+    Returns a JSON schema given a dictionary where all the possible
+    event types are the keys.
+
+    Parameters
+    ----------
+    schema : dict
+        A dictionary where the keys are the event types and the values are
+        descriptions of the event types.
+
+    Returns
+    -------
+    dict
+        A JSON schema that represents the event types.
+    """
+
+    return {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "minProperties": 1,
+            "maxProperties": 1,
+            "additionalProperties": False,
+            "properties": {key: {"type": "string"} for key in schema},
+        },
+        "minItems": 0,
+        "description": (
+            "An array of objects, where each object contains exactly one key-value "
+            "pair with predefined keys."
+        ),
+    }
+
+
 def get_arg_roles(schema: dict, event_type: str) -> list[str]:
     """
     Retrieves the list of argument roles associated with a given event type.
@@ -232,7 +266,7 @@ def data_to_argument_schema(
     return transformed_records
 
 
-def data_to_ed_schema(event_records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def data_to_ed_schema(event_records: list[dict[str, Any]]) -> list[dict]:
     """
     This takes a list of event records and transforms them according to a basic
     schema where the key is the event type and the value is the trigger word(s).
@@ -242,31 +276,28 @@ def data_to_ed_schema(event_records: list[dict[str, Any]]) -> list[dict[str, Any
     event_records : List[Dict[str, Any]]
         A list of event records. Each record is expected to have the form:
             {
-                "event_type": "<event type>",
-                "trigger": {"text": <str>, "start": <int>, "end": <int>},
-                "arguments": [
-                    {"entity_id": <str>, "role": <str>, "text": <str>, "start": <int>,
-                    "end": <int>},
+                "doc_id": "doc1",
+                "wnd_id": "wnd1",
+                "event_mentions": [
+                    {
+                        "event_type": "<event type>",
+                        "trigger": {"text": <str>, "start": <int>, "end": <int>},
+                        "arguments": [
+                            {"entity_id": <str>, "role": <str>, "text": <str>,
+                            "start": <int>, "end": <int>},
+                            ...
+                        ]
+                    },
                     ...
                 ]
             }
 
-    Returns
-    -------
-    List[Dict[str, Any]]
-        A list of dictionaries formatted according to the JSON schema for the
-        corresponding event types.
-        For example:
-            [
-                {
-                    "Transport:Movement": "drove",
-                    "Life:Die": "died"
-                }
-                {
-                    "Transaction:Transfer-Money": "gave"
-                }
-                ...
-            ]
+    list of dict
+        A list of transformed event argument records. Each dictionary contains:
+        - `doc_id` (str): The document ID of the event record.
+        - `wnd_id` (str): The window ID of the event record.
+        - `evt_id` (str): The event mention ID.
+        - `output` (dict): A dictionary mapping event types to trigger words.
     """
     # List to store the transformed event types
     transformed_records = []
@@ -274,11 +305,17 @@ def data_to_ed_schema(event_records: list[dict[str, Any]]) -> list[dict[str, Any
     # and append to list of transformed records.
     for record in event_records:
         event_mentions = record["event_mentions"]
-        new_record = {}
+        output = []
         for event_mention in event_mentions:
             event_type = event_mention.get("event_type")
             trigger = event_mention["trigger"]["text"]
-            new_record[event_type] = trigger
-        transformed_records.append(new_record)
+            output.append({event_type: trigger})
+        transformed_records.append(
+            {
+                "doc_id": record["doc_id"],
+                "wnd_id": record["wnd_id"],
+                "output": output,
+            }
+        )
 
     return transformed_records

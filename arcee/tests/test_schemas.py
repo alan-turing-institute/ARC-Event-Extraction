@@ -1,26 +1,6 @@
 from __future__ import annotations
 
-import pytest
-
-from arcee.dataset.schemas import format_event_type, pattern_to_json_schema
-
-
-@pytest.mark.parametrize(
-    ("input_event_type", "expected"),
-    [
-        ("Event:Attack", "Event_Attack"),
-        ("naturaldisaster.n/a", "Naturaldisaster_NA"),
-        ("some.event.hierarchy", "Some_Event_Hierarchy"),
-        ("NaturalDisaster.n/a", "NaturalDisaster_NA"),
-        ("multi.colon:event-type", "Multi_Colon_Eventtype"),
-    ],
-)
-def test_format_event_type(input_event_type, expected):
-    """
-    Test various transformations in format_event_type.
-    """
-    result = format_event_type(input_event_type)
-    assert result == expected
+from arcee.dataset.schemas import pattern_to_json_schema
 
 
 def test_pattern_to_class_schema_single_role():

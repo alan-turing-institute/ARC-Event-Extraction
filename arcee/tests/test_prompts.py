@@ -4,6 +4,21 @@ import pytest
 
 from arcee.prompts.prompts import EDPrompter1
 
+DATA = {
+    "doc_id": "doc1",
+    "wnd_id": "wnd1",
+    "text": "The explosion destroyed the building.",
+    "tokens": ["The", "explosion", "destroyed", "the", "building", "."],
+    "event_mentions": [
+        {"id": "ev1", "trigger": {"start": 2, "end": 3}, "event_type": "Explosion"}
+    ],
+}
+
+SCHEMA = {
+    "Explosion": "An event where something bursts violently.",
+    "Attack": "A violent physical act causing harm or damage.",
+}
+
 
 class TestEEPrompt:
     def setup_method(self):
@@ -47,55 +62,27 @@ class TestEEPrompt:
         with pytest.raises(ValueError, match="Invalid trigger indices"):
             self.prompter._get_tagged_text(tokens, 3, 4)
 
-    def test_get_arg_schema_description_single_args(self):
-        """Test _get_arg_schema_description with unique roles."""
-        arg_roles = ["Attacker", "Victim"]
-        expected_output = (
-            "There will be at most one argument for each role "
-            "and there may be no arguments for a given role. "
-        )
-        assert self.prompter._get_arg_schema_description(arg_roles) == expected_output
-
-    def test_get_arg_schema_description_multiple_roles(self):
-        """Test _get_arg_schema_description with repeated roles."""
-        arg_roles = ["participant", "participant", "place"]
-        expected_output = [
-            "There may be between zero and 2 arguments for role participant. ",
-            "There may be between zero and 1 arguments for role place. ",
-        ]
-        assert expected_output[0] in self.prompter._get_arg_schema_description(
-            arg_roles
-        )
-        assert expected_output[1] in self.prompter._get_arg_schema_description(
-            arg_roles
-        )
-
     def test_construct_prompt(self):
         """Test _construct_prompt returns expected format and output."""
-        data = {"text": "The explosion destroyed the building."}
-        schema = {
-            "Explosion": "An event where something bursts violently.",
-            "Attack": "A violent physical act causing harm or damage.",
-        }
-        prompt, output_format = self.prompter._construct_prompt(data, schema)
+        prompt, output_format, ids = self.prompter._construct_prompt(DATA, SCHEMA)
 
         assert output_format == "json"
         assert "Explosion: An event where something bursts violently." in prompt
         assert "Attack: A violent physical act causing harm or damage." in prompt
         assert "The explosion destroyed the building." in prompt
         assert "Format the output strictly as JSON" in prompt
+        assert ids == {"doc_id": "doc1", "wnd_id": "wnd1"}
 
     def test_get_prompt(self):
         """Test get_prompt calls _construct_prompt and returns expected values."""
-        data = {"text": "A bomb detonated downtown."}
-        schema = {"Explosion": "An event where something bursts violently."}
-        prompt, output_format = self.prompter.get_prompt(data, schema)
+        prompt, output_format, ids = self.prompter.get_prompt(DATA, SCHEMA)
 
-        assert isinstance(prompt, str)
-        assert isinstance(output_format, str)
         assert output_format == "json"
-        assert "A bomb detonated downtown." in prompt
         assert "Explosion: An event where something bursts violently." in prompt
+        assert "Attack: A violent physical act causing harm or damage." in prompt
+        assert "The explosion destroyed the building." in prompt
+        assert "Format the output strictly as JSON" in prompt
+        assert ids == {"doc_id": "doc1", "wnd_id": "wnd1"}
 
 
 # class TestEAEPrompter1:

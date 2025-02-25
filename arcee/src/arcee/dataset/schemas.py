@@ -5,46 +5,10 @@ from typing import Any, cast
 from pydantic import BaseModel
 
 
-def format_event_type(event_type: str) -> str:
-    """
-    Formats an event type name into a valid Python class name. The event type name
-    is expected to be hierarchical with each level in the hierarchy delimited by
-    a '.' or ':'
-
-    Parameters
-    ----------
-    event_type : str
-        The original event type string, which may contain colons (':'), periods ('.'),
-        hyphens ('-'), or 'N/a' values.
-
-    Returns
-    -------
-    str
-        A formatted string where:
-        - Words are capitalized only on the first letter.
-        - 'N/a' is replaced with 'NA'.
-        - Hyphens are removed.
-        - Colons (':') are replaced with periods ('.'), then split on '.' and
-            joined with '_'.
-
-    Examples
-    --------
-    >>> format_event_type("Event:Attack")
-    'Event_Attack'
-
-    >>> format_event_type("naturaldisaster.n/a")
-    'Naturaldisaster_NA'
-    """
-    return "_".join(
-        (word[0].upper() + word[1:]).replace("N/a", "NA").replace("-", "")
-        for word in event_type.replace(":", ".").split(".")
-    )
-
-
 def pattern_to_json_schema(event_type: str, pattern_record: list[str]) -> dict:
     """
     Converts a pattern record, which is a list of strings of arguments, into a
-    JSON schema dictionary
+    JSON schema dictionary.
 
     Parameters
     ----------

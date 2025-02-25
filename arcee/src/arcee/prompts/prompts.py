@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
+from arcee.dataset.schemas import pattern_to_json_schema
+
 
 class EEPrompt(ABC):
     """
@@ -138,41 +140,6 @@ class EEPrompt(ABC):
         tagged_tokens[trig_end - 1] = tagged_tokens[trig_end - 1] + "</trigger>"
 
         return " ".join(tagged_tokens)
-
-    def _get_arg_schema_description(self, arg_roles: list[str]) -> str:
-        """
-        Generates a textual description of the argument schema based on role
-        occurrences. This can be used to add to a prompt to describe a schema
-        if the model isn't able to take the JSON schema as an output format.
-
-        Parameters
-        ----------
-        arg_roles : list[str]
-            A list of argument roles, where each role may appear multiple times.
-
-        Returns
-        -------
-        str
-            A description of the argument schema, indicating the possible number of
-            arguments for each role.
-        """
-        number_of_args_str = (
-            "There will be at most one argument for each role "
-            "and there may be no arguments for a given role. "
-        )
-        unique_arg_roles = set(arg_roles)
-        if len(arg_roles) != len(unique_arg_roles):
-            # There could be more than one argument per role
-            number_of_args_str = ""
-            for role in unique_arg_roles:
-                number_of_args_str += (
-                    "There may be between zero and "
-                    + str(arg_roles.count(role))
-                    + " arguments "
-                    "for role " + role + ". "
-                )
-
-        return number_of_args_str
 
     def _get_ids(self, data: dict[str, str | int | list]) -> dict[str, str]:
         """
@@ -452,12 +419,10 @@ class EAEPrompter1(EEPrompt):
         """
         Method to return the IDs to be attached to the LLM's response,
         which will ensure the record can be identified.
-
         Parameters
         ----------
         data : dict[str, str | int | list]
             A dictionary containing the data record.
-
         Returns
         -------
         dict[str, str]
@@ -501,6 +466,8 @@ class EAEPrompter1(EEPrompt):
         -------
         list of str
             A list of argument roles associated with the specified event type.
+            If there are duplicate roles, then the roles are renamed to ensure
+            uniqueness, .e.g. "participant_1", "participant_2", etc.
 
         Raises
         ------
@@ -511,7 +478,20 @@ class EAEPrompter1(EEPrompt):
             err_msg = f"Event type '{event_type}' not found in schema."
             raise KeyError(err_msg)
 
-        return schema[event_type]["roles"]
+        arg_roles = schema[event_type]["roles"]
+
+        unique_arg_roles = set(arg_roles)
+        if len(arg_roles) != len(unique_arg_roles):
+            new_arg_roles = []
+            for role in unique_arg_roles:
+                if arg_roles.count(role) == 1:
+                    new_arg_roles.append(role)
+                else:
+                    for i in range(arg_roles.count(role)):
+                        new_arg_roles.append(role + "_" + str(i + 1))
+
+            return new_arg_roles
+        return arg_roles
 
     def _get_system_content(self) -> str:
         return (
@@ -554,7 +534,10 @@ class EAEPrompter1(EEPrompt):
 
         # Get additional details for the prompt
         arg_roles = self._get_arg_roles(schema, event_type)
-        number_of_args_str = self._get_arg_schema_description(arg_roles)
+        number_of_args_str = (
+            "There will be at most one argument for each role "
+            "and there may be no arguments for a given role. "
+        )
 
         return (
             (
@@ -566,7 +549,7 @@ class EAEPrompter1(EEPrompt):
                 "Input text:\n```" + input_text + "```\n"
                 "What are the words in the input text that represent the following "
                 "argument roles? \n"
-                + "\n".join(set(arg_roles))
+                + "\n".join(arg_roles)
                 + "\n"
                 + number_of_args_str
                 + "\nFormat the output strictly as JSON, ensuring each argument "
@@ -575,5 +558,76 @@ class EAEPrompter1(EEPrompt):
                 "that role.\n"
             ),
             "json",
+            self._get_ids(data),
+        )
+
+
+class EAEPrompter2(EAEPrompter1):
+    """
+    Event argument extraction:
+    - only takes a SINGLE event trigger
+    - predicts multiple argument roles
+    - does NOT use examples in the prompt
+    - requests JSON output and gives a specific schema
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    def _construct_prompt(
+        self,
+        data: dict[str, str | int | list],
+        schema: dict,
+    ) -> tuple[str, str | dict, dict]:
+        """
+        Construct a prompt for event trigger detection.
+
+        Parameters
+        ----------
+        data : dict[str, str | int]
+            A dictionary containing the data record.
+        schema: dict
+            A dictionary of the possible event types and their definitions.
+
+        Returns
+        -------
+        tuple[str, str]
+            A tuple containing the prompt and the output format.
+        """
+
+        event_mention, tokens, _ = self._confirm_data_format(data)
+
+        # Get trigger span for 1st event mention (should be only event mention)
+        trig_start, trig_end, event_type = self._get_event_trigger(event_mention)
+
+        # Get trigger based on tagged tokens
+        input_text = self._get_tagged_text(tokens, trig_start, trig_end)
+
+        # Get additional details for the prompt
+        arg_roles = self._get_arg_roles(schema, event_type)
+        number_of_args_str = (
+            "There will be at most one argument for each role "
+            "and there may be no arguments for a given role. "
+        )
+
+        return (
+            (
+                self._get_system_content()
+                + "An event type of "
+                + event_type
+                + " has been detected in the input "
+                "text. The trigger word is identified with a <trigger> tag.\n"
+                "Input text:\n```" + input_text + "```\n"
+                "What are the words in the input text that represent the following "
+                "argument roles? \n"
+                + "\n".join(arg_roles)
+                + "\n"
+                + number_of_args_str
+                + "\nFormat the output strictly as JSON, ensuring each argument "
+                "role has a corresponding key. "
+                "If an argument is not explicitly mentioned, return `null` for "
+                "that role.\n"
+            ),
+            pattern_to_json_schema(event_type, arg_roles),
             self._get_ids(data),
         )

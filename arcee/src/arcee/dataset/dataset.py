@@ -63,7 +63,7 @@ class EEDataset(Dataset):
         """
         return len(self.data)
 
-    def __getitem__(self, idx: int) -> tuple[dict[str, str], str | dict]:
+    def __getitem__(self, idx: int) -> tuple[dict[str, str], str | dict, dict]:
         """
         Gets the `idx`th item of the dataset, applies the prompt to it, then returns
         in a dictionary ready for passing to a model.
@@ -71,12 +71,16 @@ class EEDataset(Dataset):
         Args:
             idx: An integer denoting the index of the item of the dataset to return.
         """
-        prompt, output_format = self.prompt_constuctor.get_prompt(
+        prompt, output_format, record_ids = self.prompt_constuctor.get_prompt(
             data=self.data[idx],
             schema=self.event_schema,
             **self.kwargs,
         )
-        return {
-            "role": "user",
-            "content": prompt,
-        }, output_format
+        return (
+            {
+                "role": "user",
+                "content": prompt,
+            },
+            output_format,
+            record_ids,
+        )

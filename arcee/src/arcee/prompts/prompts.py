@@ -174,14 +174,49 @@ class EEPrompt(ABC):
 
         return number_of_args_str
 
+    def _get_ids(self, data: dict[str, str | int | list]) -> dict[str, str]:
+        """
+        Method to return the doc and wnd ids to be attached to the LLM's response,
+        which will ensure the record can be identified.
+        """
+        if "doc_id" not in data:
+            err_msg = "Key 'doc_id' is missing from the data."
+            raise KeyError(err_msg)
+        if not isinstance(data["doc_id"], str):
+            err_msg = (
+                "Expected 'doc_id' to be a str, but got "
+                f"{type(data['doc_id']).__name__}."
+            )
+            raise TypeError(err_msg)
+        if "wnd_id" not in data:
+            err_msg = "Key 'wnd_id' is missing from the data."
+            raise KeyError(err_msg)
+        if not isinstance(data["wnd_id"], str):
+            err_msg = (
+                "Expected 'wnd_id' to be a str, but got "
+                f"{type(data['wnd_id']).__name__}."
+            )
+            raise TypeError(err_msg)
+        return {"doc_id": data["doc_id"], "wnd_id": data["wnd_id"]}
+
     @abstractmethod
     def _construct_prompt(
         self,
         data: dict[str, str | int | list],
         schema: dict,
-    ) -> tuple[str, str | dict]:
+    ) -> tuple[str, str | dict, dict]:
         """
         Abstract method for constructing the prompt
+
+        Returns
+        -------
+        str
+            The prompt to be used in the task
+        str | dict
+            The output format, either 'json' or a JSON schema
+        dict
+            A dictionary of IDs to be attached to the LLM's response that identify the
+            record
         """
 
     def get_prompt(
@@ -189,7 +224,7 @@ class EEPrompt(ABC):
         data: dict[str, str | int | list],
         schema: dict,
         **kwargs: str | int,
-    ) -> tuple[str, str | dict]:
+    ) -> tuple[str, str | dict, dict]:
         """
         Method to return a prompt, this may get overwritten by child classes
 
@@ -205,14 +240,19 @@ class EEPrompt(ABC):
 
         Returns
         -------
-        str, str | dict
-            Returns the prompt and the output format. The output format could be
-            a string, i.e. "json" or a dictionary representing a JSON schema.
+        str
+            The prompt to be used in the task
+        str | dict
+            The output format, either 'json' or a JSON schema
+        dict
+            A dictionary of IDs to be attached to the LLM's response that identify the
+            record
+
         """
 
-        prompt, output_format = self._construct_prompt(data, schema)
+        prompt, output_format, ids = self._construct_prompt(data, schema)
 
-        return prompt, output_format
+        return prompt, output_format, ids
 
 
 class EDPrompter1(EEPrompt):
@@ -257,7 +297,7 @@ class EDPrompter1(EEPrompt):
         self,
         data: dict[str, str | int | list],
         schema: dict,
-    ) -> tuple[str, str | dict]:
+    ) -> tuple[str, str | dict, dict]:
         """
         Construct a prompt for event trigger detection.
 
@@ -270,8 +310,13 @@ class EDPrompter1(EEPrompt):
 
         Returns
         -------
-        tuple[str, str]
-            A tuple containing the prompt and the output format.
+        str
+            The prompt to be used in the task
+        str | dict
+            The output format, either 'json' or a JSON schema
+        dict
+            A dictionary of IDs to be attached to the LLM's response that identify the
+            record
         """
         # Set input text from data record
         _, _, input_text = self._confirm_data_format(data)
@@ -302,6 +347,7 @@ class EDPrompter1(EEPrompt):
                 "text."
             ),
             "json",
+            self._get_ids(data),
         )
 
 
@@ -319,7 +365,7 @@ class EDPrompter2(EDPrompter1):
         self,
         data: dict[str, str | int | list],
         schema: dict,
-    ) -> tuple[str, str | dict]:
+    ) -> tuple[str, str | dict, dict]:
         """
         Construct a prompt for event trigger detection.
 
@@ -332,8 +378,13 @@ class EDPrompter2(EDPrompter1):
 
         Returns
         -------
-        tuple[str, str]
-            A tuple containing the prompt and the output format.
+        str
+            The prompt to be used in the task
+        str | dict
+            The output format, either 'json' or a JSON schema
+        dict
+            A dictionary of IDs to be attached to the LLM's response that identify the
+            record
         """
         # Set input text from data record
         _, _, input_text = self._confirm_data_format(data)
@@ -381,6 +432,7 @@ class EDPrompter2(EDPrompter1):
                 "text."
             ),
             json_schema,
+            self._get_ids(data),
         )
 
 
@@ -395,6 +447,43 @@ class EAEPrompter1(EEPrompt):
 
     def __init__(self) -> None:
         super().__init__()
+
+    def _get_ids(self, data: dict[str, str | int | list]) -> dict[str, str]:
+        """
+        Method to return the IDs to be attached to the LLM's response,
+        which will ensure the record can be identified.
+
+        Parameters
+        ----------
+        data : dict[str, str | int | list]
+            A dictionary containing the data record.
+
+        Returns
+        -------
+        dict[str, str]
+            A dictionary containing the IDs for the record.
+        """
+        ids = super()._get_ids(data)
+        if "event_mentions" not in data:
+            err_msg = "Key 'event_mentions' is missing from the data."
+            raise KeyError(err_msg)
+        if not isinstance(data["event_mentions"], list):
+            err_msg = (
+                "Expected 'event_mentions' to be a list, but got "
+                f"{type(data['event_mentions']).__name__}."
+            )
+            raise TypeError(err_msg)
+        if "id" not in data["event_mentions"][0]:
+            err_msg = "Key 'id' is missing from the event mention record."
+            raise KeyError(err_msg)
+        if not isinstance(data["event_mentions"][0]["id"], str):
+            err_msg = (
+                "Expected 'id' to be a str, but got "
+                f"{type(data["event_mentions"][0]["id"]).__name__}."
+            )
+            raise TypeError(err_msg)
+        ids["evt_id"] = data["event_mentions"][0]["id"]
+        return ids
 
     def _get_arg_roles(self, schema: dict, event_type: str) -> list[str]:
         """
@@ -438,7 +527,7 @@ class EAEPrompter1(EEPrompt):
         self,
         data: dict[str, str | int | list],
         schema: dict,
-    ) -> tuple[str, str]:
+    ) -> tuple[str, str | dict, dict]:
         """
         Construct a prompt for event trigger detection.
 
@@ -486,4 +575,5 @@ class EAEPrompter1(EEPrompt):
                 "that role.\n"
             ),
             "json",
+            self._get_ids(data),
         )

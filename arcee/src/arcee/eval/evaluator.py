@@ -43,7 +43,7 @@ class Evaluator:
         batch_size: int,
         shuffle: bool | None,
         model_init_kwargs: dict,
-        prompt_const_kwargs: dict,
+        prompt_kwargs: dict,
         argument_extraction: bool = False,  # dataset
     ):
         # Store model ID
@@ -77,7 +77,7 @@ class Evaluator:
             prompt_constuctor=prompt_constructor,
             event_schema=schema,
             argument_extraction=argument_extraction,
-            **prompt_const_kwargs,
+            **prompt_kwargs,
         )
         self.dataloader = DataLoader(
             self.data,

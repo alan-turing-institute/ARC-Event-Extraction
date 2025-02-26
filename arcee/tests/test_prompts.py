@@ -110,7 +110,7 @@ class TestEDPrompter1:
         assert "Attack: A violent physical act causing harm or damage." in prompt
         assert "The explosion destroyed the building." in prompt
         assert "Format the output strictly as JSON" in prompt
-        assert ids == {"doc_id": "doc1", "wnd_id": "wnd1"}
+        assert ids == {"wnd_id": "wnd1"}
 
     def test_get_prompt(self):
         """Test get_prompt calls _construct_prompt and returns expected values."""
@@ -121,7 +121,7 @@ class TestEDPrompter1:
         assert "Attack: A violent physical act causing harm or damage." in prompt
         assert "The explosion destroyed the building." in prompt
         assert "Format the output strictly as JSON" in prompt
-        assert ids == {"doc_id": "doc1", "wnd_id": "wnd1"}
+        assert ids == {"wnd_id": "wnd1"}
 
 
 ### TESTING EDPrompter2 ###
@@ -141,7 +141,7 @@ class TestEDPrompter2:
         assert "Attack: A violent physical act causing harm or damage." in prompt
         assert "The explosion destroyed the building." in prompt
         assert "Format the output strictly as JSON" in prompt
-        assert ids == {"doc_id": "doc1", "wnd_id": "wnd1"}
+        assert ids == {"wnd_id": "wnd1"}
 
     def test_get_prompt(self):
         """Test get_prompt for EDPrompter2 works correctly."""
@@ -154,7 +154,7 @@ class TestEDPrompter2:
         assert "Attack: A violent physical act causing harm or damage." in prompt
         assert "The explosion destroyed the building." in prompt
         assert "Format the output strictly as JSON" in prompt
-        assert ids == {"doc_id": "doc1", "wnd_id": "wnd1"}
+        assert ids == {"wnd_id": "wnd1"}
 
 
 ### TESTING EAEPrompter1 ###
@@ -175,7 +175,7 @@ class TestEAEPrompter1:
         assert "Victim" in prompt
         assert "Location" in prompt
         assert "Format the output strictly as JSON" in prompt
-        assert ids == {"doc_id": "doc1", "wnd_id": "wnd1", "evt_id": "ev1"}
+        assert ids == {"evt_id": "ev1"}
 
     def test_get_prompt(self):
         """Test get_prompt for EAEPrompter1 works correctly."""
@@ -187,7 +187,7 @@ class TestEAEPrompter1:
         assert "Victim" in prompt
         assert "Location" in prompt
         assert "Format the output strictly as JSON" in prompt
-        assert ids == {"doc_id": "doc1", "wnd_id": "wnd1", "evt_id": "ev1"}
+        assert ids == {"evt_id": "ev1"}
 
 
 ### TESTING EAEPrompter2 ###
@@ -211,7 +211,7 @@ class TestEAEPrompter2:
         assert "Victim" in prompt
         assert "Location" in prompt
         assert "Format the output strictly as JSON" in prompt
-        assert ids == {"doc_id": "doc1", "wnd_id": "wnd1", "evt_id": "ev1"}
+        assert ids == {"evt_id": "ev1"}
 
     def test_get_prompt(self):
         """Test get_prompt for EAEPrompter2 works correctly."""
@@ -226,4 +226,4 @@ class TestEAEPrompter2:
         assert "Victim" in prompt
         assert "Location" in prompt
         assert "Format the output strictly as JSON" in prompt
-        assert ids == {"doc_id": "doc1", "wnd_id": "wnd1", "evt_id": "ev1"}
+        assert ids == {"evt_id": "ev1"}

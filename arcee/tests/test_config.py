@@ -15,6 +15,7 @@ EXPECTED_INIT_KWARGS = {
 }
 EXPECTED_PROMPT_CLS = "DummyEAEPrompter"
 EXPECTED_PROMPT_KWARGS = {}
+EXPECTED_OUTPUT = "outputs/dummy_experiment.jsonl"
 
 
 def test_DataArguments(dummy_experment_config: ExperimentConfig):
@@ -52,5 +53,6 @@ def test_model_dump(dummy_experment_config: ExperimentConfig):
             "prompt_cls": EXPECTED_PROMPT_CLS,
             "prompt_kwargs": EXPECTED_PROMPT_KWARGS,
         },
+        "output_path": EXPECTED_OUTPUT,
     }
     assert dummy_experment_config.to_dict() == expected_kwargs

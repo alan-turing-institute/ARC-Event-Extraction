@@ -6,6 +6,10 @@ poc/results/**/*.[ct]sv
 poc/results/*.txt
 poc/model/*
 
+# OUTPUT
+output/*
+!output/README.md
+
 # Data
 data/RAMS/*
 !data/RAMS/README.md

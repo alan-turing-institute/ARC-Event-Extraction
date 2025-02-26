@@ -10,6 +10,7 @@ from arcee.eval.evaluator import Evaluator
 def main(config: ExperimentConfig) -> None:
     # Initialise evaluator
     evaluator = Evaluator(
+        output_path=config.output_path,
         **config.data_kwargs.to_dict(),
         **config.model_kwargs.to_dict(),
         **config.prompt_kwargs.to_dict(),

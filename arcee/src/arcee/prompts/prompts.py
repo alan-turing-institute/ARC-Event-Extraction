@@ -152,15 +152,6 @@ class EEPrompt(ABC):
         Method to return the doc and wnd ids to be attached to the LLM's response,
         which will ensure the record can be identified.
         """
-        if "doc_id" not in data:
-            err_msg = "Key 'doc_id' is missing from the data."
-            raise KeyError(err_msg)
-        if not isinstance(data["doc_id"], str):
-            err_msg = (
-                "Expected 'doc_id' to be a str, but got "
-                f"{type(data['doc_id']).__name__}."
-            )
-            raise TypeError(err_msg)
         if "wnd_id" not in data:
             err_msg = "Key 'wnd_id' is missing from the data."
             raise KeyError(err_msg)
@@ -170,7 +161,7 @@ class EEPrompt(ABC):
                 f"{type(data['wnd_id']).__name__}."
             )
             raise TypeError(err_msg)
-        return {"doc_id": data["doc_id"], "wnd_id": data["wnd_id"]}
+        return {"wnd_id": data["wnd_id"]}
 
     @abstractmethod
     def _construct_prompt(
@@ -434,7 +425,6 @@ class EAEPrompter1(EEPrompt):
         dict[str, str]
             A dictionary containing the IDs for the record.
         """
-        ids = super()._get_ids(data)
         if "event_mentions" not in data:
             err_msg = "Key 'event_mentions' is missing from the data."
             raise KeyError(err_msg)
@@ -453,8 +443,7 @@ class EAEPrompter1(EEPrompt):
                 f"{type(data['event_mentions'][0]['id']).__name__}."
             )
             raise TypeError(err_msg)
-        ids["evt_id"] = data["event_mentions"][0]["id"]
-        return ids
+        return {"evt_id": data["event_mentions"][0]["id"]}
 
     def _get_system_content(self) -> str:
         return (

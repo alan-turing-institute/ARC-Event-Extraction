@@ -19,8 +19,8 @@ class EEBaseModel(ABC):
     @abstractmethod
     def predict(
         self,
-        input: list[dict[str, str]],
-    ) -> list[str]:
+        input: list[tuple[dict[str, str], str | dict, dict]],
+    ) -> list[dict]:
         """
         Makes predictions for some data, whether it is doing event detection (ED),
         event argument extraction (EAE) or end-to-end (E2E) will be determined
@@ -62,11 +62,10 @@ class EEOllamaModel(EEBaseModel):
         """
         super().__init__()
         if options is None:
-            # TODO: Copied this functionality over from WikiGame, do we want it here?
-            # Might want to see the difference in performance when changing the
-            # temperature, I have a feeling a lower value might be better to stop it
-            # being too creative when doing event extraction, but not 100% sure
-            options = {"temperature": 0.0}
+            # Set temperature to zero (less creative)
+            # Ollama's context window length (option `num_ctx`) defaults to 2048, which
+            # is likely to be too short for many prompts, so setting this to 8192.
+            options = {"temperature": 0.0, "num_ctx": 8192}
         self.options = options
 
         self.keep_alive = keep_alive
@@ -82,7 +81,7 @@ class EEOllamaModel(EEBaseModel):
     def _get_response(
         self,
         messages: list[dict[str, str]],
-        response_format: str = "json",
+        response_format: str | dict = "json",
     ) -> str:
         """
         Get the response from the Ollama model.
@@ -111,29 +110,35 @@ class EEOllamaModel(EEBaseModel):
         )["message"]["content"]
 
     def predict(
-        self,
-        input: list[dict[str, str]],
-    ) -> list[str]:
+        self, input: list[tuple[dict[str, str], str | dict, dict]]
+    ) -> list[dict]:
         """
         This method makes predictions using an Ollama model, a given prompt and
         a dataset
 
         Parameters
         ----------
-        input: list[dict[str, str]]
+        input: list[tuple[dict[str, str], str]]
             A list of messages to be passed to the Ollama client chat
 
         Returns
         -------
-        list[str]
+        list[dict]
             The response from the Ollama model
 
         """
-        responses = []
-        for message in input:
-            responses.append(self._get_response([message], "json"))
+        outputs = []
+        for record in input:
+            messages = [record[0]]
+            output_format = record[1]
+            # Create an output dictionary that consists of the record IDs
+            output = record[2]
+            response = self._get_response(messages, output_format)
+            # Append the response to the output dict
+            output["output"] = response
+            outputs.append(output)
 
-        return responses
+        return outputs
 
 
 class EEMockOllamaModel(EEOllamaModel):
@@ -147,7 +152,7 @@ class EEMockOllamaModel(EEOllamaModel):
     def _get_response(
         self,
         messages: list[dict[str, str]],
-        response_format: str = "json",
+        response_format: str | dict = "json",
     ) -> str:
         # To prevent the linter throwing a wobbly, do something with the args
         del messages
@@ -155,9 +160,8 @@ class EEMockOllamaModel(EEOllamaModel):
         return '{"object": "mock object"}'
 
     def predict(
-        self,
-        input: list[dict[str, str]],
-    ) -> list[str]:
+        self, input: list[tuple[dict[str, str], str | dict, dict]]
+    ) -> list[dict]:
         return super().predict(input)
 
 
@@ -224,9 +228,8 @@ class EEHFModel(EEBaseModel):
         self.options = options
 
     def predict(
-        self,
-        input: list[dict[str, str]],
-    ) -> list[str]:
+        self, input: list[tuple[dict[str, str], str | dict, dict]]
+    ) -> list[dict]:
         """
         Method for making predictions with a transformers model. Inputs should come
         from an `arcee.dataset.dataset.EEDataset`.

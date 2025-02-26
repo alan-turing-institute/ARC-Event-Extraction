@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 
 import arcee.prompts.prompts as prompts
 from arcee.dataset.dataset import EEDataset
-from arcee.dataset.load import load_pattern
+from arcee.dataset.load import load_json
 from arcee.ee_models.ee_models import EEHFModel, EEOllamaModel
 
 MODEL_CLS_MAP = {
@@ -43,6 +43,8 @@ class Evaluator:
         batch_size: int,
         shuffle: bool | None,
         model_init_kwargs: dict,
+        prompt_const_kwargs: dict,
+        argument_extraction: bool = False,  # dataset
     ):
         # Store model ID
         # TODO: handle trained models stored locally differently? stored on wandb?
@@ -63,7 +65,7 @@ class Evaluator:
 
         # Get prompter and data schema
         prompt_constructor = getattr(prompts, prompt_cls)()
-        schema = load_pattern(schema_path)
+        schema = load_json(schema_path)
 
         # Shuffle defaults to False
         if shuffle is None:
@@ -74,6 +76,8 @@ class Evaluator:
             data_path=data_path,
             prompt_constuctor=prompt_constructor,
             event_schema=schema,
+            argument_extraction=argument_extraction,
+            **prompt_const_kwargs,
         )
         self.dataloader = DataLoader(
             self.data,
@@ -82,6 +86,9 @@ class Evaluator:
             collate_fn=lambda x: x,
         )
 
+        # This will be needed when we want to know how to extract the results
+        # i.e., trigger or arg extraction
+        self.argument_extraction = argument_extraction
         # TODO: handle result extraction
         # self.extractor= extractor
 
@@ -92,6 +99,7 @@ class Evaluator:
         """
         # Get model ouputs and decode using tokenzier
         outputs = []
+
         for batch in iter(self.dataloader):
             outputs.extend(self.model.predict(batch))
 

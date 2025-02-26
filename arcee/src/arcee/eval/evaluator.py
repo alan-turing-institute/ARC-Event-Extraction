@@ -122,9 +122,12 @@ class Evaluator:
             with open(self.output_path, "w") as f:
                 for output in batch_outputs:
                     f.write(json.dumps(output) + "\n")
-            # Fetch correct labels from gold data
-            # Save correct predictions, total predicts and total golds
-            # Save to wandb?
+            # TODO:
+            # - Fetch correct labels from gold data - will want to use
+            # self.argument_extraction to determine whether to extract gold
+            # triggers or gold arguments
+            # - Save correct predictions, total predicts and total golds
+            # - Save to wandb?
 
         # TODO: other things to log:
         # - total time taken (or is this logged by wandb?)

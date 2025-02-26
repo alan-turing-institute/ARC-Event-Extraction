@@ -192,8 +192,6 @@ def data_to_argument_schema(
     -------
     list of dict
         A list of transformed event argument records. Each dictionary contains:
-        - `doc_id` (str): The document ID of the event record.
-        - `wnd_id` (str): The window ID of the event record.
         - `evt_id` (str): The event mention ID.
         - `output` (dict): A dictionary mapping argument roles to their respective vals.
 
@@ -242,8 +240,6 @@ def data_to_argument_schema(
             # Get definition of event type schema
             properties = json_schema.get("properties", {})
             new_record = {
-                "doc_id": record.get("doc_id"),
-                "wnd_id": record.get("wnd_id"),
                 "evt_id": event_mention.get("id"),
                 "output": {},
             }
@@ -276,7 +272,6 @@ def data_to_ed_schema(event_records: list[dict[str, Any]]) -> list[dict]:
     event_records : List[Dict[str, Any]]
         A list of event records. Each record is expected to have the form:
             {
-                "doc_id": "doc1",
                 "wnd_id": "wnd1",
                 "event_mentions": [
                     {
@@ -294,7 +289,6 @@ def data_to_ed_schema(event_records: list[dict[str, Any]]) -> list[dict]:
 
     list of dict
         A list of transformed event argument records. Each dictionary contains:
-        - `doc_id` (str): The document ID of the event record.
         - `wnd_id` (str): The window ID of the event record.
         - `evt_id` (str): The event mention ID.
         - `output` (dict): A dictionary mapping event types to trigger words.
@@ -312,7 +306,6 @@ def data_to_ed_schema(event_records: list[dict[str, Any]]) -> list[dict]:
             output.append({event_type: trigger})
         transformed_records.append(
             {
-                "doc_id": record["doc_id"],
                 "wnd_id": record["wnd_id"],
                 "output": output,
             }

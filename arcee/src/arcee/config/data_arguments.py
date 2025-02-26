@@ -20,11 +20,13 @@ class DataArguments(BaseConfig):
         self,
         data_path: str,
         schema_path: str,
+        argument_extraction: bool = False,
         shuffle: bool | None = None,
     ) -> None:
         super().__init__()
         self.data_path = data_path
         self.schema_path = schema_path
+        self.argument_extraction = argument_extraction
         self.shuffle = shuffle
 
     def to_dict(self) -> dict:
@@ -36,5 +38,6 @@ class DataArguments(BaseConfig):
         return {
             "data_path": self.data_path,
             "schema_path": self.schema_path,
+            "argument_extraction": self.argument_extraction,
             "shuffle": self.shuffle,
         }

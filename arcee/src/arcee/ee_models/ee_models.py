@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from abc import ABC, abstractmethod
 
 import ollama
@@ -123,8 +124,10 @@ class EEOllamaModel(EEBaseModel):
 
         Returns
         -------
-        list[dict]
-            The response from the Ollama model
+        list[dict[str, str | list | dict]]
+            A list of dictionaries, with the record IDs and the output from the model
+            If the output is not in JSON format, then it will be logged with a key of
+            'JSON_ERROR' and the value of the response.
 
         """
         outputs = []
@@ -132,11 +135,15 @@ class EEOllamaModel(EEBaseModel):
             messages = [record[0]]
             output_format = record[1]
             # Create an output dictionary that consists of the record IDs
-            output = record[2]
+            ids = record[2]
             response = self._get_response(messages, output_format)
             # Append the response to the output dict
-            output["output"] = response
-            outputs.append(output)
+            try:
+                output = json.loads(response)
+            except json.JSONDecodeError:
+                output = {"JSON_ERROR": response}
+
+            outputs.append({**ids, "output": output})
 
         return outputs
 

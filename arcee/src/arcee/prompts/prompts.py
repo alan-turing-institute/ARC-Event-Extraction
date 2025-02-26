@@ -24,9 +24,23 @@ class EEPrompt(ABC):
             "from input text.\n"
         )
 
-    def _confirm_data_format(
+    def _confirm_ed_data_format(self, data: dict[str, str | int | list]) -> str:
+        # Double check keys and types of data
+        if "text" not in data:
+            err_msg = "Key 'text' is missing from the data."
+            raise KeyError(err_msg)
+        if not isinstance(data["text"], str):
+            err_msg = (
+                "Expected 'text' to be a string, but got "
+                f"{type(data['text']).__name__}."
+            )
+            raise TypeError(err_msg)
+
+        return data["text"]
+
+    def _confirm_arg_data_format(
         self, data: dict[str, str | int | list]
-    ) -> tuple[dict, list, str]:
+    ) -> tuple[dict, list]:
         # Double check keys and types of data
         if "event_mentions" not in data:
             err_msg = "Key 'event_mentions' is missing from the data."
@@ -43,6 +57,7 @@ class EEPrompt(ABC):
                 f"{type(data['event_mentions'][0]).__name__}."
             )
             raise TypeError(err_msg)
+        event_mention = data["event_mentions"][0]
         if "tokens" not in data:
             err_msg = "Key 'tokens' is missing from the data."
             raise KeyError(err_msg)
@@ -52,17 +67,8 @@ class EEPrompt(ABC):
                 f"{type(data['tokens']).__name__}."
             )
             raise TypeError(err_msg)
-        if "text" not in data:
-            err_msg = "Key 'text' is missing from the data."
-            raise KeyError(err_msg)
-        if not isinstance(data["text"], str):
-            err_msg = (
-                "Expected 'text' to be a string, but got "
-                f"{type(data['text']).__name__}."
-            )
-            raise TypeError(err_msg)
 
-        return data["event_mentions"][0], data["tokens"], data["text"]
+        return event_mention, data["tokens"]
 
     def _get_event_trigger(
         self, event_mention: dict[str, dict[str, int] | str]
@@ -286,7 +292,7 @@ class EDPrompter1(EEPrompt):
             record
         """
         # Set input text from data record
-        _, _, input_text = self._confirm_data_format(data)
+        input_text = self._confirm_ed_data_format(data)
 
         # For event detection the schema is the list of events with definitions
         # Concatenate event type definitions into a single string, with a line break
@@ -354,7 +360,7 @@ class EDPrompter2(EDPrompter1):
             record
         """
         # Set input text from data record
-        _, _, input_text = self._confirm_data_format(data)
+        input_text = self._confirm_ed_data_format(data)
 
         # For event detection the schema is the list of events with definitions
         # Concatenate event type definitions into a single string, with a line break
@@ -481,7 +487,7 @@ class EAEPrompter1(EEPrompt):
             A tuple containing the prompt and the output format.
         """
 
-        event_mention, tokens, _ = self._confirm_data_format(data)
+        event_mention, tokens = self._confirm_arg_data_format(data)
 
         # Get trigger span for 1st event mention (should be only event mention)
         trig_start, trig_end, event_type = self._get_event_trigger(event_mention)
@@ -552,7 +558,7 @@ class EAEPrompter2(EAEPrompter1):
             A tuple containing the prompt and the output format.
         """
 
-        event_mention, tokens, _ = self._confirm_data_format(data)
+        event_mention, tokens = self._confirm_arg_data_format(data)
 
         # Get trigger span for 1st event mention (should be only event mention)
         trig_start, trig_end, event_type = self._get_event_trigger(event_mention)

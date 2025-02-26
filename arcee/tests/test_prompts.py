@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from arcee.dataset.schemas import pattern_to_json_schema
+from arcee.dataset.schemas import get_arg_roles, pattern_to_json_schema
 from arcee.prompts.prompts import EAEPrompter1, EAEPrompter2, EDPrompter1, EDPrompter2
 
 DATA = {
@@ -38,6 +38,24 @@ EAE_SCHEMA = {
     "Explosion": {"roles": ["Attacker", "Victim", "Location"]},
     "Attack": {"roles": ["Attacker", "Target", "Location"]},
 }
+
+
+### TESTING get_arg_roles ###
+
+
+def test_get_arg_roles_valid():
+    """Test _get_arg_roles returns correct argument roles."""
+    assert get_arg_roles(EAE_SCHEMA, "Explosion") == [
+        "Attacker",
+        "Victim",
+        "Location",
+    ]
+
+
+def test_get_arg_roles_invalid():
+    """Test _get_arg_roles raises KeyError for unknown event type."""
+    with pytest.raises(KeyError, match="Event type 'Flood' not found in schema."):
+        get_arg_roles(EAE_SCHEMA, "Flood")
 
 
 ### TESTING EDPrompter1 ###
@@ -144,19 +162,6 @@ class TestEAEPrompter1:
     def setup_method(self):
         """Setup an instance of EAEPrompter1 for testing."""
         self.prompter = EAEPrompter1()
-
-    def test_get_arg_roles_valid(self):
-        """Test _get_arg_roles returns correct argument roles."""
-        assert self.prompter._get_arg_roles(EAE_SCHEMA, "Explosion") == [
-            "Attacker",
-            "Victim",
-            "Location",
-        ]
-
-    def test_get_arg_roles_invalid(self):
-        """Test _get_arg_roles raises KeyError for unknown event type."""
-        with pytest.raises(KeyError, match="Event type 'Flood' not found in schema."):
-            self.prompter._get_arg_roles(EAE_SCHEMA, "Flood")
 
     def test_construct_prompt(self):
         """

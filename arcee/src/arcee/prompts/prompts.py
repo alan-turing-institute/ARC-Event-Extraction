@@ -444,7 +444,7 @@ class EAEPrompter1(EEPrompt):
         if not isinstance(data["event_mentions"][0]["id"], str):
             err_msg = (
                 "Expected 'id' to be a str, but got "
-                f"{type(data["event_mentions"][0]["id"]).__name__}."
+                f"{type(data['event_mentions'][0]['id']).__name__}."
             )
             raise TypeError(err_msg)
         ids["evt_id"] = data["event_mentions"][0]["id"]

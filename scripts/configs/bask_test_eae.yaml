@@ -8,7 +8,7 @@ model_kwargs:
       temperature: 0
 data_kwargs:
   data_path: data/ACE05/output/split_dev/dev.jsonlines
-  schema_path: data/ACE05/schema/event_type_definitions.json
+  schema_path: data/ACE05/schema/pattern.json
   argument_extraction: True
 prompt_kwargs:
   prompt_cls: EAEPrompter2

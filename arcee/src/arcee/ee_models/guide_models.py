@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 
 import guidance as gi
@@ -137,7 +138,9 @@ class GuideFreeJSONModel(BaseGuideModel):
         )
         self.max_tokens = max_tokens
 
-    def predict(self, input: list[dict[str, str]]) -> list[str]:
+    def predict(
+        self, input: list[tuple[dict[str, str], str | dict, dict]]
+    ) -> list[dict[str, str | dict]]:
         """This uses the
 
         Args:
@@ -147,7 +150,7 @@ class GuideFreeJSONModel(BaseGuideModel):
             list[str]: _description_
         """
         responses = []
-        for chat in input:
+        for chat, _, ids in input:
             lm = self.model.copy()
             with gi.user():
                 lm += chat["content"]
@@ -156,5 +159,12 @@ class GuideFreeJSONModel(BaseGuideModel):
                 lm += gi.json(name="output", max_tokens=self.max_tokens)
                 lm += "\n\n```"
 
-            responses.append(lm["output"])
+            try:
+                output = json.loads(lm["output"])
+            except json.JSONDecodeError:
+                output = {}
+
+            response = {**ids, "output": output}
+            responses.append(response)
+
         return responses

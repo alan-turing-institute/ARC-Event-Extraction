@@ -37,4 +37,4 @@ sleep 5
 echo "About to run script"
 
 # Run
-python scripts/eval/inference.py --config_path scripts/configs/bask_test_ed.yaml --ollama_host=${OLLAMA_PORT}
+python scripts/eval/inference.py --config_path scripts/configs/test/bask_test_ed.yaml --ollama_port=${OLLAMA_PORT}

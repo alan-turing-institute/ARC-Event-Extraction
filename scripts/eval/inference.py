@@ -44,6 +44,9 @@ if __name__ == "__main__":
 
     # Init experiment config
     config = ExperimentConfig.from_yaml(args.config_path)
+    output_path = args.config_path.replace("yaml", "jsonl")
+    output_path = output_path.replace("scripts/configs", "outputs")
+    config["output_path"] = output_path
     if args.ollama_port:
         config["model_kwargs"]["model_init_kwargs"]["host_port"] = args.ollama_port
 

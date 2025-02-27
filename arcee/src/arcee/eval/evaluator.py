@@ -59,6 +59,7 @@ class Evaluator:
         if os.path.exists(output_path):
             err_msg = f"Output path {output_path} already exists."
             raise FileExistsError(err_msg)
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
         self.output_path = output_path
 
         # Store model ID

@@ -120,7 +120,7 @@ class Evaluator:
         for batch in iter(self.dataloader):
             batch_outputs = self.model.predict(batch)
             outputs.extend(batch_outputs)
-            with open(self.output_path, "w") as f:
+            with open(self.output_path, "a") as f:
                 for output in batch_outputs:
                     f.write(json.dumps(output) + "\n")
             # TODO:

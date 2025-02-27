@@ -34,10 +34,18 @@ if __name__ == "__main__":
         required=True,
         help="String containing the local path to the experiment config",
     )
+    parser.add_argument(
+        "--ollama_port",
+        required=False,
+        type=int,
+        help="Port to use for OLLAMA",
+    )
     args = parser.parse_args()
 
     # Init experiment config
     config = ExperimentConfig.from_yaml(args.config_path)
+    if args.ollama_port:
+        config["model_kwargs"]["model_init_kwargs"]["host_port"] = args.ollama_port
 
     # Run
     main(config)

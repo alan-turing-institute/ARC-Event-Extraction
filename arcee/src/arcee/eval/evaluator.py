@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json
+import os
+
 from torch.utils.data import DataLoader
 
 import arcee.prompts.prompts as prompts
@@ -15,37 +18,49 @@ MODEL_CLS_MAP = {
 
 class Evaluator:
     """
-    A class which manages and runs evaluations.
-
-    Attributes:
-        model_id: A string denoting the id or path of the model being used. Should be a
-            hugggingface model id, an ollama model id, or a path to a model.
-        model: A model whose class inherits from EEBaseModel. The model type is selected
-            using the `model_type` argument, which should one one of `"hf"` or
-            `"ollama"`. Additional arguments conditional on the model class can be
-            passed via the `model_init_kwargs` dictionary
-        data: An EEDataset. It is initialised using the `data_path` argument denoting a
-            dataset to be loaded, the `prompt_cls` which is a string for a prompt
-            construction class in arcee.prompts.prompts.py, and the `schema_path` path
-            argument which is the path to the event schema for that dataset.
-        dataloader: A torch.DataLoader, used for batching the dataset. It is initialised
-            using the dataset, the `shuffle` argument` and the `batch_size` argument.
-            See the torch documentation for details.
+    Class for evaluating an event extraction model.
     """
 
     def __init__(
         self,
         model_id: str,
         model_type: str,
+        output_path: str,
         data_path: str,
+        # TODO: add check that the prompt is doing the same as arg extraction value
+        argument_extraction: bool,
         prompt_cls: str,
         schema_path: str,
         batch_size: int,
         shuffle: bool | None,
         model_init_kwargs: dict,
-        prompt_const_kwargs: dict,
-        argument_extraction: bool = False,  # dataset
+        prompt_kwargs: dict,
     ):
+        """TODO: to be filled in
+
+        Args:
+            model_id (str): _description_
+            model_type (str): _description_
+            output_path (str): _description_
+            data_path (str): _description_
+            argument_extraction (bool): _description_
+            prompt_cls (str): _description_
+            schema_path (str): _description_
+            batch_size (int): _description_
+            shuffle (bool | None): _description_
+            model_init_kwargs (dict): _description_
+            prompt_kwargs (dict): _description_
+
+        Raises:
+            FileExistsError: _description_
+            ValueError: _description_
+        """
+        # Check output path doesn't already exist
+        if os.path.exists(output_path):
+            err_msg = f"Output path {output_path} already exists."
+            raise FileExistsError(err_msg)
+        self.output_path = output_path
+
         # Store model ID
         # TODO: handle trained models stored locally differently? stored on wandb?
         self.model_id = model_id
@@ -77,7 +92,7 @@ class Evaluator:
             prompt_constuctor=prompt_constructor,
             event_schema=schema,
             argument_extraction=argument_extraction,
-            **prompt_const_kwargs,
+            **prompt_kwargs,
         )
         self.dataloader = DataLoader(
             self.data,
@@ -100,15 +115,25 @@ class Evaluator:
         # Get model ouputs and decode using tokenzier
         outputs = []
 
+        # TODO: total_preds, correct_preds, total_golds = 0, 0, 0
         for batch in iter(self.dataloader):
-            outputs.extend(self.model.predict(batch))
+            batch_outputs = self.model.predict(batch)
+            outputs.extend(batch_outputs)
+            with open(self.output_path, "w") as f:
+                for output in batch_outputs:
+                    f.write(json.dumps(output) + "\n")
+            # TODO:
+            # - Fetch correct labels from gold data - will want to use
+            # self.argument_extraction to determine whether to extract gold
+            # triggers or gold arguments
+            # - Save correct predictions, total predicts and total golds
+            # - Save to wandb?
 
-        # Extract trigger/arguments from predicted outputs (given dataset)
-        # TODO: set up EE dataset to return targets conditional on schema
-        # TODO: trigger, arg, or both arg
+        # TODO: other things to log:
+        # - total time taken (or is this logged by wandb?)
 
         # Compute f1 scores
-        # TODO: conditional on above
+        # TODO: to match TextEE (without trig start / end matching)
 
         # Log scores
         # TODO: get wandb setup

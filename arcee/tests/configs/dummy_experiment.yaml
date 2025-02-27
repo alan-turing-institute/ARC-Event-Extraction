@@ -10,3 +10,4 @@ data_kwargs:
   schema_path: data/RAMS/patterns/pattern.json
 prompt_kwargs:
   prompt_cls: DummyEAEPrompter
+output_path: outputs/dummy_experiment.jsonl

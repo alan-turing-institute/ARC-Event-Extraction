@@ -12,4 +12,3 @@ data_kwargs:
   argument_extraction: False
 prompt_kwargs:
   prompt_cls: EDPrompter2
-output_path: outputs/bask_test/ed_test.jsonl

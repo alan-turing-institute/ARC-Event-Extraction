@@ -21,7 +21,7 @@ class ExperimentConfig(BaseConfig):
         data_kwargs: dict,
         model_kwargs: dict,
         prompt_kwargs: dict,
-        output_path: str,
+        output_path: str = "OUTPUT_NOT_SET.jsonl",
     ) -> None:
         super().__init__()
         self.data_kwargs = DataArguments.from_dict(data_kwargs)

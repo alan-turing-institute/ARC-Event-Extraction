@@ -7,8 +7,8 @@ poc/results/*.txt
 poc/model/*
 
 # OUTPUT
-output/*
-!output/README.md
+outputs/*
+!outputs/README.md
 
 # Data
 data/RAMS/*

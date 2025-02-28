@@ -59,6 +59,7 @@ class Evaluator:
         if os.path.exists(output_path):
             err_msg = f"Output path {output_path} already exists."
             raise FileExistsError(err_msg)
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
         self.output_path = output_path
 
         # Store model ID
@@ -119,7 +120,7 @@ class Evaluator:
         for batch in iter(self.dataloader):
             batch_outputs = self.model.predict(batch)
             outputs.extend(batch_outputs)
-            with open(self.output_path, "w") as f:
+            with open(self.output_path, "a") as f:
                 for output in batch_outputs:
                     f.write(json.dumps(output) + "\n")
             # TODO:

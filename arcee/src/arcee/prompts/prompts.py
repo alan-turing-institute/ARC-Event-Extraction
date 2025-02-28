@@ -227,7 +227,7 @@ class EEPrompt(ABC):
 
         """
 
-        prompt, output_format, ids = self._construct_prompt(data, schema)
+        prompt, output_format, ids = self._construct_prompt(data, schema, **kwargs)
 
         return prompt, output_format, ids
 

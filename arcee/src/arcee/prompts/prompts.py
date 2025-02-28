@@ -1,8 +1,20 @@
 from __future__ import annotations
 
+import json
 from abc import ABC, abstractmethod
+from typing import Any
 
-from arcee.dataset.schemas import get_arg_roles, pattern_to_json_schema
+import numpy as np
+import torch
+from sentence_transformers import SentenceTransformer, util
+
+from arcee.dataset.load import load_data
+from arcee.dataset.schemas import (
+    data_to_ed_schema,
+    get_arg_roles,
+    get_ed_json_schema,
+    pattern_to_json_schema,
+)
 
 
 class EEPrompt(ABC):
@@ -168,6 +180,7 @@ class EEPrompt(ABC):
         self,
         data: dict[str, str | int | list],
         schema: dict,
+        **kwargs: Any,
     ) -> tuple[str, str | dict, dict]:
         """
         Abstract method for constructing the prompt
@@ -187,7 +200,7 @@ class EEPrompt(ABC):
         self,
         data: dict[str, str | int | list],
         schema: dict,
-        **kwargs: str | int,
+        **kwargs: Any,
     ) -> tuple[str, str | dict, dict]:
         """
         Method to return a prompt, this may get overwritten by child classes
@@ -261,6 +274,7 @@ class EDPrompter1(EEPrompt):
         self,
         data: dict[str, str | int | list],
         schema: dict,
+        **kwargs: Any,
     ) -> tuple[str, str | dict, dict]:
         """
         Construct a prompt for event trigger detection.
@@ -329,6 +343,7 @@ class EDPrompter2(EDPrompter1):
         self,
         data: dict[str, str | int | list],
         schema: dict,
+        **kwargs: Any,
     ) -> tuple[str, str | dict, dict]:
         """
         Construct a prompt for event trigger detection.
@@ -359,21 +374,7 @@ class EDPrompter2(EDPrompter1):
         event_type_defs = self._get_event_types_defs(schema)
 
         # Define the JSON schema for the output
-        json_schema = {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "minProperties": 1,
-                "maxProperties": 1,
-                "additionalProperties": False,
-                "properties": {key: {"type": "string"} for key in schema},
-            },
-            "minItems": 0,
-            "description": (
-                "An array of objects, where each object contains exactly one key-value "
-                "pair with predefined keys."
-            ),
-        }
+        json_schema = get_ed_json_schema(schema)
 
         # Return the constructed prompt
         return (
@@ -381,6 +382,163 @@ class EDPrompter2(EDPrompter1):
                 self._get_system_content()
                 + "These are the possible event types you can chose from:\n"
                 + event_type_defs
+                + "\nGiven this text:\n```"
+                + input_text
+                + "```\n"
+                "Do any of the event types appear in the text? "
+                "Not all event types will appear in the text, there may be some "
+                "that appear multiple times and there may be no event types "
+                "in the text.\n"
+                "If you identify one or more event type, then what is the trigger "
+                "word or words in the input text?"
+                + "\nFormat the output strictly as JSON. The output is an array of "
+                "JSON objects with exactly one key-value pair. The valid keys are "
+                "the event types and the values are the trigger words from the input "
+                "text."
+            ),
+            json_schema,
+            self._get_ids(data),
+        )
+
+
+class EDPrompter3(EDPrompter1):
+    """
+    Class to construct prompts for event trigger detection:
+    - uses RANDOM samples in the prompt the prompt
+    - requests JSON output with a defined JSON schema
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    def _get_examples(
+        self, example_data_path: str, seed: int, num_examples: int
+    ) -> list[dict]:
+        """
+        Selects a random subset of example records from a dataset.
+
+        This function loads example data from a given file, sets a random seed for
+        reproducibility, and selects `num_examples` random examples without replacement.
+
+        Args:
+            example_data_path (str): Path to the file containing example records.
+            seed (int): Random seed to ensure reproducibility of the selected examples.
+            num_examples (int): The number of examples to randomly select.
+
+        Returns:
+            list[dict]: A list of randomly selected example records.
+        """
+        example_data = load_data(example_data_path)
+
+        np.random.seed(seed)
+
+        return list(np.random.choice(example_data, num_examples, replace=False))
+
+    def _construct_examples(
+        self, example_data_path: str, seed: int, num_examples: int
+    ) -> str:
+        """
+        Constructs formatted example prompts based on retrieved event records.
+
+        This function retrieves example records using `_get_examples`, extracts relevant
+        event mentions from each record, and formats the data into structured prompt
+        text for model input.
+
+        Args:
+            example_data_path (str): Path to the file containing example records.
+            seed (int): Random seed to ensure reproducibility when selecting examples.
+            num_examples (int): The number of examples to retrieve and format.
+
+        Returns:
+            str: A formatted string containing structured example prompts.
+        """
+        example_records = self._get_examples(example_data_path, seed, num_examples)
+
+        expected_output = data_to_ed_schema(example_records)
+
+        output = []
+        for i, record in enumerate(example_records):
+            input_text = " ".join(record["tokens"])
+
+            prompt_text = (
+                "### Example " + str(i + 1) + "\n"
+                "Input text: ```" + input_text + "```\n"
+                "Expected Response (JSON): \n" + json.dumps(expected_output[i]) + "\n"
+            )
+            output.append(prompt_text)
+        return "\n".join(output)
+
+    def _construct_prompt(
+        self,
+        data: dict[str, str | int | list],
+        schema: dict,
+        **kwargs: Any,
+    ) -> tuple[str, str | dict, dict]:
+        """
+        Constructs a prompt for event trigger detection.
+
+        This function generates a structured prompt for event detection by
+        combining input text, event type definitions, and example texts. It
+        also defines the expected output format using a JSON schema.
+
+        Args:
+            data (dict[str, str | int | list]):
+                The input data record containing text and other metadata.
+            schema (dict):
+                A dictionary defining possible event types and their descriptions.
+            example_data_path (str):
+                Path to the file containing example event records.
+            seed (int):
+                Random seed for selecting examples reproducibly.
+            num_examples (int):
+                The number of example records to include in the prompt.
+
+        Returns:
+            tuple[str, str | dict, dict]: A tuple containing:
+                - str: The constructed prompt with event type definitions,
+                  examples, and input text.
+                - str | dict: The JSON schema defining the expected output format.
+                - dict: A dictionary containing extracted IDs from the input data.
+        """
+        required_keys = {"example_data_path": str, "seed": int, "num_examples": int}
+
+        for key, expected_type in required_keys.items():
+            if key not in kwargs:
+                err_msg = f"Missing required keyword argument: '{key}'"
+                raise TypeError(err_msg)
+            if not isinstance(kwargs[key], expected_type):
+                err_msg = (
+                    f"Expected '{key}' to be of type {expected_type.__name__}, "
+                    "but got {type(kwargs[key]).__name__}"
+                )
+                raise TypeError(err_msg)
+
+        example_data_path: str = kwargs["example_data_path"]
+        seed: int = kwargs["seed"]
+        num_examples: int = kwargs["num_examples"]
+
+        # Set input text from data record
+        input_text = self._confirm_ed_data_format(data)
+
+        # For event detection the schema is the list of events with definitions
+        # Concatenate event type definitions into a single string, with a line break
+        # between each definition
+        event_type_defs = self._get_event_types_defs(schema)
+
+        # Get text of examples
+        example_text = self._construct_examples(example_data_path, seed, num_examples)
+
+        # Define the JSON schema for the output
+        json_schema = get_ed_json_schema(schema)
+
+        # Return the constructed prompt
+        return (
+            (
+                self._get_system_content()
+                + "These are the possible event types you can chose from:\n"
+                + event_type_defs
+                + "\nHere are some examples:\n"
+                + example_text
                 + "\nGiven this text:\n```"
                 + input_text
                 + "```\n"
@@ -459,6 +617,7 @@ class EAEPrompter1(EEPrompt):
         self,
         data: dict[str, str | int | list],
         schema: dict,
+        **kwargs: Any,
     ) -> tuple[str, str | dict, dict]:
         """
         Construct a prompt for event trigger detection.
@@ -530,6 +689,7 @@ class EAEPrompter2(EAEPrompter1):
         self,
         data: dict[str, str | int | list],
         schema: dict,
+        **kwargs: Any,
     ) -> tuple[str, str | dict, dict]:
         """
         Construct a prompt for event trigger detection.

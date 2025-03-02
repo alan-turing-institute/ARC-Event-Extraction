@@ -1,9 +1,18 @@
 from __future__ import annotations
 
+import json
+import tempfile
+
 import pytest
 
 from arcee.dataset.schemas import get_arg_roles, pattern_to_json_schema
-from arcee.prompts.prompts import EAEPrompter1, EAEPrompter2, EDPrompter1, EDPrompter2
+from arcee.prompts.prompts import (
+    EAEPrompter1,
+    EAEPrompter2,
+    EDPrompter1,
+    EDPrompter2,
+    EDPrompter3,
+)
 
 DATA = {
     "doc_id": "doc1",
@@ -39,6 +48,73 @@ EAE_SCHEMA = {
     "Attack": {"roles": ["Attacker", "Target", "Location"]},
 }
 
+EXAMPLE_RECORDS = [
+    {
+        "doc_id": "doc1",
+        "wnd_id": "wnd1",
+        "text": "The explosion destroyed the building.",
+        "tokens": ["The", "explosion", "destroyed", "the", "building", "."],
+        "event_mentions": [
+            {
+                "id": "ev1",
+                "trigger": {"text": "explosion", "start": 2, "end": 3},
+                "event_type": "Explosion",
+            }
+        ],
+    },
+    {
+        "doc_id": "doc2",
+        "wnd_id": "wnd2",
+        "text": "A fire broke out in the warehouse.",
+        "tokens": ["A", "fire", "broke", "out", "in", "the", "warehouse", "."],
+        "event_mentions": [
+            {
+                "id": "ev2",
+                "trigger": {"text": "fire", "start": 1, "end": 2},
+                "event_type": "Fire",
+            }
+        ],
+    },
+    {
+        "doc_id": "doc3",
+        "wnd_id": "wnd3",
+        "text": "The hurricane caused severe damage.",
+        "tokens": ["The", "hurricane", "caused", "severe", "damage", "."],
+        "event_mentions": [
+            {
+                "id": "ev3",
+                "trigger": {"text": "hurricane", "start": 1, "end": 2},
+                "event_type": "Hurricane",
+            }
+        ],
+    },
+    {
+        "doc_id": "doc4",
+        "wnd_id": "wnd4",
+        "text": "An earthquake shook the city last night.",
+        "tokens": ["An", "earthquake", "shook", "the", "city", "last", "night", "."],
+        "event_mentions": [
+            {
+                "id": "ev4",
+                "trigger": {"text": "earthquake", "start": 1, "end": 2},
+                "event_type": "Earthquake",
+            }
+        ],
+    },
+    {
+        "doc_id": "doc5",
+        "wnd_id": "wnd5",
+        "text": "The protest escalated into a riot.",
+        "tokens": ["The", "protest", "escalated", "into", "a", "riot", "."],
+        "event_mentions": [
+            {
+                "id": "ev5",
+                "trigger": {"text": "protest", "start": 1, "end": 2},
+                "event_type": "Protest",
+            }
+        ],
+    },
+]
 
 ### TESTING get_arg_roles ###
 
@@ -155,6 +231,62 @@ class TestEDPrompter2:
         assert "The explosion destroyed the building." in prompt
         assert "Format the output strictly as JSON" in prompt
         assert ids == {"wnd_id": "wnd1"}
+
+
+### TESTING EDPrompter3 ###
+class TestEDPrompter3:
+    def setup_method(self):
+        """Setup an instance of EDPrompter3 for testing."""
+        self.prompter = EDPrompter3()
+
+    def test_get_examples(self):
+        """Test _get_examples returns expected examples."""
+
+        with tempfile.NamedTemporaryFile(
+            delete=False, mode="w", suffix=".json"
+        ) as temp_file:
+            for record in EXAMPLE_RECORDS:
+                temp_file.write(json.dumps(record) + "\n")
+            temp_file_path = temp_file.name
+
+        prompter = EDPrompter3()
+        selected_examples = prompter._get_examples(
+            temp_file_path, seed=42, num_examples=3
+        )
+
+        assert len(selected_examples) == 3, "Should select exactly 3 examples"
+        assert all(
+            example in EXAMPLE_RECORDS for example in selected_examples
+        ), "Selected examples should be from input data"
+
+        # Ensure reproducibility
+        selected_examples_again = prompter._get_examples(
+            temp_file_path, seed=42, num_examples=3
+        )
+        assert (
+            selected_examples == selected_examples_again
+        ), "Results should be reproducible with the same seed"
+
+    def test_construct_examples(self):
+        """Test _construct_examples returns expected format and output."""
+        with tempfile.NamedTemporaryFile(
+            delete=False, mode="w", suffix=".json"
+        ) as temp_file:
+            for record in EXAMPLE_RECORDS:
+                temp_file.write(json.dumps(record) + "\n")
+            temp_file_path = temp_file.name
+
+        prompter = EDPrompter3()
+        examples_text = prompter._construct_examples(
+            temp_file_path, seed=42, num_examples=3
+        )
+        assert "### Example 1" in examples_text
+        assert "### Example 2" in examples_text
+        assert "### Example 3" in examples_text
+        assert EXAMPLE_RECORDS[1]["text"] in examples_text
+        assert EXAMPLE_RECORDS[2]["text"] in examples_text
+        assert EXAMPLE_RECORDS[4]["text"] in examples_text
+        assert "Expected Response (JSON):" in examples_text
 
 
 ### TESTING EAEPrompter1 ###

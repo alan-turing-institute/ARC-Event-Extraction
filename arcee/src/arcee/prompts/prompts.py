@@ -458,7 +458,7 @@ class EDPrompter3(EDPrompter1):
 
         output = []
         for i, record in enumerate(example_records):
-            input_text = " ".join(record["tokens"])
+            input_text = self._confirm_ed_data_format(record)
 
             prompt_text = (
                 "### Example " + str(i + 1) + "\n"

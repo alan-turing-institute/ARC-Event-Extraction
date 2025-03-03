@@ -20,6 +20,12 @@ A class for constructing prompts for event trigger detection. This class does no
 
 A class for constructing prompts for event trigger detection. This class does not use any examples in the prompt and requests JSON output with a defined JSON schema.
 
+#### `EDPrompter3`
+A class for constructing prompts for event trigger detection. This class uses random examples in the prompt (the number determined by an input argument) and requests JSON output with a defined JSON schema.
+
+#### `EDPrompter4`
+A class for constructing prompts for event trigger detection. This class uses similar examples in the prompt (the number determined by an input argument and the similarity determined by a sentence transformer using cosine similarity) and requests JSON output with a defined JSON schema.
+
 ### Prompt classes for event argument extraction
 
 #### `EAEPrompter1`

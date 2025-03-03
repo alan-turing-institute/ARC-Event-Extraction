@@ -615,7 +615,7 @@ class EDPrompter3(EDPrompter1):
 
         # Some options for selecting similar examples may require additional keyword
         # arguments (e.g., name of sentence transformer), set these if they exist
-        example_kwargs = kwargs.get("similarity_kwargs", {})
+        example_kwargs = kwargs.get("example_kwargs", {})
         # If selecting sentences based on similarity, then the target input text will
         # be required.
         example_kwargs["target_text"] = input_text

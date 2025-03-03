@@ -284,8 +284,8 @@ class TestEDPrompter3:
         assert "### Example 1" in examples_text
         assert "### Example 2" in examples_text
         assert "### Example 3" in examples_text
-        assert EXAMPLE_RECORDS[1]["text"] in examples_text
-        assert EXAMPLE_RECORDS[2]["text"] in examples_text
+        assert EXAMPLE_RECORDS[0]["text"] in examples_text
+        assert EXAMPLE_RECORDS[3]["text"] in examples_text
         assert EXAMPLE_RECORDS[4]["text"] in examples_text
         assert "Expected Response (JSON):" in examples_text
 

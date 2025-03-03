@@ -521,10 +521,10 @@ class EDPrompter3(EDPrompter1):
         seed = kwargs["seed"]
         # Load the example data
         example_data = load_data(example_data_path)
-        # Set random seed
-        np.random.seed(seed)
+        # Set random number generator
+        rng = np.random.default_rng(seed)
         # Return 'num_examples' random examples from the data
-        return list(np.random.choice(example_data, num_examples, replace=False))
+        return list(rng.choice(example_data, num_examples, replace=False))
 
     def _construct_examples(
         self, example_data_path: str, num_examples: int, **kwargs: Any

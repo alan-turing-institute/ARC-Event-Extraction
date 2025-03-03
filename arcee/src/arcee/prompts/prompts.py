@@ -704,7 +704,8 @@ class EDPrompter4(EDPrompter3):
         target_text = kwargs["target_text"]
         target_embedding = model.encode(target_text)
         example_data = load_data(example_data_path)
-        example_embeddings = model.encode(example_data)
+        example_text = [record["text"] for record in example_data]
+        example_embeddings = model.encode(example_text)
 
         # Compute cosine similarity between the target and all text records
         cos_scores = model.similarity(target_embedding, example_embeddings)[0]

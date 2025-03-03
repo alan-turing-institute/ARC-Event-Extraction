@@ -129,6 +129,7 @@ dependencies = [
     { name = "pre-commit" },
     { name = "pytest" },
     { name = "pytest-cov" },
+    { name = "sentence-transformers" },
     { name = "torch" },
     { name = "transformers" },
 ]
@@ -142,6 +143,7 @@ requires-dist = [
     { name = "pre-commit" },
     { name = "pytest" },
     { name = "pytest-cov" },
+    { name = "sentence-transformers" },
     { name = "torch" },
     { name = "transformers" },
 ]

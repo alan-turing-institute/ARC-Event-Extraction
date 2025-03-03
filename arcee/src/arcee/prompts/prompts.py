@@ -168,8 +168,8 @@ class EEPrompt(ABC):
         self, tokens: list[str], trig_start: int, trig_end: int
     ) -> str:
         """
-        Inserts trigger tags into a list of tokens at the specified start and end indices
-        and returns the modified text.
+        Inserts trigger tags into a list of tokens at the specified start and end
+        indices and returns the modified text.
 
         Args:
             tokens (list[str]):
@@ -227,6 +227,34 @@ class EEPrompt(ABC):
             )
             raise TypeError(err_msg)
         return {"wnd_id": data["wnd_id"]}
+
+    def _check_required_keys(self, required_keys: dict, kwargs: dict) -> None:
+        """
+        Validates that all required keys are present in the kwargs dictionary and have
+        the correct types.
+
+        Args:
+            required_keys (dict):
+                A dictionary mapping required keyword argument names to their expected
+                types.
+            kwargs (dict):
+                A dictionary containing keyword arguments to be validated.
+
+        Raises:
+            TypeError: If a required key is missing from `kwargs`.
+            TypeError: If a required key has a value of an incorrect type.
+        """
+
+        for key, expected_type in required_keys.items():
+            if key not in kwargs:
+                err_msg = f"Missing required keyword argument: '{key}'"
+                raise TypeError(err_msg)
+            if not isinstance(kwargs[key], expected_type):
+                err_msg = (
+                    f"Expected '{key}' to be of type {expected_type.__name__}, "
+                    "but got {type(kwargs[key]).__name__}"
+                )
+                raise TypeError(err_msg)
 
     @abstractmethod
     def _construct_prompt(
@@ -469,7 +497,7 @@ class EDPrompter3(EDPrompter1):
         super().__init__()
 
     def _get_examples(
-        self, example_data_path: str, seed: int, num_examples: int
+        self, example_data_path: str, num_examples: int, **kwargs: Any
     ) -> list[dict]:
         """
         Selects a random subset of example records from a dataset.
@@ -479,20 +507,27 @@ class EDPrompter3(EDPrompter1):
 
         Args:
             example_data_path (str): Path to the file containing example records.
-            seed (int): Random seed to ensure reproducibility of the selected examples.
             num_examples (int): The number of examples to randomly select.
+            **kwargs: Additional keyword arguments, must include:
+                - seed (int): Random seed to ensure reproducibility of the selected
+                examples.
 
         Returns:
             list[dict]: A list of randomly selected example records.
         """
+        # Check that the seed kwarg exists
+        required_kwargs = {"seed": int}
+        self._check_required_keys(required_kwargs, kwargs)
+        seed = kwargs["seed"]
+        # Load the example data
         example_data = load_data(example_data_path)
-
+        # Set random seed
         np.random.seed(seed)
-
+        # Return 'num_examples' random examples from the data
         return list(np.random.choice(example_data, num_examples, replace=False))
 
     def _construct_examples(
-        self, example_data_path: str, seed: int, num_examples: int
+        self, example_data_path: str, num_examples: int, **kwargs: Any
     ) -> str:
         """
         Constructs formatted example prompts based on retrieved event records.
@@ -505,11 +540,12 @@ class EDPrompter3(EDPrompter1):
             example_data_path (str): Path to the file containing example records.
             seed (int): Random seed to ensure reproducibility when selecting examples.
             num_examples (int): The number of examples to retrieve and format.
+            **kwargs: Additional keyword arguments.
 
         Returns:
             str: A formatted string containing structured example prompts.
         """
-        example_records = self._get_examples(example_data_path, seed, num_examples)
+        example_records = self._get_examples(example_data_path, num_examples, **kwargs)
 
         expected_output = data_to_ed_schema(example_records)
 
@@ -551,6 +587,9 @@ class EDPrompter3(EDPrompter1):
                   Random seed for selecting examples reproducibly.
                 - num_examples (int):
                   The number of example records to include in the prompt.
+                Might also include:
+                - example_kwargs (dict):
+                  Additional keyword arguments for selecting similar examples.
 
         Returns:
             tuple[str, str | dict, dict]: A tuple containing:
@@ -559,21 +598,11 @@ class EDPrompter3(EDPrompter1):
                 - str | dict: The JSON schema defining the expected output format.
                 - dict: A dictionary containing extracted IDs from the input data.
         """
-        required_keys = {"example_data_path": str, "seed": int, "num_examples": int}
-
-        for key, expected_type in required_keys.items():
-            if key not in kwargs:
-                err_msg = f"Missing required keyword argument: '{key}'"
-                raise TypeError(err_msg)
-            if not isinstance(kwargs[key], expected_type):
-                err_msg = (
-                    f"Expected '{key}' to be of type {expected_type.__name__}, "
-                    "but got {type(kwargs[key]).__name__}"
-                )
-                raise TypeError(err_msg)
+        # Check that we have the expected kwargs
+        required_keys = {"example_data_path": str, "num_examples": int}
+        self._check_required_keys(required_keys, kwargs)
 
         example_data_path: str = kwargs["example_data_path"]
-        seed: int = kwargs["seed"]
         num_examples: int = kwargs["num_examples"]
 
         # Set input text from data record
@@ -584,8 +613,16 @@ class EDPrompter3(EDPrompter1):
         # between each definition
         event_type_defs = self._get_event_types_defs(schema)
 
+        # Some options for selecting similar examples may require additional keyword
+        # arguments (e.g., name of sentence transformer), set these if they exist
+        example_kwargs = kwargs.get("similarity_kwargs", {})
+        # If selecting sentences based on similarity, then the target input text will
+        # be required.
+        example_kwargs["target_text"] = input_text
         # Get text of examples
-        example_text = self._construct_examples(example_data_path, seed, num_examples)
+        example_text = self._construct_examples(
+            example_data_path, num_examples, **example_kwargs
+        )
 
         # Define the JSON schema for the output
         json_schema = get_ed_json_schema(schema)
@@ -615,6 +652,68 @@ class EDPrompter3(EDPrompter1):
             json_schema,
             self._get_ids(data),
         )
+
+
+class EDPrompter4(EDPrompter3):
+    """
+    Class to construct prompts for event trigger detection:
+    - uses SIMILAR samples in the prompt the prompt
+    - similarity is determined using a sentence transformer
+    - requests JSON output with a defined JSON schema
+    """
+
+    def _get_examples(
+        self, example_data_path: str, num_examples: int, **kwargs: Any
+    ) -> list[dict]:
+        """
+        Selects a subset of example records from a dataset based on the cosine
+        similarity given by a sentence transformer model.
+
+        This function loads example data from a given file, sets a random seed for
+        reproducibility, and selects `num_examples` random examples without replacement.
+
+        Args:
+            example_data_path (str): Path to the file containing example records.
+            num_examples (int): The number of examples to randomly select.
+            **kwargs: Additional keyword arguments, must include:
+                - sentence_transformer_model (str):
+                  The name of the sentence transformer model to use for similarity
+                  comparison.
+                - target_text (str):
+                  The target text that event triggers are to be extracted from
+
+        Returns:
+            list[dict]: A list of randomly selected example records.
+        """
+        required_keys = {"sentence_transformer_model": str, "target_text": str}
+
+        self._check_required_keys(required_keys, kwargs)
+
+        model_name = kwargs["sentence_transformer_model"]
+
+        # Validate that the model name is valid by trying to load it
+        try:
+            model = SentenceTransformer(model_name)
+        except Exception as e:
+            err_msg = f"Invalid sentence transformer model name: {model_name}"
+            raise ValueError(err_msg) from e
+
+        target_text = kwargs["target_text"]
+        target_embedding = model.encode(target_text)
+        example_data = load_data(example_data_path)
+        example_embeddings = model.encode(example_data)
+
+        # Compute cosine similarity between the target and all text records
+        cos_scores = util.pytorch_cos_sim(target_embedding, example_embeddings)[0]
+
+        # Get the indices of the top 3 most similar records
+        top_results = torch.topk(cos_scores, k=num_examples)
+
+        selected_examples = []
+        for _, idx in zip(top_results[0], top_results[1], strict=False):
+            selected_examples.append(example_data[idx])
+
+        return selected_examples
 
 
 class EAEPrompter1(EEPrompt):

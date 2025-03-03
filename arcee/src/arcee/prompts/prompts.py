@@ -6,7 +6,7 @@ from typing import Any
 
 import numpy as np
 import torch
-from sentence_transformers import SentenceTransformer
+from sentence_transformers import SentenceTransformer, SimilarityFunction
 
 from arcee.dataset.load import load_data
 from arcee.dataset.schemas import (
@@ -694,7 +694,9 @@ class EDPrompter4(EDPrompter3):
         # once (in the evaluator?) and then pass these to the prompt, rather than
         # loading for each prompt.
         try:
-            model = SentenceTransformer(model_name)
+            model = SentenceTransformer(
+                model_name, similarity_fn_name=SimilarityFunction.COSINE
+            )
         except Exception as e:
             err_msg = f"Invalid sentence transformer model name: {model_name}"
             raise ValueError(err_msg) from e

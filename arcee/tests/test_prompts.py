@@ -12,6 +12,7 @@ from arcee.prompts.prompts import (
     EDPrompter1,
     EDPrompter2,
     EDPrompter3,
+    EDPrompter4,
 )
 
 DATA = {
@@ -249,9 +250,9 @@ class TestEDPrompter3:
                 temp_file.write(json.dumps(record) + "\n")
             temp_file_path = temp_file.name
 
-        prompter = EDPrompter3()
-        selected_examples = prompter._get_examples(
-            temp_file_path, seed=42, num_examples=3
+        example_kwargs = {"seed": 42}
+        selected_examples = self.prompter._get_examples(
+            temp_file_path, num_examples=3, **example_kwargs
         )
 
         assert len(selected_examples) == 3, "Should select exactly 3 examples"
@@ -260,8 +261,8 @@ class TestEDPrompter3:
         ), "Selected examples should be from input data"
 
         # Ensure reproducibility
-        selected_examples_again = prompter._get_examples(
-            temp_file_path, seed=42, num_examples=3
+        selected_examples_again = self.prompter._get_examples(
+            temp_file_path, num_examples=3, **example_kwargs
         )
         assert (
             selected_examples == selected_examples_again
@@ -276,9 +277,9 @@ class TestEDPrompter3:
                 temp_file.write(json.dumps(record) + "\n")
             temp_file_path = temp_file.name
 
-        prompter = EDPrompter3()
-        examples_text = prompter._construct_examples(
-            temp_file_path, seed=42, num_examples=3
+        example_kwargs = {"seed": 42}
+        examples_text = self.prompter._construct_examples(
+            temp_file_path, num_examples=3, **example_kwargs
         )
         assert "### Example 1" in examples_text
         assert "### Example 2" in examples_text
@@ -287,6 +288,46 @@ class TestEDPrompter3:
         assert EXAMPLE_RECORDS[2]["text"] in examples_text
         assert EXAMPLE_RECORDS[4]["text"] in examples_text
         assert "Expected Response (JSON):" in examples_text
+
+
+### TESTING EDPrompter4 ###
+class TestEDPrompter4:
+    def setup_method(self):
+        """Setup an instance of EDPrompter4 for testing."""
+        self.prompter = EDPrompter4()
+
+    def test_get_examples(self):
+        """Test _get_examples returns expected examples."""
+
+        with tempfile.NamedTemporaryFile(
+            delete=False, mode="w", suffix=".json"
+        ) as temp_file:
+            for record in EXAMPLE_RECORDS:
+                temp_file.write(json.dumps(record) + "\n")
+            temp_file_path = temp_file.name
+
+        model_name = "sentence-transformers-testing/stsb-bert-tiny-safetensors"
+        target_text = "An example of a target sentence."
+        example_kwargs = {
+            "sentence_transformer_model": model_name,
+            "target_text": target_text,
+        }
+        selected_examples = self.prompter._get_examples(
+            temp_file_path, num_examples=3, **example_kwargs
+        )
+
+        assert len(selected_examples) == 3, "Should select exactly 3 examples"
+        assert all(
+            example in EXAMPLE_RECORDS for example in selected_examples
+        ), "Selected examples should be from input data"
+
+        # Ensure reproducibility
+        selected_examples_again = self.prompter._get_examples(
+            temp_file_path, num_examples=3, **example_kwargs
+        )
+        assert (
+            selected_examples == selected_examples_again
+        ), "Results should be reproducible with the same settings"
 
 
 ### TESTING EAEPrompter1 ###

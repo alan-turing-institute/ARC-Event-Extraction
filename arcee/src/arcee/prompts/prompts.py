@@ -6,7 +6,7 @@ from typing import Any
 
 import numpy as np
 import torch
-from sentence_transformers import SentenceTransformer, util
+from sentence_transformers import SentenceTransformer
 
 from arcee.dataset.load import load_data
 from arcee.dataset.schemas import (
@@ -583,13 +583,11 @@ class EDPrompter3(EDPrompter1):
                 Additional parameters for constructing the prompt, must include:
                 - example_data_path (str):
                   Path to the file containing example event records.
-                - seed (int):
-                  Random seed for selecting examples reproducibly.
                 - num_examples (int):
                   The number of example records to include in the prompt.
                 Might also include:
                 - example_kwargs (dict):
-                  Additional keyword arguments for selecting similar examples.
+                  Additional keyword arguments for selecting examples.
 
         Returns:
             tuple[str, str | dict, dict]: A tuple containing:
@@ -691,7 +689,10 @@ class EDPrompter4(EDPrompter3):
 
         model_name = kwargs["sentence_transformer_model"]
 
-        # Validate that the model name is valid by trying to load it
+        # Check that the model name is valid by trying to load it
+        # TODO: Would be more efficient to load the model once and encode the examples
+        # once (in the evaluator?) and then pass these to the prompt, rather than
+        # loading for each prompt.
         try:
             model = SentenceTransformer(model_name)
         except Exception as e:
@@ -704,7 +705,7 @@ class EDPrompter4(EDPrompter3):
         example_embeddings = model.encode(example_data)
 
         # Compute cosine similarity between the target and all text records
-        cos_scores = util.pytorch_cos_sim(target_embedding, example_embeddings)[0]
+        cos_scores = model.similarity(target_embedding, example_embeddings)[0]
 
         # Get the indices of the top 3 most similar records
         top_results = torch.topk(cos_scores, k=num_examples)

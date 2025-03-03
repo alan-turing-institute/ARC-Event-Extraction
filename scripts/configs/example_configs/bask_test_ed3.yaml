@@ -17,4 +17,3 @@ prompt_kwargs:
     num_examples: 3
     example_kwargs:
       seed: 0
-

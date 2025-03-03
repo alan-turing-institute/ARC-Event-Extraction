@@ -54,10 +54,10 @@ def stats_on_event_detection(
             - total_event (int): The total number of events in the gold data.
             - predict_event (int): The total number of events in the output data.
             - correct_all (int): The total number of correct events in the output data.
-            - event_percision (float): The percision of the events.
+            - event_precision (float): The percision of the events.
             - event_recall (float): The recall of the events.
             - event_f1 (float): The f1 score of the events.
-            - event_type_percision (float): The percision of the event types.
+            - event_type_precision (float): The percision of the event types.
             - event_type_recall (float): The recall of the event types.
             - event_type_f1 (float): The f1 score of the event types.
     """
@@ -103,16 +103,16 @@ def stats_on_event_detection(
                 correct_type += 1
 
     passage_accuracy = correct_passage / total_passage
-    event_percision = correct_all / predict_event
+    event_precision = correct_all / predict_event
     event_recall = correct_all / total_event
-    event_f1 = 2 * event_percision * event_recall / (event_percision + event_recall)
-    event_type_percision = correct_type / predict_event
+    event_f1 = 2 * event_precision * event_recall / (event_precision + event_recall)
+    event_type_precision = correct_type / predict_event
     event_type_recall = correct_type / total_event
     event_type_f1 = (
         2
-        * event_type_percision
+        * event_type_precision
         * event_type_recall
-        / (event_type_percision + event_type_recall)
+        / (event_type_precision + event_type_recall)
     )
 
     return {
@@ -122,10 +122,10 @@ def stats_on_event_detection(
         "total_event": total_event,
         "predict_event": predict_event,
         "correct_all": correct_all,
-        "event_percision": event_percision,
+        "event_precision": event_precision,
         "event_recall": event_recall,
         "event_f1": event_f1,
-        "event_type_percision": event_type_percision,
+        "event_type_precision": event_type_precision,
         "event_type_recall": event_type_recall,
         "event_type_f1": event_type_f1,
     }

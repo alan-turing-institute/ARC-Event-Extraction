@@ -20,10 +20,11 @@ def test_load_events_event_detection(event_trigger_jsonl_file):
 def test_load_events_argument_extraction(event_arg_jsonl_file):
     events = load_events(event_arg_jsonl_file, "evt_id")
     assert events is not None
-    assert len(events) == 3
+    assert len(events) == 4
     assert events["e1"] == {"Person": "Alice", "Place": "Las Vegas"}
     assert events["e2"] == {"Person": "Bob", "Vehicle": "car"}
     assert events["e3"] == {"Person": "Charlie", "Place": "New York"}
+    assert events["e4"] == {"Person": "Dave", "House": None}
 
 
 def test_stats_on_event_detection(event_trigger_jsonl_file):
@@ -71,12 +72,12 @@ def test_stats_on_argument_detection(event_arg_jsonl_file):
 
     perfect_stats = stats_on_argument_detection(gold_events, gold_events)
 
-    assert perfect_stats["total_event"] == 3
-    assert perfect_stats["correct_event"] == 3
+    assert perfect_stats["total_event"] == 4
+    assert perfect_stats["correct_event"] == 4
     assert perfect_stats["event_accuracy"] == 1.0
-    assert perfect_stats["total_argument"] == 6
-    assert perfect_stats["predict_argument"] == 6
-    assert perfect_stats["correct_argument"] == 6
+    assert perfect_stats["total_argument"] == 7
+    assert perfect_stats["predict_argument"] == 7
+    assert perfect_stats["correct_argument"] == 7
     assert perfect_stats["argument_precision"] == 1.0
     assert perfect_stats["argument_recall"] == 1.0
     assert perfect_stats["argument_f1"] == 1.0
@@ -85,15 +86,16 @@ def test_stats_on_argument_detection(event_arg_jsonl_file):
         "e1": {"Person": "Alice", "Place": "Las Vegas"},
         "e2": {"Person": "Bob", "Vehicle": "bike"},  # Mistake here
         "e3": {"Person": "Charlie"},  # Missing argument here
+        "e4": {"Person": "Dave", "House": "apartment"},
     }
     mistake_stats = stats_on_argument_detection(gold_events, output_with_mistakes)
 
-    assert mistake_stats["total_event"] == 3
+    assert mistake_stats["total_event"] == 4
     assert mistake_stats["correct_event"] == 1  # Two events are incorrect
-    assert mistake_stats["event_accuracy"] == 1 / 3
-    assert mistake_stats["total_argument"] == 6
-    assert mistake_stats["predict_argument"] == 5
-    assert mistake_stats["correct_argument"] == 4  # Two arguments are incorrect
-    assert mistake_stats["argument_precision"] == 4 / 5
-    assert mistake_stats["argument_recall"] == 4 / 6
-    assert mistake_stats["argument_f1"] == 2 * (4 / 5) * (4 / 6) / ((4 / 5) + (4 / 6))
+    assert mistake_stats["event_accuracy"] == 1 / 4
+    assert mistake_stats["total_argument"] == 7
+    assert mistake_stats["predict_argument"] == 7
+    assert mistake_stats["correct_argument"] == 5  # Two arguments are incorrect
+    assert mistake_stats["argument_precision"] == 5 / 7
+    assert mistake_stats["argument_recall"] == 5 / 7
+    assert mistake_stats["argument_f1"] == 2 * (5 / 7) * (5 / 7) / ((5 / 7) + (5 / 7))

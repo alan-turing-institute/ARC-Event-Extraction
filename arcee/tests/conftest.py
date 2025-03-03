@@ -308,6 +308,7 @@ def event_arg_jsonl_file(tmp_path_factory):
         {"evt_id": "e1", "output": {"Person": "Alice", "Place": "Las Vegas"}},
         {"evt_id": "e2", "output": {"Person": "Bob", "Vehicle": "car"}},
         {"evt_id": "e3", "output": {"Person": "Charlie", "Place": "New York"}},
+        {"evt_id": "e4", "output": {"Person": "Dave", "House": None}},
     ]
     temp_file_path = tmp_path_factory.mktemp("data") / "event_argument_temp_file.jsonl"
     with temp_file_path.open(mode="w") as temp_file:

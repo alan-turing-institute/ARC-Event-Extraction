@@ -14,7 +14,7 @@ There is a base class `EEPrompt` which all other prompt classes inherit from. Th
 
 #### `EDPrompter1`
 
-A class for constructing prompts for event trigger detection. This class does not use any examples in the prompt and requests JSON output with a description of the schema.
+A class for constructing prompts for event trigger detection. This class does not use any examples in the prompt and requests JSON output with only a description of the schema in the prompt.
 
 #### `EDPrompter2`
 
@@ -30,12 +30,17 @@ A class for constructing prompts for event trigger detection. This class uses si
 
 #### `EAEPrompter1`
 
-A class for constructing prompts for event argument extraction. This class only takes a single event trigger, predicts multiple argument roles, does not use examples in the prompt, and requests JSON output.
+A class for constructing prompts for event argument extraction. This class only takes a single event trigger, predicts multiple argument roles, does not use examples in the prompt, and requests JSON output (with only a description of the required schema in the prompt).
 
 #### `EAEPrompter2`
 
 A class for constructing prompts for event argument extraction. This class only takes a single event trigger, predicts multiple argument roles, does not use examples in the prompt, and requests JSON output with a specific schema.
 
+#### `EAEPrompter3`
+A class for constructing prompts for event argument extraction. This class uses random examples in the prompt (the number determined by an input argument) and requests JSON output with a specific schema.
+
+#### `EAEPrompter4`
+A class for constructing prompts for event argument extraction. This class uses random examples in the prompt (the number determined by an input argument) and requests JSON output with a specific schema. The random examples are chosen from the examples with the same event type as the input record; if there are not enough examples with the same event type to choose from, then examples will be selected at random (as per `EAEPrompter3`).
 
 ## EE Models
 The only class that has been created to date is:

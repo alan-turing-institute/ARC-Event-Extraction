@@ -165,6 +165,20 @@ def semi_compare_argument_detection(g_args: dict, o_args: dict) -> tuple[int, in
     return compare_argument_detection(semi_g_args, semi_o_args)
 
 
+def safe_divide(numerator: int | float, denominator: int | float) -> float:
+    """
+    Safely divide two numbers, returning 0 if the denominator is 0.
+
+    Args:
+        numerator (int | float): The numerator.
+        denominator (int | float): The denominator.
+
+    Returns:
+        float: The result of the division, or 0 if the denominator is 0.
+    """
+    return numerator / denominator if denominator != 0 else 0.0
+
+
 def stats_on_event_detection(
     golds: dict[str, list], outputs: dict[str, list], semi: bool = False
 ) -> dict[str, int | float]:
@@ -225,17 +239,17 @@ def stats_on_event_detection(
         correct_all += this_correct_all
         correct_type += this_correct_type
 
-    passage_accuracy = correct_passage / total_passage
-    event_precision = correct_all / predict_event
-    event_recall = correct_all / total_event
-    event_f1 = 2 * event_precision * event_recall / (event_precision + event_recall)
-    event_type_precision = correct_type / predict_event
-    event_type_recall = correct_type / total_event
-    event_type_f1 = (
-        2
-        * event_type_precision
-        * event_type_recall
-        / (event_type_precision + event_type_recall)
+    passage_accuracy = safe_divide(correct_passage, total_passage)
+    event_precision = safe_divide(correct_all, predict_event)
+    event_recall = safe_divide(correct_all, total_event)
+    event_f1 = safe_divide(
+        2 * event_precision * event_recall, event_precision + event_recall
+    )
+    event_type_precision = safe_divide(correct_type, predict_event)
+    event_type_recall = safe_divide(correct_type, total_event)
+    event_type_f1 = safe_divide(
+        2 * event_type_precision * event_type_recall,
+        event_type_precision + event_type_recall,
     )
 
     return {
@@ -303,14 +317,11 @@ def stats_on_argument_detection(
         correct_event += this_correct_event
         correct_argument += this_correct_argument
 
-    event_accuracy = correct_event / total_event
-    argument_precision = correct_argument / predict_argument
-    argument_recall = correct_argument / total_argument
-    argument_f1 = (
-        2
-        * argument_precision
-        * argument_recall
-        / (argument_precision + argument_recall)
+    event_accuracy = safe_divide(correct_event, total_event)
+    argument_precision = safe_divide(correct_argument, predict_argument)
+    argument_recall = safe_divide(correct_argument, total_argument)
+    argument_f1 = safe_divide(
+        2 * argument_precision * argument_recall, argument_precision + argument_recall
     )
 
     return {

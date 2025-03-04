@@ -422,7 +422,7 @@ class EDPrompter2(EDPrompter1):
         """
         super().__init__(schema)
         # Define the JSON schema for the output
-        self.json_schema = get_ed_json_schema(self._schema)
+        self._json_schema = get_ed_json_schema(self._schema)
 
     def _construct_prompt(self) -> tuple[str, str | dict, dict]:
         """
@@ -456,7 +456,7 @@ class EDPrompter2(EDPrompter1):
                 "the event types and the values are the trigger words from the input "
                 "text."
             ),
-            self.json_schema,
+            self._json_schema,
             self._get_ids(self._input_data),
         )
 
@@ -464,7 +464,8 @@ class EDPrompter2(EDPrompter1):
 class EDPrompter3(EDPrompter2):
     """
     Class to construct prompts for event trigger detection:
-    - uses RANDOM samples in the prompt the prompt
+    - uses RANDOM samples in the prompt the prompt, a different selection of examples
+        are selected for each record
     - requests JSON output with a defined JSON schema
     """
 
@@ -494,16 +495,16 @@ class EDPrompter3(EDPrompter2):
         )
         example_data_path, num_examples, seed = prompt_args
 
-        # Set the variables to use to select random examples
-        example_records = self._select_random_examples(
-            example_data_path, num_examples, seed
-        )
-        # Turn the selected examples into the text to use for the prompt.
-        self._examples_for_prompt = self._construct_examples(example_records)
+        # Load the example data
+        self._example_data = load_data(example_data_path)
+        self._num_examples = num_examples
+        # Set random number generator
+        self._rng = np.random.default_rng(seed)
+        # Which examples to use in the prompt will be defined at runtime, with
+        # potentially different examples selected for each record.
+        self._examples_for_prompt = ""
 
-    def _select_random_examples(
-        self, example_data_path: str, num_examples: int, seed: int
-    ) -> list[dict]:
+    def _get_examples(self) -> list[dict]:
         """
         Select `num_examples` random samples from the data to be loaded from the
         `example_data_path`
@@ -520,12 +521,10 @@ class EDPrompter3(EDPrompter2):
             list[dict]:
                 A list of `num_examples` of records
         """
-        # Load the example data
-        example_data = load_data(example_data_path)
-        # Set random number generator
-        rng = np.random.default_rng(seed)
         # Return 'num_examples' random examples from the data
-        return list(rng.choice(example_data, num_examples, replace=False))
+        return list(
+            self._rng.choice(self._example_data, self._num_examples, replace=False)
+        )
 
     def _construct_examples(self, example_records: list[dict]) -> str:
         """
@@ -572,6 +571,10 @@ class EDPrompter3(EDPrompter2):
                 - str | dict: The JSON schema defining the expected output format.
                 - dict: A dictionary containing extracted IDs from the input data.
         """
+        # Set the variables to use to select random examples
+        example_records = self._get_examples()
+        # Turn the selected examples into the text to use for the prompt.
+        self._examples_for_prompt = self._construct_examples(example_records)
         # Return the constructed prompt
         return (
             (
@@ -594,7 +597,7 @@ class EDPrompter3(EDPrompter2):
                 "the event types and the values are the trigger words from the input "
                 "text."
             ),
-            self.json_schema,
+            self._json_schema,
             self._get_ids(self._input_data),
         )
 
@@ -729,27 +732,6 @@ class EDPrompter4(EDPrompter3):
             selected_examples.append(self._example_data[idx])
 
         return selected_examples
-
-    def _construct_prompt(self) -> tuple[str, str | dict, dict]:
-        """
-        Constructs a prompt for event trigger detection.
-
-        This function generates a structured prompt for event detection by
-        combining input text, event type definitions, and example texts. It
-        also defines the expected output format using a JSON schema.
-
-        Returns:
-            tuple[str, str | dict, dict]: A tuple containing:
-                - str: The constructed prompt with event type definitions,
-                  examples, and input text.
-                - str | dict: The JSON schema defining the expected output format.
-                - dict: A dictionary containing extracted IDs from the input data.
-        """
-        # Get examples
-        example_records = self._get_examples()
-        # Format them into a string for use in prompt
-        self._examples_for_prompt = self._construct_examples(example_records)
-        return super()._construct_prompt()
 
 
 class EAEPrompter1(EEPrompt):

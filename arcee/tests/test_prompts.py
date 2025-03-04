@@ -9,6 +9,8 @@ from arcee.dataset.schemas import get_arg_roles, pattern_to_json_schema
 from arcee.prompts.prompts import (
     EAEPrompter1,
     EAEPrompter2,
+    EAEPrompter3,
+    EAEPrompter4,
     EDPrompter1,
     EDPrompter2,
     EDPrompter3,
@@ -21,7 +23,7 @@ DATA = {
     "text": "The explosion destroyed the building.",
     "tokens": ["The", "explosion", "destroyed", "the", "building", "."],
     "event_mentions": [
-        {"id": "ev1", "trigger": {"start": 2, "end": 3}, "event_type": "Explosion"}
+        {"id": "ev1", "trigger": {"start": 1, "end": 2}, "event_type": "Explosion"}
     ],
 }
 
@@ -47,19 +49,24 @@ JSON_SCHEMA = {
 EAE_SCHEMA = {
     "Explosion": {"roles": ["Attacker", "Victim", "Location"]},
     "Attack": {"roles": ["Attacker", "Target", "Location"]},
+    "Fire": {"roles": ["Agent", "Location"]},
+    "Hurricane": {"roles": ["Location"]},
+    "Earthquake": {"roles": ["Location"]},
+    "Protest": {"roles": ["Location"]},
 }
 
 EXAMPLE_RECORDS = [
     {
         "doc_id": "doc1",
         "wnd_id": "wnd1",
-        "text": "The explosion destroyed the building.",
-        "tokens": ["The", "explosion", "destroyed", "the", "building", "."],
+        "text": "The explosion destroyed the car.",
+        "tokens": ["The", "explosion", "destroyed", "the", "car", "."],
         "event_mentions": [
             {
                 "id": "ev1",
-                "trigger": {"text": "explosion", "start": 2, "end": 3},
+                "trigger": {"text": "explosion", "start": 1, "end": 2},
                 "event_type": "Explosion",
+                "arguments": [{"role": "Victim", "text": "car"}],
             }
         ],
     },
@@ -73,6 +80,7 @@ EXAMPLE_RECORDS = [
                 "id": "ev2",
                 "trigger": {"text": "fire", "start": 1, "end": 2},
                 "event_type": "Fire",
+                "arguments": [{"role": "Location", "text": "warehouse"}],
             }
         ],
     },
@@ -86,6 +94,7 @@ EXAMPLE_RECORDS = [
                 "id": "ev3",
                 "trigger": {"text": "hurricane", "start": 1, "end": 2},
                 "event_type": "Hurricane",
+                "arguments": [{"role": "Location", "text": None}],
             }
         ],
     },
@@ -99,6 +108,7 @@ EXAMPLE_RECORDS = [
                 "id": "ev4",
                 "trigger": {"text": "earthquake", "start": 1, "end": 2},
                 "event_type": "Earthquake",
+                "arguments": [{"role": "Location", "text": "city"}],
             }
         ],
     },
@@ -112,6 +122,7 @@ EXAMPLE_RECORDS = [
                 "id": "ev5",
                 "trigger": {"text": "protest", "start": 1, "end": 2},
                 "event_type": "Protest",
+                "arguments": [{"role": "Location", "text": None}],
             }
         ],
     },
@@ -307,3 +318,46 @@ class TestEAEPrompter2:
         assert "Location" in prompt
         assert "Format the output strictly as JSON" in prompt
         assert ids == {"evt_id": "ev1"}
+
+
+### TESTING EAEPrompter3 ###
+class TestEAEPrompter3:
+    def setup_method(self):
+        """Setup an instance of EAEPrompter3 for testing."""
+        with tempfile.NamedTemporaryFile(
+            delete=False, mode="w", suffix=".json"
+        ) as temp_file:
+            for record in EXAMPLE_RECORDS:
+                temp_file.write(json.dumps(record) + "\n")
+            temp_file_path = temp_file.name
+
+        kwargs = {"example_data_path": temp_file_path, "num_examples": 3, "seed": 42}
+        self.prompter = EAEPrompter3(EAE_SCHEMA, **kwargs)
+
+    def test_get_prompt(self):
+        """Test get_prompt for EAEPrompter3 works correctly."""
+        prompt, output_format, ids = self.prompter.get_prompt(DATA)
+
+        assert isinstance(prompt, str)
+        assert isinstance(output_format, dict)
+        assert output_format == pattern_to_json_schema(
+            "Explosion", EAE_SCHEMA["Explosion"]["roles"]
+        )
+        assert ids == {"evt_id": "ev1"}
+
+        assert "The <trigger>explosion</trigger> destroyed the building ." in prompt
+        assert "### Example 1" in prompt
+        assert "### Example 2" in prompt
+        assert "### Example 3" in prompt
+        assert "### Example 4" not in prompt
+        assert "The <trigger>explosion</trigger> destroyed the car ." in prompt
+        assert "A <trigger>fire</trigger> broke out in the warehouse ." not in prompt
+        assert "The <trigger>hurricane</trigger> caused severe damage ." not in prompt
+        assert "An <trigger>earthquake</trigger> shook the city last night ." in prompt
+        assert "The <trigger>protest</trigger> escalated into a riot ." in prompt
+        assert (
+            '{"evt_id": "ev1", "output": {"Attacker": null, '
+            '"Location": null, "Victim": "car"}}'
+        ) in prompt
+        assert '{"evt_id": "ev4", "output": {"Location": "city"}}' in prompt
+        assert '{"evt_id": "ev5", "output": {"Location": null}}' in prompt

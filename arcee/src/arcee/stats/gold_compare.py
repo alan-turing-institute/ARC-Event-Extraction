@@ -34,6 +34,18 @@ def load_events(file: str, key: str) -> dict[str, dict | list] | None:
     return all_events
 
 
+class SemiString(str):
+    """
+    This is a string that is considered equal when either string contains a subset of
+    the other.
+    """
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, str | SemiString):
+            return NotImplemented
+        return (self in other) or (other in self)
+
+
 def compare_events_detection(g_events: list, o_events: list) -> tuple[int, int, int]:
     """
     Compare gold events with output events and return the count of correct events and
@@ -74,6 +86,33 @@ def compare_events_detection(g_events: list, o_events: list) -> tuple[int, int, 
     return correct_passage, correct_all, correct_type
 
 
+def semi_compare_events_detection(
+    g_events: list[dict], o_events: list[dict]
+) -> tuple[int, int, int]:
+    """
+    Compare gold events with output events and return the count of correct events and
+    correct event types for a single passage.
+    This does a partial string match for the trigger.
+
+    Args:
+        g_events (list): Gold standard events detection result.
+        o_events (list): Output events detection result.
+
+    Returns:
+        correct_passage (int): If the whole passage is correct.
+        correct_all (int): The total number of correct events in the output data.
+        correct_type (int): The total number events whose type was correctly predicted.
+    """
+    semi_g_events = [
+        {key: SemiString(val) for key, val in event.items()} for event in g_events
+    ]
+    semi_o_events = [
+        {key: SemiString(val) for key, val in event.items()} for event in o_events
+    ]
+
+    return compare_events_detection(semi_g_events, semi_o_events)
+
+
 def compare_argument_detection(g_args: dict, o_args: dict) -> tuple[int, int]:
     """
     Compare gold arguments with output arguments and return the count of correct events,
@@ -95,6 +134,26 @@ def compare_argument_detection(g_args: dict, o_args: dict) -> tuple[int, int]:
             correct_argument += 1 if o_args[arg_type] == arg else 0
 
     return correct_event, correct_argument
+
+
+def semi_compare_argument_detection(g_args: dict, o_args: dict) -> tuple[int, int]:
+    """
+    Compare gold arguments with output arguments and return the count of correct events,
+    correct arguments, and correct argument types for a single event.
+    This does a partial string match for the arguments.
+
+    Args:
+        g_args (dict): Gold standard arguments detection result.
+        o_args (dict): Output arguments detection result.
+
+    Returns:
+        correct_event (int): If the whole event is correct.
+        correct_argument (int): The total number of correct arguments.
+    """
+    semi_g_args = {key: SemiString(val) for key, val in g_args.items()}
+    semi_o_args = {key: SemiString(val) for key, val in o_args.items()}
+
+    return compare_argument_detection(semi_g_args, semi_o_args)
 
 
 def stats_on_event_detection(

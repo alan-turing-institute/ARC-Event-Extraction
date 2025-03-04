@@ -4,6 +4,8 @@ from arcee.stats.gold_compare import (
     compare_argument_detection,
     compare_events_detection,
     load_events,
+    semi_compare_argument_detection,
+    semi_compare_events_detection,
     stats_on_argument_detection,
     stats_on_event_detection,
 )
@@ -34,14 +36,6 @@ def test_compare_events_detection():
         {"Life:Marry": "married"},
         {"Life:Injure": "wounded"},
     ]
-    output_events_incorrect = [
-        {"Life:Marry": "married"},
-        {"Life:Injure": "injured"},
-    ]
-    output_events_partial = [
-        {"Life:Marry": "married"},
-    ]
-
     correct_passage, correct_all, correct_type = compare_events_detection(
         gold_events, gold_events
     )
@@ -49,6 +43,10 @@ def test_compare_events_detection():
     assert correct_all == 2
     assert correct_type == 2
 
+    output_events_incorrect = [
+        {"Life:Marry": "married"},
+        {"Life:Injure": "injured"},
+    ]
     correct_passage, correct_all, correct_type = compare_events_detection(
         gold_events, output_events_incorrect
     )
@@ -56,6 +54,9 @@ def test_compare_events_detection():
     assert correct_all == 1
     assert correct_type == 2
 
+    output_events_partial = [
+        {"Life:Marry": "married"},
+    ]
     correct_passage, correct_all, correct_type = compare_events_detection(
         gold_events, output_events_partial
     )
@@ -69,42 +70,103 @@ def test_compare_events_detection():
     assert null_type == 0
 
 
+def test_semi_compare_events_detection():
+    gold_events = [
+        {"Life:Marry": "married"},
+        {"Life:Injure": "wounded"},
+    ]
+
+    correct_passage, correct_all, correct_type = semi_compare_events_detection(
+        gold_events, gold_events
+    )
+    assert correct_passage == 1
+    assert correct_all == 2
+    assert correct_type == 2
+
+    output_events_partial_match = [
+        {"Life:Marry": "married"},
+        {"Life:Injure": "wound"},
+    ]
+    correct_passage, correct_all, correct_type = semi_compare_events_detection(
+        gold_events, output_events_partial_match
+    )
+    assert correct_passage == 1
+    assert correct_all == 2
+    assert correct_type == 2
+
+    output_events_extra_words = [
+        {"Life:Marry": "married"},
+        {"Life:Injure": "badly wounded"},
+    ]
+    correct_passage, correct_all, correct_type = semi_compare_events_detection(
+        gold_events, output_events_extra_words
+    )
+    assert correct_passage == 1
+    assert correct_all == 2
+    assert correct_type == 2
+
+    output_events_incorrect = [
+        {"Life:Marry": "married"},
+        {"Life:Injure": "injured"},
+    ]
+    correct_passage, correct_all, correct_type = semi_compare_events_detection(
+        gold_events, output_events_incorrect
+    )
+    assert correct_passage == 0
+    assert correct_all == 1
+    assert correct_type == 2
+
+    output_events_partial = [
+        {"Life:Marry": "married"},
+    ]
+    correct_passage, correct_all, correct_type = semi_compare_events_detection(
+        gold_events, output_events_partial
+    )
+    assert correct_passage == 0
+    assert correct_all == 1
+    assert correct_type == 1
+
+    null_passage, null_all, null_type = semi_compare_events_detection([], [])
+    assert null_passage == 1
+    assert null_all == 0
+    assert null_type == 0
+
+
 def test_compare_argument_detection():
     gold_arguments = {
         "Person": "Alice",
         "Place": "Las Vegas",
     }
-    output_arguments_incorrect = {
-        "Person": "Alice",
-        "Place": "New York",
-    }
-    output_arguments_extra = {
-        "Person": "Alice",
-        "Place": "Las Vegas",
-        "Vehicle": "car",
-    }
-    output_arguments_partial = {
-        "Person": "Alice",
-    }
-
     correct_event, correct_argument = compare_argument_detection(
         gold_arguments, gold_arguments
     )
     assert correct_event == 1
     assert correct_argument == 2
 
+    output_arguments_incorrect = {
+        "Person": "Alice",
+        "Place": "New York",
+    }
     correct_event, correct_argument = compare_argument_detection(
         gold_arguments, output_arguments_incorrect
     )
     assert correct_event == 0
     assert correct_argument == 1
 
+    output_arguments_extra = {
+        "Person": "Alice",
+        "Place": "Las Vegas",
+        "Vehicle": "car",
+    }
     correct_event, correct_argument = compare_argument_detection(
         gold_arguments, output_arguments_extra
     )
     assert correct_event == 0
     assert correct_argument == 2
 
+    output_arguments_partial = {
+        "Person": "Alice",
+    }
     correct_event, correct_argument = compare_argument_detection(
         gold_arguments, output_arguments_partial
     )
@@ -112,6 +174,61 @@ def test_compare_argument_detection():
     assert correct_argument == 1
 
     null_event, null_argument = compare_argument_detection({}, {})
+    assert null_event == 1
+    assert null_argument == 0
+
+
+def test_semi_compare_argument_detection():
+    gold_arguments = {
+        "Person": "Alice",
+        "Place": "Las Vegas",
+    }
+    correct_event, correct_argument = semi_compare_argument_detection(
+        gold_arguments, gold_arguments
+    )
+    assert correct_event == 1
+    assert correct_argument == 2
+
+    output_arguments_partial_match = {
+        "Person": "Alice",
+        "Place": "Vegas",
+    }
+    correct_event, correct_argument = semi_compare_argument_detection(
+        gold_arguments, output_arguments_partial_match
+    )
+    assert correct_event == 1
+    assert correct_argument == 2
+
+    output_arguments_extra_words = {
+        "Person": "Alice",
+        "Place": "Las Vegas, Nevada",
+    }
+    correct_event, correct_argument = semi_compare_argument_detection(
+        gold_arguments, output_arguments_extra_words
+    )
+    assert correct_event == 1
+    assert correct_argument == 2
+
+    output_arguments_incorrect = {
+        "Person": "Alice",
+        "Place": "New York",
+    }
+    correct_event, correct_argument = semi_compare_argument_detection(
+        gold_arguments, output_arguments_incorrect
+    )
+    assert correct_event == 0
+    assert correct_argument == 1
+
+    output_arguments_partial = {
+        "Person": "Alice",
+    }
+    correct_event, correct_argument = semi_compare_argument_detection(
+        gold_arguments, output_arguments_partial
+    )
+    assert correct_event == 0
+    assert correct_argument == 1
+
+    null_event, null_argument = semi_compare_argument_detection({}, {})
     assert null_event == 1
     assert null_argument == 0
 

@@ -10,6 +10,7 @@ from sentence_transformers import SentenceTransformer, SimilarityFunction
 
 from arcee.dataset.load import load_data
 from arcee.dataset.schemas import (
+    data_to_argument_schema,
     data_to_ed_schema,
     get_arg_roles,
     get_ed_json_schema,
@@ -807,7 +808,7 @@ class EAEPrompter1(EEPrompt):
 
     def _construct_prompt(self) -> tuple[str, str | dict, dict]:
         """
-        Constructs a prompt for event trigger detection.
+        Constructs a prompt for event argument extraction.
 
         Returns:
             tuple[str, str]: A tuple containing:
@@ -870,7 +871,7 @@ class EAEPrompter2(EAEPrompter1):
 
     def _construct_prompt(self) -> tuple[str, str | dict, dict]:
         """
-        Constructs a prompt for event trigger detection.
+        Constructs a prompt for event argument extraction.
 
         Returns:
             tuple[str, str]: A tuple containing:
@@ -926,6 +927,153 @@ class EAEPrompter3(EAEPrompter2):
     - Uses RANDOM examples in the prompt
     - requests JSON output with specific schema for event type
     """
+
+    def __init__(self, schema: dict, **kwargs: Any) -> None:
+        """
+        Initialises the object and sets the examples to be used in each prompt.
+
+        The example data is loaded from a given file path, sets a random seed for
+        reproducibility, and selects `num_examples` random examples without replacement.
+
+        Args:
+            schema: dict
+                The event schema to be used for the data
+            **kwargs: Additional keyword arguments, for this class these must include:
+                - example_data_path (str):
+                    Path to the file containing example records.
+                - num_examples (int):
+                    The number of examples to retrieve and format.
+                - seed (int):
+                    Random seed to ensure reproducibility of the selected examples.
+        """
+        super().__init__(schema)
+        required_keys = {"example_data_path": str, "num_examples": int, "seed": int}
+        prompt_args: tuple[str, int, int] = self._check_required_keys(
+            required_keys, kwargs
+        )
+        example_data_path, num_examples, seed = prompt_args
+
+        # Set the variables to use to select random examples
+        example_records = self._select_random_examples(
+            example_data_path, num_examples, seed
+        )
+        # Turn the selected examples into the text to use for the prompt.
+        self._examples_for_prompt = self._construct_examples(example_records)
+
+    def _select_random_examples(
+        self, example_data_path: str, num_examples: int, seed: int, event_type: str = ""
+    ) -> list[dict]:
+        """
+        Select `num_examples` random samples from the data to be loaded from the
+        `example_data_path`
+
+        Args:
+            example_data_path (str):
+                Path to the file containing example records.
+            num_examples (int):
+                The number of examples to retrieve and format.
+            seed (int):
+                Random seed to ensure reproducibility of the selected examples.
+            event_type (str):
+                The event type to filter the examples by, if an empty string, then won't
+                filter by event type
+
+        Returns:
+            list[dict]:
+                A list of `num_examples` of records
+        """
+        # Load the example data
+        example_data = load_data(example_data_path)
+        if event_type:
+            example_data = [
+                record
+                for record in example_data
+                if record["event_mention"]["event_type"] == event_type
+            ]
+        # Set random number generator
+        rng = np.random.default_rng(seed)
+        # Return 'num_examples' random examples from the data
+        return list(rng.choice(example_data, num_examples, replace=False))
+
+    def _construct_examples(self, example_records: list[dict]) -> str:
+        """
+        Takes a list of example records and returns them in a string to be used in
+        the prompt.
+
+        Args:
+            example_records (list[dict]):
+                A list of the example records, each record is a dictionary
+
+        Returns:
+            str:
+                Text that can be used in the prompt.
+        """
+        expected_output = data_to_argument_schema(example_records, schema=self._schema)
+
+        output = []
+        for i, record in enumerate(example_records):
+            event_mention, tokens = self._confirm_arg_data_format(record)
+
+            # Get trigger span for 1st event mention (should be only event mention)
+            trig_start, trig_end, event_type = self._get_event_trigger(event_mention)
+
+            # Get trigger based on tagged tokens
+            tagged_text = self._get_tagged_text(tokens, trig_start, trig_end)
+
+            # Get additional details for the prompt
+            arg_roles = get_arg_roles(self._schema, event_type)
+
+            prompt_text = (
+                "### Example " + str(i + 1) + "\n"
+                "Event type: " + event_type + "\n"
+                "Argument roles: " + ", ".join(set(arg_roles)) + "\n"
+                "Input text: ```" + tagged_text + "```\n"
+                "Expected Response (JSON): \n" + json.dumps(expected_output[i]) + "\n"
+            )
+            output.append(prompt_text)
+
+        return "\n".join(output)
+
+    def _construct_prompt(self) -> tuple[str, str | dict, dict]:
+        """
+        Constructs a prompt for event argument extraction.
+
+        This function generates a structured prompt for event argument extraction by
+        combining input text, event type definitions, and example texts. It
+        also defines the expected output format using a JSON schema.
+
+        Returns:
+            tuple[str, str | dict, dict]: A tuple containing:
+                - str: The constructed prompt with event type definitions,
+                  examples, and input text.
+                - str | dict: The JSON schema defining the expected output format.
+                - dict: A dictionary containing extracted IDs from the input data.
+        """
+        event_mention, tokens = self._confirm_arg_data_format(self._input_data)
+
+        # Get trigger span for 1st event mention (should be only event mention)
+        trig_start, trig_end, event_type = self._get_event_trigger(event_mention)
+
+        # Get trigger based on tagged tokens
+        input_text = self._get_tagged_text(tokens, trig_start, trig_end)
+
+        # Get additional details for the prompt
+        arg_roles = get_arg_roles(self._schema, event_type)
+
+        return (
+            (
+                self._get_system_content()
+                + "\n## Examples\n"
+                + self._examples_for_prompt
+                + "\n---\n\n## Now process the following input:\n"
+                "Event type: " + event_type + "\n"
+                "Argument roles: " + ", ".join(set(arg_roles)) + "\n"
+                "Input text: ```" + input_text + "```\n"
+                "Expected response (JSON):"
+            ),
+            "json",
+            self._get_ids(self._input_data),
+        )
 
 
 class EAEPrompter4(EAEPrompter3):

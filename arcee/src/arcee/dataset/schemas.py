@@ -167,7 +167,9 @@ def pattern_to_json_schema(event_type: str, pattern_record: list[str]) -> dict:
 
 
 def data_to_argument_schema(
-    event_records: list[dict[str, Any]], pattern_file_path: str
+    event_records: list[dict[str, Any]],
+    pattern_file_path: str | None = None,
+    schema: dict | None = None,
 ) -> list[dict[str, Any]]:
     """
     Transforms event records into structured argument schemas based on a predefined
@@ -178,37 +180,45 @@ def data_to_argument_schema(
     ensures event arguments are structured according to the schema, and extracts
     relevant arguments for each event mention.
 
-    Parameters
-    ----------
-    event_records : list of dict
-        A list of dictionaries, where each dictionary represents an event record.
-        Each record contains various attributes, including `event_mentions`,
-        which lists events occurring in the text.
-    pattern_file_path : str
-        The file path to a JSON file containing predefined event argument schemas.
-        The schema maps event types to argument roles and their corresponding templates.
+    Args:
+        event_records : list of dict
+            A list of dictionaries, where each dictionary represents an event record.
+            Each record contains various attributes, including `event_mentions`,
+            which lists events occurring in the text.
+        pattern_file_path : str, optional
+            The file path to a JSON file containing predefined event argument schemas.
+            The schema maps event types to argument roles and their corresponding
+            templates.
+            This argument is optional if `schema` is provided.
+        schema : dict, optional
+            A dictionary containing predefined event argument schemas. This argument is
+            optional if `pattern_file_path` is provided.
 
-    Returns
-    -------
-    list of dict
-        A list of transformed event argument records. Each dictionary contains:
-        - `evt_id` (str): The event mention ID.
-        - `output` (dict): A dictionary mapping argument roles to their respective vals.
+    Returns:
+        list of dict
+            A list of transformed event argument records. Each dictionary contains:
+            - `evt_id` (str): The event mention ID.
+            - `output` (dict): A dictionary mapping argument roles to their respective
+            vals.
 
-    Raises
-    ------
-    TypeError
-        If `event_records`  contains non-dictionary elements.
-    KeyError
-        If an event mention lacks the "event_type" key or if the event type is missing
-        from the schema.
+    Raises:
+        TypeError
+            If `event_records`  contains non-dictionary elements.
+        KeyError
+            If an event mention lacks the "event_type" key or if the event type is
+            missing from the schema.
     """
     # Validate event_records type
     if not all(isinstance(record, dict) for record in event_records):
         err_msg = "Each element in `event_records` must be a dictionary."
         raise TypeError(err_msg)
 
-    schema = load_json(pattern_file_path)
+    if pattern_file_path is None:
+        if schema is None:
+            err_msg = "Either `pattern_file_path` or `schema` must be provided."
+            raise ValueError(err_msg)
+    else:
+        schema = load_json(pattern_file_path)
 
     # List to store the transformed event arguments
     transformed_records = []

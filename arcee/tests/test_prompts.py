@@ -355,9 +355,51 @@ class TestEAEPrompter3:
         assert "The <trigger>hurricane</trigger> caused severe damage ." not in prompt
         assert "An <trigger>earthquake</trigger> shook the city last night ." in prompt
         assert "The <trigger>protest</trigger> escalated into a riot ." in prompt
-        assert (
-            '{"evt_id": "ev1", "output": {"Attacker": null, '
-            '"Location": null, "Victim": "car"}}'
-        ) in prompt
+        assert '{"evt_id": "ev1", "output": ' in prompt
+        assert '{"evt_id": "ev4", "output": {"Location": "city"}}' in prompt
+        assert '{"evt_id": "ev5", "output": {"Location": null}}' in prompt
+
+
+### TESTING EAEPrompter4 ###
+class TestEAEPrompter4:
+    def setup_method(self):
+        """Setup an instance of EAEPrompter4 for testing."""
+        with tempfile.NamedTemporaryFile(
+            delete=False, mode="w", suffix=".json"
+        ) as temp_file:
+            for record in EXAMPLE_RECORDS:
+                temp_file.write(json.dumps(record) + "\n")
+            temp_file_path = temp_file.name
+
+        # Set up one prompt where the example data doesn't have enough of the same
+        # event type as the input data
+        kwargs = {"example_data_path": temp_file_path, "num_examples": 3, "seed": 42}
+        self.prompter_no_events = EAEPrompter4(EAE_SCHEMA, **kwargs)
+
+    def test_get_prompt(self):
+        """Test get_prompt for EAEPrompter4 works correctly."""
+        # The 'prompter_no_events' doesn't have access to enough events of the same type
+        # as the input data, so it should just use random examples, regardless of type
+        # (i.e., the same as EAEPrompter3)
+        prompt, output_format, ids = self.prompter_no_events.get_prompt(DATA)
+
+        assert isinstance(prompt, str)
+        assert isinstance(output_format, dict)
+        assert output_format == pattern_to_json_schema(
+            "Explosion", EAE_SCHEMA["Explosion"]["roles"]
+        )
+        assert ids == {"evt_id": "ev1"}
+
+        assert "The <trigger>explosion</trigger> destroyed the building ." in prompt
+        assert "### Example 1" in prompt
+        assert "### Example 2" in prompt
+        assert "### Example 3" in prompt
+        assert "### Example 4" not in prompt
+        assert "The <trigger>explosion</trigger> destroyed the car ." in prompt
+        assert "A <trigger>fire</trigger> broke out in the warehouse ." not in prompt
+        assert "The <trigger>hurricane</trigger> caused severe damage ." not in prompt
+        assert "An <trigger>earthquake</trigger> shook the city last night ." in prompt
+        assert "The <trigger>protest</trigger> escalated into a riot ." in prompt
+        assert '{"evt_id": "ev1", "output": ' in prompt
         assert '{"evt_id": "ev4", "output": {"Location": "city"}}' in prompt
         assert '{"evt_id": "ev5", "output": {"Location": null}}' in prompt

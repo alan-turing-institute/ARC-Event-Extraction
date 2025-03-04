@@ -12,8 +12,7 @@ data_kwargs:
   argument_extraction: False
 prompt_kwargs:
   prompt_cls: EDPrompter3
-  prompt_kwargs:
+  prompt_init_kwargs:
     example_data_path: data/ACE05/output/split_dev/train.jsonlines
     num_examples: 3
-    example_kwargs:
-      seed: 0
+    seed: 0

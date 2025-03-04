@@ -34,7 +34,7 @@ class Evaluator:
         batch_size: int,
         shuffle: bool | None,
         model_init_kwargs: dict,
-        prompt_kwargs: dict,
+        prompt_init_kwargs: dict,
     ):
         """TODO: to be filled in
 
@@ -49,7 +49,7 @@ class Evaluator:
             batch_size (int): _description_
             shuffle (bool | None): _description_
             model_init_kwargs (dict): _description_
-            prompt_kwargs (dict): _description_
+            prompt_init_kwargs (dict): _description_
 
         Raises:
             FileExistsError: _description_
@@ -79,9 +79,9 @@ class Evaluator:
             **model_init_kwargs,
         )
 
-        # Get prompter and data schema
-        prompt_constructor = getattr(prompts, prompt_cls)()
+        # Load data schema and create instance of prompt constructor
         schema = load_json(schema_path)
+        prompt_constructor = getattr(prompts, prompt_cls)(schema, **prompt_init_kwargs)
 
         # Shuffle defaults to False
         if shuffle is None:
@@ -91,9 +91,7 @@ class Evaluator:
         self.data = EEDataset.from_file(
             data_path=data_path,
             prompt_constuctor=prompt_constructor,
-            event_schema=schema,
             argument_extraction=argument_extraction,
-            **prompt_kwargs,
         )
         self.dataloader = DataLoader(
             self.data,

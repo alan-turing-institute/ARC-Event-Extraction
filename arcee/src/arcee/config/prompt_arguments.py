@@ -15,13 +15,13 @@ class PromptArguments(BaseConfig):
     def __init__(
         self,
         prompt_cls: str,
-        prompt_kwargs: dict | None = None,
+        prompt_init_kwargs: dict | None = None,
     ) -> None:
         super().__init__()
         self.prompt_cls = prompt_cls
-        if prompt_kwargs is None:
-            prompt_kwargs = {}
-        self.prompt_kwargs = prompt_kwargs
+        if prompt_init_kwargs is None:
+            prompt_init_kwargs = {}
+        self.prompt_init_kwargs = prompt_init_kwargs
 
     def to_dict(self) -> dict:
         """Convert the config to a dict.
@@ -31,5 +31,5 @@ class PromptArguments(BaseConfig):
         """
         return {
             "prompt_cls": self.prompt_cls,
-            "prompt_kwargs": self.prompt_kwargs,
+            "prompt_init_kwargs": self.prompt_init_kwargs,
         }

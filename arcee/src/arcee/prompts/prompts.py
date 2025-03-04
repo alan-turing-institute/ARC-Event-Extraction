@@ -380,7 +380,7 @@ class EDPrompter1(EEPrompt):
                 + "These are the possible event types you can chose from:\n"
                 + self.event_type_defs
                 + "\nGiven this input text:\n```"
-                + self.input_text
+                + self._input_text
                 + "```\n"
                 "Do any of the event types appear in the text? "
                 "Not all event types will appear in the text, there may be some "
@@ -401,7 +401,7 @@ class EDPrompter1(EEPrompt):
         self, data: dict[str, str | int | list]
     ) -> tuple[str, str | dict, dict]:
         # This override is specific to ED Prompts
-        self.input_text = self._confirm_ed_data_format(data)
+        self._input_text = self._confirm_ed_data_format(data)
         return super().get_prompt(data)
 
 
@@ -442,7 +442,7 @@ class EDPrompter2(EDPrompter1):
                 + "These are the possible event types you can chose from:\n"
                 + self.event_type_defs
                 + "\nGiven this text:\n```"
-                + self.input_text
+                + self._input_text
                 + "```\n"
                 "Do any of the event types appear in the text? "
                 "Not all event types will appear in the text, there may be some "
@@ -498,7 +498,7 @@ class EDPrompter3(EDPrompter2):
             example_data_path, num_examples, seed
         )
         # Turn the selected examples into the text to use for the prompt.
-        self.examples_for_prompt = self._construct_examples(example_records)
+        self._examples_for_prompt = self._construct_examples(example_records)
 
     def _select_random_examples(
         self, example_data_path: str, num_examples: int, seed: int
@@ -578,9 +578,9 @@ class EDPrompter3(EDPrompter2):
                 + "These are the possible event types you can chose from:\n"
                 + self.event_type_defs
                 + "\nHere are some examples:\n"
-                + self.examples_for_prompt
+                + self._examples_for_prompt
                 + "\nGiven this text:\n```"
-                + self.input_text
+                + self._input_text
                 + "```\n"
                 "Do any of the event types appear in the text? "
                 "Not all event types will appear in the text, there may be some "
@@ -639,21 +639,21 @@ class EDPrompter4(EDPrompter3):
 
         ### SET MODEL
         # Set sentence embedding model name
-        self.model = self._load_model(model_name)
+        self._model = self._load_model(model_name)
 
         ### LOAD DATA FOR EXAMPLES
-        self.example_data, self.example_embeddings = self._load_examples(
+        self._example_data, self._example_embeddings = self._load_examples(
             example_data_path
         )
 
         ### SET ATTRIBUTES FOR SELECTING EXAMPLES
         # Set the number of examples as an object attribute, this will be used when
         # selecting the examples to use in the prompt.
-        # self.num_examples: int = kwargs["num_examples"]
-        self.num_examples = num_examples
+        # self._num_examples: int = kwargs["num_examples"]
+        self._num_examples = num_examples
         # Which examples to use in the prompt will be defined at runtime, with
         # potentially different examples selected for each record.
-        self.examples_for_prompt = ""
+        self._examples_for_prompt = ""
 
     def _load_model(self, model_name: str) -> SentenceTransformer:
         """
@@ -701,7 +701,7 @@ class EDPrompter4(EDPrompter3):
         example_text = [record["text"] for record in example_data]
         # Encode all the examples and store in object - these will be needed to compare
         # with the text for each record
-        example_embeddings = self.model.encode(example_text)
+        example_embeddings = self._model.encode(example_text)
         return example_data, example_embeddings
 
     def _get_examples(self) -> list[dict]:
@@ -713,17 +713,19 @@ class EDPrompter4(EDPrompter3):
             list[dict]: A list of randomly selected example records.
         """
         # Embed the input text
-        target_embedding = self.model.encode(self.input_text)
+        target_embedding = self._model.encode(self._input_text)
 
         # Compute cosine similarity between the target and all text records
-        cos_scores = self.model.similarity(target_embedding, self.example_embeddings)[0]
+        cos_scores = self._model.similarity(target_embedding, self._example_embeddings)[
+            0
+        ]
 
         # Get the indices of the top `num_examples` most similar records
-        top_results = torch.topk(cos_scores, k=self.num_examples)
+        top_results = torch.topk(cos_scores, k=self._num_examples)
 
         selected_examples = []
         for _, idx in zip(top_results[0], top_results[1], strict=False):
-            selected_examples.append(self.example_data[idx])
+            selected_examples.append(self._example_data[idx])
 
         return selected_examples
 
@@ -745,7 +747,7 @@ class EDPrompter4(EDPrompter3):
         # Get examples
         example_records = self._get_examples()
         # Format them into a string for use in prompt
-        self.examples_for_prompt = self._construct_examples(example_records)
+        self._examples_for_prompt = self._construct_examples(example_records)
         return super()._construct_prompt()
 
 

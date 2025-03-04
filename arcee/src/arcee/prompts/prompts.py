@@ -647,7 +647,7 @@ class EDPrompter4(EDPrompter3):
                     The name of the sentence transformer model to use for similarity
                     comparison.
         """
-        super().__init__(schema)
+        EDPrompter2.__init__(self, schema)
         # Check required keys exist and the values have expected types.
         required_keys = {
             "example_data_path": str,

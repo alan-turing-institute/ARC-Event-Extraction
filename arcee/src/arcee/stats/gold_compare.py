@@ -34,6 +34,69 @@ def load_events(file: str, key: str) -> dict[str, dict | list] | None:
     return all_events
 
 
+def compare_events_detection(g_events: list, o_events: list) -> tuple[int, int, int]:
+    """
+    Compare gold events with output events and return the count of correct events and
+    correct event types for a single passage.
+    This does an exact sting match for the trigger.
+
+    Args:
+        g_events (list): Gold standard events detection result.
+        o_events (list): Output events detection result.
+
+    Returns:
+        correct_passage (int): If the whole passage is correct.
+        correct_all (int): The total number of correct events in the output data.
+        correct_type (int): The total number events whose type was correctly predicted.
+    """
+    correct_all = 0
+    correct_type = 0
+
+    correct_passage = 1 if (g_events == o_events) else 0
+
+    if len(g_events) == 0 or len(o_events) == 0:
+        return correct_passage, correct_all, correct_type
+
+    for g_event in g_events:
+        event_correct = False
+        event_type_correct = False
+        for o_event in o_events:
+            if g_event == o_event:
+                event_correct = True
+            if g_event.keys() == o_event.keys():
+                event_type_correct = True
+
+        if event_correct:
+            correct_all += 1
+        if event_type_correct:
+            correct_type += 1
+
+    return correct_passage, correct_all, correct_type
+
+
+def compare_argument_detection(g_args: dict, o_args: dict) -> tuple[int, int]:
+    """
+    Compare gold arguments with output arguments and return the count of correct events,
+    correct arguments, and correct argument types for a single event.
+
+    Args:
+        g_args (dict): Gold standard arguments detection result.
+        o_args (dict): Output arguments detection result.
+
+    Returns:
+        correct_event (int): If the whole event is correct.
+        correct_argument (int): The total number of correct arguments.
+    """
+    correct_event = 1 if g_args == o_args else 0
+    correct_argument = 0
+
+    for arg_type, arg in g_args.items():
+        if arg and arg_type in o_args:
+            correct_argument += 1 if o_args[arg_type] == arg else 0
+
+    return correct_event, correct_argument
+
+
 def stats_on_event_detection(
     golds: dict[str, list], outputs: dict[str, list]
 ) -> dict[str, int | float]:
@@ -75,9 +138,6 @@ def stats_on_event_detection(
             raise ValueError(err_msg)
 
         total_passage += 1
-        if output == golds[key]:
-            correct_passage += 1
-
         total_event += len(golds[key])
 
         if not isinstance(output, list):
@@ -85,22 +145,13 @@ def stats_on_event_detection(
             continue  # type: ignore[unreachable]
 
         predict_event += len(output)
-        if len(output) == 0 or len(golds[key]) == 0:
-            continue
 
-        for g_event in golds[key]:
-            event_correct = False
-            event_type_correct = False
-            for o_event in output:
-                if g_event == o_event:
-                    event_correct = True
-                if g_event.keys() == o_event.keys():
-                    event_type_correct = True
-
-            if event_correct:
-                correct_all += 1
-            if event_type_correct:
-                correct_type += 1
+        this_correct_passage, this_correct_all, this_correct_type = (
+            compare_events_detection(golds[key], output)
+        )
+        correct_passage += this_correct_passage
+        correct_all += this_correct_all
+        correct_type += this_correct_type
 
     passage_accuracy = correct_passage / total_passage
     event_precision = correct_all / predict_event
@@ -167,13 +218,14 @@ def stats_on_argument_detection(
             raise ValueError(err_msg)
 
         total_event += 1
-        correct_event += 1 if output == golds[key] else 0
-
         predict_argument += len([val for val in output.values() if val])
         total_argument += len([val for val in golds[key].values() if val])
-        for arg_type, arg in golds[key].items():
-            if arg and arg_type in output:
-                correct_argument += 1 if output[arg_type] == arg else 0
+
+        this_correct_event, this_correct_argument = compare_argument_detection(
+            golds[key], output
+        )
+        correct_event += this_correct_event
+        correct_argument += this_correct_argument
 
     event_accuracy = correct_event / total_event
     argument_precision = correct_argument / predict_argument

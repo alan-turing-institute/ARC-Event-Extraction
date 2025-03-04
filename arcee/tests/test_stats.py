@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from arcee.stats.gold_compare import (
+    compare_argument_detection,
+    compare_events_detection,
     load_events,
     stats_on_argument_detection,
     stats_on_event_detection,
@@ -25,6 +27,93 @@ def test_load_events_argument_extraction(event_arg_jsonl_file):
     assert events["e2"] == {"Person": "Bob", "Vehicle": "car"}
     assert events["e3"] == {"Person": "Charlie", "Place": "New York"}
     assert events["e4"] == {"Person": "Dave", "House": None}
+
+
+def test_compare_events_detection():
+    gold_events = [
+        {"Life:Marry": "married"},
+        {"Life:Injure": "wounded"},
+    ]
+    output_events_incorrect = [
+        {"Life:Marry": "married"},
+        {"Life:Injure": "injured"},
+    ]
+    output_events_partial = [
+        {"Life:Marry": "married"},
+    ]
+
+    correct_passage, correct_all, correct_type = compare_events_detection(
+        gold_events, gold_events
+    )
+    assert correct_passage == 1
+    assert correct_all == 2
+    assert correct_type == 2
+
+    correct_passage, correct_all, correct_type = compare_events_detection(
+        gold_events, output_events_incorrect
+    )
+    assert correct_passage == 0
+    assert correct_all == 1
+    assert correct_type == 2
+
+    correct_passage, correct_all, correct_type = compare_events_detection(
+        gold_events, output_events_partial
+    )
+    assert correct_passage == 0
+    assert correct_all == 1
+    assert correct_type == 1
+
+    null_passage, null_all, null_type = compare_events_detection([], [])
+    assert null_passage == 1
+    assert null_all == 0
+    assert null_type == 0
+
+
+def test_compare_argument_detection():
+    gold_arguments = {
+        "Person": "Alice",
+        "Place": "Las Vegas",
+    }
+    output_arguments_incorrect = {
+        "Person": "Alice",
+        "Place": "New York",
+    }
+    output_arguments_extra = {
+        "Person": "Alice",
+        "Place": "Las Vegas",
+        "Vehicle": "car",
+    }
+    output_arguments_partial = {
+        "Person": "Alice",
+    }
+
+    correct_event, correct_argument = compare_argument_detection(
+        gold_arguments, gold_arguments
+    )
+    assert correct_event == 1
+    assert correct_argument == 2
+
+    correct_event, correct_argument = compare_argument_detection(
+        gold_arguments, output_arguments_incorrect
+    )
+    assert correct_event == 0
+    assert correct_argument == 1
+
+    correct_event, correct_argument = compare_argument_detection(
+        gold_arguments, output_arguments_extra
+    )
+    assert correct_event == 0
+    assert correct_argument == 2
+
+    correct_event, correct_argument = compare_argument_detection(
+        gold_arguments, output_arguments_partial
+    )
+    assert correct_event == 0
+    assert correct_argument == 1
+
+    null_event, null_argument = compare_argument_detection({}, {})
+    assert null_event == 1
+    assert null_argument == 0
 
 
 def test_stats_on_event_detection(event_trigger_jsonl_file):

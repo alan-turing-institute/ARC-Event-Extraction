@@ -916,3 +916,43 @@ class EAEPrompter2(EAEPrompter1):
             pattern_to_json_schema(event_type, arg_roles),
             self._get_ids(self._input_data),
         )
+
+
+class EAEPrompter3(EAEPrompter2):
+    """
+    Event argument extraction:
+    - only takes a SINGLE event trigger
+    - predicts multiple argument roles
+    - Uses RANDOM examples in the prompt
+    - requests JSON output with specific schema for event type
+    """
+
+
+class EAEPrompter4(EAEPrompter3):
+    """
+    Event argument extraction:
+    - only takes a SINGLE event trigger
+    - predicts multiple argument roles
+    - Uses RANDOM examples in the prompt, but with SAME EVENT TYPE
+    - requests JSON output with specific schema for event type
+    """
+
+
+class EAEPrompter5(EAEPrompter3):
+    """
+    Event argument extraction:
+    - only takes a SINGLE event trigger
+    - predicts multiple argument roles
+    - Uses SIMILAR examples in the prompt
+    - requests JSON output with specific schema for event type
+    """
+
+
+class EAEPrompter6(EAEPrompter3):
+    """
+    Event argument extraction:
+    - only takes a SINGLE event trigger
+    - predicts multiple argument roles
+    - Uses SIMILAR examples in the prompt, but with SAME EVENT TYPE
+    - requests JSON output with specific schema for event type
+    """

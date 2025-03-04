@@ -32,9 +32,9 @@ class EEPrompt(ABC):
         """
         super().__init__()
         self.schema = schema
-        self.input_data: dict[
-            str, str | int | list
-        ] = {}  # will be set each time the `get_prompt` method is called
+        # The `input_data` attribute will be set each time the `get_prompt` method
+        # is called
+        self.input_data: dict[str, str | int | list] = {}
 
     def _get_system_content(self) -> str:
         """
@@ -297,10 +297,6 @@ class EEPrompt(ABC):
         Args:
             data (dict[str, str | int | list]):
                 The input data record.
-            schema (dict[str, str]):
-                A schema represented as a dictionary. For event type detection, this
-                dictionary contains event types and their definitions. For argument
-                extraction, it contains event types and their possible argument roles.
 
         Returns:
             tuple[str, str | dict, dict]: A tuple containing:
@@ -335,7 +331,7 @@ class EDPrompter1(EEPrompt):
         # For event detection the schema is the list of events with definitions
         # Concatenate event type definitions into a single string, with a line break
         # between each definition
-        self.event_type_defs = self._get_event_types_defs(self.schema)
+        self.event_type_defs = self._get_event_types_defs()
 
     def _get_system_content(self) -> str:
         """
@@ -352,20 +348,16 @@ class EDPrompter1(EEPrompt):
             "---\n"
         )
 
-    def _get_event_types_defs(self, schema: dict) -> str:
+    def _get_event_types_defs(self) -> str:
         """
         Retrieves event types and their definitions from the schema and returns them as
         a string.
-
-        Args:
-            schema (dict):
-                A dictionary of event types and their definitions.
 
         Returns:
             str: A string containing the event type definitions.
         """
 
-        return "\n".join([key + ": " + schema[key] for key in schema])
+        return "\n".join([key + ": " + self.schema[key] for key in self.schema])
 
     def _construct_prompt(
         self,
@@ -431,17 +423,9 @@ class EDPrompter2(EDPrompter1):
         # Define the JSON schema for the output
         self.json_schema = get_ed_json_schema(self.schema)
 
-    def _construct_prompt(
-        self,
-    ) -> tuple[str, str | dict, dict]:
+    def _construct_prompt(self) -> tuple[str, str | dict, dict]:
         """
         Constructs a prompt for event trigger detection.
-
-        Args:
-            data (dict[str, str | int | list]):
-                A dictionary containing the data record.
-            schema (dict):
-                A dictionary of the possible event types and their definitions.
 
         Returns:
             tuple[str, str | dict, dict]: A tuple containing:
@@ -579,12 +563,6 @@ class EDPrompter3(EDPrompter2):
         This function generates a structured prompt for event detection by
         combining input text, event type definitions, and example texts. It
         also defines the expected output format using a JSON schema.
-
-        Args:
-            data (dict[str, str | int | list]):
-                The input data record containing text and other metadata.
-            schema (dict):
-                A dictionary defining possible event types and their descriptions.
 
         Returns:
             tuple[str, str | dict, dict]: A tuple containing:
@@ -731,16 +709,6 @@ class EDPrompter4(EDPrompter3):
         Selects a subset of example records from a dataset based on the cosine
         similarity given by a sentence transformer model.
 
-        Args:
-            example_data_path (str): Path to the file containing example records.
-            num_examples (int): The number of examples to randomly select.
-            **kwargs: Additional keyword arguments, must include:
-                - sentence_transformer_model (str):
-                  The name of the sentence transformer model to use for similarity
-                  comparison.
-                - target_text (str):
-                  The target text that event triggers are to be extracted from
-
         Returns:
             list[dict]: A list of randomly selected example records.
         """
@@ -766,12 +734,6 @@ class EDPrompter4(EDPrompter3):
         This function generates a structured prompt for event detection by
         combining input text, event type definitions, and example texts. It
         also defines the expected output format using a JSON schema.
-
-        Args:
-            data (dict[str, str | int | list]):
-                The input data record containing text and other metadata.
-            schema (dict):
-                A dictionary defining possible event types and their descriptions.
 
         Returns:
             tuple[str, str | dict, dict]: A tuple containing:
@@ -845,14 +807,6 @@ class EAEPrompter1(EEPrompt):
         """
         Constructs a prompt for event trigger detection.
 
-        Args:
-            data (dict[str, str | int | list]):
-                A dictionary containing the data record.
-            schema (dict):
-                A dictionary of the possible event types and their definitions.
-            **kwargs:
-                Additional keyword arguments.
-
         Returns:
             tuple[str, str]: A tuple containing:
 
@@ -916,21 +870,12 @@ class EAEPrompter2(EAEPrompter1):
         """
         Constructs a prompt for event trigger detection.
 
-        Args:
-            data (dict[str, str | int]):
-                A dictionary containing the data record.
-            schema (dict):
-                A dictionary of the possible event types and their definitions.
-            **kwargs:
-                Additional keyword arguments
-
         Returns:
             tuple[str, str]: A tuple containing:
-
-            - str: The constructed prompt.
-            - str | dict: The output format, either 'json' or a JSON schema.
-            - dict: A dictionary of IDs to be attached to the LLM's response
-              that identify the record.
+                - str: The constructed prompt.
+                - str | dict: The output format, either 'json' or a JSON schema.
+                - dict: A dictionary of IDs to be attached to the LLM's response
+                that identify the record.
         """
 
         event_mention, tokens = self._confirm_arg_data_format(self.input_data)

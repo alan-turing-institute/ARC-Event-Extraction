@@ -502,9 +502,8 @@ class EDPrompter3(EDPrompter2):
         # Which examples to use in the prompt will be defined at runtime, with
         # potentially different examples selected for each record.
         self._examples_for_prompt = ""
-        
 
-    def _select_random_examples(self) -> list[dict]:
+    def _get_examples(self) -> list[dict]:
         """
         Select `num_examples` random samples from the data to be loaded from the
         `example_data_path`
@@ -522,7 +521,9 @@ class EDPrompter3(EDPrompter2):
                 A list of `num_examples` of records
         """
         # Return 'num_examples' random examples from the data
-        return list(self._rng.choice(self._example_data, self._num_examples, replace=False))
+        return list(
+            self._rng.choice(self._example_data, self._num_examples, replace=False)
+        )
 
     def _construct_examples(self, example_records: list[dict]) -> str:
         """
@@ -570,7 +571,7 @@ class EDPrompter3(EDPrompter2):
                 - dict: A dictionary containing extracted IDs from the input data.
         """
         # Set the variables to use to select random examples
-        example_records = self._select_random_examples()
+        example_records = self._get_examples()
         # Turn the selected examples into the text to use for the prompt.
         self._examples_for_prompt = self._construct_examples(example_records)
         # Return the constructed prompt
@@ -730,27 +731,6 @@ class EDPrompter4(EDPrompter3):
             selected_examples.append(self._example_data[idx])
 
         return selected_examples
-
-    def _construct_prompt(self) -> tuple[str, str | dict, dict]:
-        """
-        Constructs a prompt for event trigger detection.
-
-        This function generates a structured prompt for event detection by
-        combining input text, event type definitions, and example texts. It
-        also defines the expected output format using a JSON schema.
-
-        Returns:
-            tuple[str, str | dict, dict]: A tuple containing:
-                - str: The constructed prompt with event type definitions,
-                  examples, and input text.
-                - str | dict: The JSON schema defining the expected output format.
-                - dict: A dictionary containing extracted IDs from the input data.
-        """
-        # Get examples
-        example_records = self._get_examples()
-        # Format them into a string for use in prompt
-        self._examples_for_prompt = self._construct_examples(example_records)
-        return super()._construct_prompt()
 
 
 class EAEPrompter1(EEPrompt):

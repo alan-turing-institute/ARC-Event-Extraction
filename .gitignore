@@ -29,6 +29,9 @@ data/ACE05/schema/*
 scripts/scratch.py
 scripts/scratch/*
 
+# Config for development
+scripts/configs/test/*
+
 ### ~~~~ FROM PYTHON TEMPLATE ~~~~ ###
 
 # Byte-compiled / optimized / DLL files

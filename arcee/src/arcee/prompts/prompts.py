@@ -1,8 +1,20 @@
 from __future__ import annotations
 
+import json
 from abc import ABC, abstractmethod
+from typing import Any
 
-from arcee.dataset.schemas import get_arg_roles, pattern_to_json_schema
+import numpy as np
+import torch
+from sentence_transformers import SentenceTransformer, SimilarityFunction
+
+from arcee.dataset.load import load_data
+from arcee.dataset.schemas import (
+    data_to_ed_schema,
+    get_arg_roles,
+    get_ed_json_schema,
+    pattern_to_json_schema,
+)
 
 
 class EEPrompt(ABC):
@@ -11,13 +23,28 @@ class EEPrompt(ABC):
     that child prompt classes will inherit.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, schema: dict, **kwargs: Any) -> None:
+        """
+        Args:
+            schema: dict
+                The event schema to be used for the data
+            **kwargs: Additional keyword arguments
+        """
         super().__init__()
+        self._schema = schema
+        # The `input_data` attribute will be set each time the `get_prompt` method
+        # is called
+        self._input_data: dict[str, str | int | list] = {}
 
     def _get_system_content(self) -> str:
         """
-        This method will return the system content message to be used
-        This could be overwritten by a child class.
+        Returns the system content message to be used.
+
+        This method provides a default system content message, which can be
+        overridden by a child class.
+
+        Returns:
+            str: The system content message.
         """
         return (
             "You are an assistant that helps conducts event extraction "
@@ -25,6 +52,25 @@ class EEPrompt(ABC):
         )
 
     def _confirm_ed_data_format(self, data: dict[str, str | int | list]) -> str:
+        """
+        Validates the format of the input data and ensures the presence of the 'text'
+        key.
+
+        This method checks if the 'text' key exists in the input data and verifies that
+        its value is a string. If the validation fails, appropriate exceptions are
+        raised. If the validation passes, the value of the 'text' key is returned.
+
+        Args:
+            data (dict[str, str | int | list]):
+                A dictionary containing the input data.
+
+        Returns:
+            str: The value of the 'text' key from the input data.
+
+        Raises:
+            KeyError: If the 'text' key is missing from the data.
+            TypeError: If the value of 'text' is not a string.
+        """
         # Double check keys and types of data
         if "text" not in data:
             err_msg = "Key 'text' is missing from the data."
@@ -41,6 +87,29 @@ class EEPrompt(ABC):
     def _confirm_arg_data_format(
         self, data: dict[str, str | int | list]
     ) -> tuple[dict, list]:
+        """
+        Validates the format of the input data for argument extraction.
+
+        This method checks if the required keys ('event_mentions' and 'tokens') exist
+        in the input data and verifies their types. If the validation fails, appropriate
+        exceptions are raised. If the validation passes, then the 'event_mentions' and
+        'tokens' values are returned.
+
+        Args:
+            data (dict[str, str | int | list]):
+                A dictionary containing the input data.
+
+        Returns:
+            tuple[dict, list]: A tuple containing:
+
+            - dict: The first event mention from 'event_mentions'.
+            - list: The list of tokens from 'tokens'.
+
+        Raises:
+            KeyError: If 'event_mentions' or 'tokens' is missing from the data.
+            TypeError: If 'event_mentions' is not a list, if its first element is not
+                a dictionary, or if 'tokens' is not a list.
+        """
         # Double check keys and types of data
         if "event_mentions" not in data:
             err_msg = "Key 'event_mentions' is missing from the data."
@@ -109,29 +178,24 @@ class EEPrompt(ABC):
         self, tokens: list[str], trig_start: int, trig_end: int
     ) -> str:
         """
-        Inserts trigger tags into a list of tokens given the start and end
-        indices, and returns the modified text.
+        Inserts trigger tags into a list of tokens at the specified start and end
+        indices and returns the modified text.
 
-        Parameters
-        ----------
-        tokens : list of str
-            A list of tokens representing a text sequence.
-        trig_start : int
-            The starting index of the trigger span.
-        trig_end : int
-            The exclusive ending index of the trigger span.
+        Args:
+            tokens (list[str]):
+                A list of tokens representing a text sequence.
+            trig_start (int):
+                The starting index of the trigger span.
+            trig_end (int):
+                The exclusive ending index of the trigger span.
 
-        Returns
-        -------
-        str
-            The modified text with `<trigger>` and `</trigger>` tags
+        Returns:
+            str: The modified text with `<trigger>` and `</trigger>` tags
             surrounding the trigger span.
 
-        Raises
-        ------
-        ValueError
-            If trig_start is not less than trig_end or if trig_end exceeds the list
-            bounds.
+        Raises:
+            ValueError: If `trig_start` is not less than `trig_end` or if `trig_end`
+            exceeds the list bounds.
         """
         if not (0 <= trig_start < trig_end <= len(tokens)):
             err_msg = (
@@ -149,8 +213,19 @@ class EEPrompt(ABC):
 
     def _get_ids(self, data: dict[str, str | int | list]) -> dict[str, str]:
         """
-        Method to return the doc and wnd ids to be attached to the LLM's response,
-        which will ensure the record can be identified.
+        Retrieves the document and window IDs to be attached to the LLM's response
+        for record identification.
+
+        Args:
+            data (dict[str, str | int | list]):
+                A dictionary containing the input data.
+
+        Returns:
+            dict[str, str]: A dictionary containing the window ID (`wnd_id`).
+
+        Raises:
+            KeyError: If the `wnd_id` key is missing from the data.
+            TypeError: If the value of `wnd_id` is not a string.
         """
         if "wnd_id" not in data:
             err_msg = "Key 'wnd_id' is missing from the data."
@@ -163,58 +238,77 @@ class EEPrompt(ABC):
             raise TypeError(err_msg)
         return {"wnd_id": data["wnd_id"]}
 
-    @abstractmethod
-    def _construct_prompt(
-        self,
-        data: dict[str, str | int | list],
-        schema: dict,
-    ) -> tuple[str, str | dict, dict]:
+    def _check_required_keys(
+        self, required_keys: dict, kwargs: dict
+    ) -> tuple[Any, ...]:
         """
-        Abstract method for constructing the prompt
+        Validates that all required keys are present in the kwargs dictionary and have
+        the correct types.
 
-        Returns
-        -------
-        str
-            The prompt to be used in the task
-        str | dict
-            The output format, either 'json' or a JSON schema
-        dict
-            A dictionary of IDs to be attached to the LLM's response that identify the
-            record
+        Args:
+            required_keys (dict):
+                A dictionary mapping required keyword argument names to their expected
+                types.
+            kwargs (dict):
+                A dictionary containing keyword arguments to be validated.
+
+        Returns:
+            tuple[Any, ...]: The values of the required keys in the order they
+            appear in `required_keys`.
+
+        Raises:
+            TypeError: If a required key is missing from `kwargs`.
+            TypeError: If a required key has a value of an incorrect type.
+        """
+        values = []
+        for key, expected_type in required_keys.items():
+            if key not in kwargs:
+                err_msg = f"Missing required keyword argument: '{key}'"
+                raise TypeError(err_msg)
+            if not isinstance(kwargs[key], expected_type):
+                err_msg = (
+                    f"Expected '{key}' to be of type {expected_type.__name__}, "
+                    "but got {type(kwargs[key]).__name__}"
+                )
+                raise TypeError(err_msg)
+            values.append(kwargs[key])
+        return tuple(values)
+
+    @abstractmethod
+    def _construct_prompt(self) -> tuple[str, str | dict, dict]:
+        """
+        Abstract method for constructing the prompt.
+
+        Returns:
+            tuple[str, str | dict, dict]: A tuple containing:
+
+            - str: The prompt to be used in the task.
+            - str | dict: The output format, either 'json' or a JSON schema.
+            - dict: A dictionary of IDs to be attached to the LLM's response that
+                    identify the record.
         """
 
     def get_prompt(
-        self,
-        data: dict[str, str | int | list],
-        schema: dict,
-        **kwargs: str | int,
+        self, data: dict[str, str | int | list]
     ) -> tuple[str, str | dict, dict]:
         """
-        Method to return a prompt, this may get overwritten by child classes
+        Returns a prompt, which may be overridden by child classes.
 
-        Parameters
-        ----------
-        tokens: list[str]
-            The input text in token form
-        schema: dict[str, str]
-            A schema which is a dictionary. For event type detection, this
-            dictionary will contain the event types and their definitions.
-            For argument extraction, it will contain the event types and
-            the possible arguemnt roles for each event type.
+        Args:
+            data (dict[str, str | int | list]):
+                The input data record.
 
-        Returns
-        -------
-        str
-            The prompt to be used in the task
-        str | dict
-            The output format, either 'json' or a JSON schema
-        dict
-            A dictionary of IDs to be attached to the LLM's response that identify the
-            record
+        Returns:
+            tuple[str, str | dict, dict]: A tuple containing:
+
+            - str: The prompt to be used in the task.
+            - str | dict: The output format, either 'json' or a JSON schema.
+            - dict: A dictionary of IDs to be attached to the LLM's response
+            that identify the record.
 
         """
-
-        prompt, output_format, ids = self._construct_prompt(data, schema)
+        self._input_data = data
+        prompt, output_format, ids = self._construct_prompt()
 
         return prompt, output_format, ids
 
@@ -226,12 +320,25 @@ class EDPrompter1(EEPrompt):
     - requests JSON output with a description of the schema
     """
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, schema: dict, **kwargs: Any) -> None:
+        """
+        Args:
+            schema: dict
+                The event schema to be used for the data
+            **kwargs: Additional keyword arguments
+        """
+        super().__init__(schema)
+        # For event detection the schema is the list of events with definitions
+        # Concatenate event type definitions into a single string, with a line break
+        # between each definition
+        self.event_type_defs = self._get_event_types_defs()
 
     def _get_system_content(self) -> str:
         """
         This method will return the system content message to be used
+
+        Returns:
+            str: The system content message.
         """
         return (
             "You are an assistant that extracts event triggers and their associated "
@@ -241,63 +348,39 @@ class EDPrompter1(EEPrompt):
             "---\n"
         )
 
-    def _get_event_types_defs(self, schema: dict) -> str:
+    def _get_event_types_defs(self) -> str:
         """
-        Get the event types and definitions from the schema and return them as a string.
+        Retrieves event types and their definitions from the schema and returns them as
+        a string.
 
-        Parameters
-        ----------
-        schema : dict
-            A dictionary of event types and their definitions.
-
-        Returns
-        -------
-        str
-            A string containing the event type definitions.
+        Returns:
+            str: A string containing the event type definitions.
         """
-        return "\n".join([key + ": " + schema[key] for key in schema])
+
+        return "\n".join([key + ": " + self._schema[key] for key in self._schema])
 
     def _construct_prompt(
         self,
-        data: dict[str, str | int | list],
-        schema: dict,
     ) -> tuple[str, str | dict, dict]:
         """
-        Construct a prompt for event trigger detection.
+        Constructs a prompt for event trigger detection.
 
-        Parameters
-        ----------
-        data : dict[str, str | int]
-            A dictionary containing the data record.
-        schema: dict
-            A dictionary of the possible event types and their definitions.
+        Returns:
+            tuple[str, str | dict, dict]: A tuple containing:
 
-        Returns
-        -------
-        str
-            The prompt to be used in the task
-        str | dict
-            The output format, either 'json' or a JSON schema
-        dict
-            A dictionary of IDs to be attached to the LLM's response that identify the
-            record
+            - str: The prompt to be used in the task.
+            - str | dict: The output format, either 'json' or a JSON schema.
+            - dict: A dictionary of IDs to be attached to the LLM's response
+              that identify the record.
         """
-        # Set input text from data record
-        input_text = self._confirm_ed_data_format(data)
-
-        # For event detection the schema is the list of events with definitions
-        # Concatenate event type definitions into a single string, with a line break
-        # between each definition
-        event_type_defs = self._get_event_types_defs(schema)
-
         # Return the constructed prompt
         return (
             (
                 self._get_system_content()
                 + "These are the possible event types you can chose from:\n"
-                + event_type_defs
+                + self.event_type_defs
                 + "\nGiven this input text:\n```"
-                + input_text
+                + self._input_text
                 + "```\n"
                 "Do any of the event types appear in the text? "
                 "Not all event types will appear in the text, there may be some "
@@ -311,8 +394,15 @@ class EDPrompter1(EEPrompt):
                 "text."
             ),
             "json",
-            self._get_ids(data),
+            self._get_ids(self._input_data),
         )
+
+    def get_prompt(
+        self, data: dict[str, str | int | list]
+    ) -> tuple[str, str | dict, dict]:
+        # This override is specific to ED Prompts
+        self._input_text = self._confirm_ed_data_format(data)
+        return super().get_prompt(data)
 
 
 class EDPrompter2(EDPrompter1):
@@ -322,67 +412,37 @@ class EDPrompter2(EDPrompter1):
     - requests JSON output with a defined JSON schema
     """
 
-    def __init__(self) -> None:
-        super().__init__()
-
-    def _construct_prompt(
-        self,
-        data: dict[str, str | int | list],
-        schema: dict,
-    ) -> tuple[str, str | dict, dict]:
+    def __init__(self, schema: dict, **kwargs: Any) -> None:
         """
-        Construct a prompt for event trigger detection.
-
-        Parameters
-        ----------
-        data : dict[str, str | int]
-            A dictionary containing the data record.
-        schema: dict
-            A dictionary of the possible event types and their definitions.
-
-        Returns
-        -------
-        str
-            The prompt to be used in the task
-        str | dict
-            The output format, either 'json' or a JSON schema
-        dict
-            A dictionary of IDs to be attached to the LLM's response that identify the
-            record
+        Args:
+            schema: dict
+                The event schema to be used for the data
+            **kwargs: Additional keyword arguments
         """
-        # Set input text from data record
-        input_text = self._confirm_ed_data_format(data)
-
-        # For event detection the schema is the list of events with definitions
-        # Concatenate event type definitions into a single string, with a line break
-        # between each definition
-        event_type_defs = self._get_event_types_defs(schema)
-
+        super().__init__(schema)
         # Define the JSON schema for the output
-        json_schema = {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "minProperties": 1,
-                "maxProperties": 1,
-                "additionalProperties": False,
-                "properties": {key: {"type": "string"} for key in schema},
-            },
-            "minItems": 0,
-            "description": (
-                "An array of objects, where each object contains exactly one key-value "
-                "pair with predefined keys."
-            ),
-        }
+        self._json_schema = get_ed_json_schema(self._schema)
 
+    def _construct_prompt(self) -> tuple[str, str | dict, dict]:
+        """
+        Constructs a prompt for event trigger detection.
+
+        Returns:
+            tuple[str, str | dict, dict]: A tuple containing:
+
+            - str: The prompt to be used in the task.
+            - str | dict: The output format, either 'json' or a JSON schema.
+            - dict: A dictionary of IDs to be attached to the LLM's response
+              that identify the record.
+        """
         # Return the constructed prompt
         return (
             (
                 self._get_system_content()
                 + "These are the possible event types you can chose from:\n"
-                + event_type_defs
+                + self.event_type_defs
                 + "\nGiven this text:\n```"
-                + input_text
+                + self._input_text
                 + "```\n"
                 "Do any of the event types appear in the text? "
                 "Not all event types will appear in the text, there may be some "
@@ -395,9 +455,282 @@ class EDPrompter2(EDPrompter1):
                 "the event types and the values are the trigger words from the input "
                 "text."
             ),
-            json_schema,
-            self._get_ids(data),
+            self._json_schema,
+            self._get_ids(self._input_data),
         )
+
+
+class EDPrompter3(EDPrompter2):
+    """
+    Class to construct prompts for event trigger detection:
+    - uses RANDOM samples in the prompt the prompt, a different selection of examples
+        are selected for each record
+    - requests JSON output with a defined JSON schema
+    """
+
+    def __init__(self, schema: dict, **kwargs: Any) -> None:
+        """
+        Initialises the object and sets the examples to be used in each prompt.
+
+        The example data is loaded from a given file path, sets a random seed for
+        reproducibility, and selects `num_examples` random examples without replacement.
+
+        Args:
+            schema: dict
+                The event schema to be used for the data
+            **kwargs: Additional keyword arguments, for this class these must include:
+                - example_data_path (str):
+                    Path to the file containing example records.
+                - num_examples (int):
+                    The number of examples to retrieve and format.
+                - seed (int):
+                    Random seed to ensure reproducibility of the selected examples.
+        """
+        super().__init__(schema)
+        # Check required keys exist and the values have expected types.
+        required_keys = {"example_data_path": str, "num_examples": int, "seed": int}
+        prompt_args: tuple[str, int, int] = self._check_required_keys(
+            required_keys, kwargs
+        )
+        example_data_path, num_examples, seed = prompt_args
+
+        # Load the example data
+        self._example_data = load_data(example_data_path)
+        self._num_examples = num_examples
+        # Set random number generator
+        self._rng = np.random.default_rng(seed)
+        # Which examples to use in the prompt will be defined at runtime, with
+        # potentially different examples selected for each record.
+        self._examples_for_prompt = ""
+
+    def _get_examples(self) -> list[dict]:
+        """
+        Select `num_examples` random samples from the data to be loaded from the
+        `example_data_path`
+
+        Args:
+            example_data_path (str):
+                Path to the file containing example records.
+            num_examples (int):
+                The number of examples to retrieve and format.
+            seed (int):
+                Random seed to ensure reproducibility of the selected examples.
+
+        Returns:
+            list[dict]:
+                A list of `num_examples` of records
+        """
+        # Return 'num_examples' random examples from the data
+        return list(
+            self._rng.choice(self._example_data, self._num_examples, replace=False)
+        )
+
+    def _construct_examples(self, example_records: list[dict]) -> str:
+        """
+        Takes a list of example records and returns them in a string to be used in
+        the prompt.
+
+        Args:
+            example_records (list[dict]):
+                A list of the example records, each record is a dictionary
+
+        Returns:
+            str:
+                Text that can be used in the prompt.
+        """
+        expected_output = data_to_ed_schema(example_records)
+
+        output = []
+        for i, record in enumerate(example_records):
+            input_text = self._confirm_ed_data_format(record)
+
+            prompt_text = (
+                "### Example " + str(i + 1) + "\n"
+                "Input text: ```" + input_text + "```\n"
+                "Expected Response (JSON): \n" + json.dumps(expected_output[i]) + "\n"
+            )
+            output.append(prompt_text)
+
+        return "\n".join(output)
+
+    def _construct_prompt(
+        self,
+    ) -> tuple[str, str | dict, dict]:
+        """
+        Constructs a prompt for event trigger detection.
+
+        This function generates a structured prompt for event detection by
+        combining input text, event type definitions, and example texts. It
+        also defines the expected output format using a JSON schema.
+
+        Returns:
+            tuple[str, str | dict, dict]: A tuple containing:
+                - str: The constructed prompt with event type definitions,
+                  examples, and input text.
+                - str | dict: The JSON schema defining the expected output format.
+                - dict: A dictionary containing extracted IDs from the input data.
+        """
+        # Set the variables to use to select random examples
+        example_records = self._get_examples()
+        # Turn the selected examples into the text to use for the prompt.
+        self._examples_for_prompt = self._construct_examples(example_records)
+        # Return the constructed prompt
+        return (
+            (
+                self._get_system_content()
+                + "These are the possible event types you can chose from:\n"
+                + self.event_type_defs
+                + "\nHere are some examples:\n"
+                + self._examples_for_prompt
+                + "\nGiven this text:\n```"
+                + self._input_text
+                + "```\n"
+                "Do any of the event types appear in the text? "
+                "Not all event types will appear in the text, there may be some "
+                "that appear multiple times and there may be no event types "
+                "in the text.\n"
+                "If you identify one or more event type, then what is the trigger "
+                "word or words in the input text?"
+                + "\nFormat the output strictly as JSON. The output is an array of "
+                "JSON objects with exactly one key-value pair. The valid keys are "
+                "the event types and the values are the trigger words from the input "
+                "text."
+            ),
+            self._json_schema,
+            self._get_ids(self._input_data),
+        )
+
+
+class EDPrompter4(EDPrompter3):
+    """
+    Class to construct prompts for event trigger detection:
+    - uses SIMILAR samples in the prompt the prompt
+    - similarity is determined using a sentence transformer
+    - requests JSON output with a defined JSON schema
+    """
+
+    def __init__(self, schema: dict, **kwargs: Any):
+        """
+        Initialises the object and sets the sentence embedding model to be used.
+
+        The example data is loaded from a given file path, sets the sentence embedding
+        model, and encodes the example data using the model.
+
+        Args:
+            schema: dict
+                The event schema to be used for the data
+            **kwargs: Additional keyword arguments, must include:
+                - example_data_path (str):
+                    Path to the file containing example records.
+                - num_examples (int):
+                    The number of examples to retrieve and format.
+                - sentence_transformer_model (str):
+                    The name of the sentence transformer model to use for similarity
+                    comparison.
+        """
+        EDPrompter2.__init__(self, schema)
+        # Check required keys exist and the values have expected types.
+        required_keys = {
+            "example_data_path": str,
+            "num_examples": int,
+            "sentence_transformer_model": str,
+        }
+        prompt_args: tuple[str, int, str] = self._check_required_keys(
+            required_keys, kwargs
+        )
+        example_data_path, num_examples, model_name = prompt_args
+
+        ### SET MODEL
+        # Set sentence embedding model name
+        self._model = self._load_model(model_name)
+
+        ### LOAD DATA FOR EXAMPLES
+        self._example_data, self._example_embeddings = self._load_examples(
+            example_data_path
+        )
+
+        ### SET ATTRIBUTES FOR SELECTING EXAMPLES
+        # Set the number of examples as an object attribute, this will be used when
+        # selecting the examples to use in the prompt.
+        # self._num_examples: int = kwargs["num_examples"]
+        self._num_examples = num_examples
+        # Which examples to use in the prompt will be defined at runtime, with
+        # potentially different examples selected for each record.
+        self._examples_for_prompt = ""
+
+    def _load_model(self, model_name: str) -> SentenceTransformer:
+        """
+        Check that the model name is valid by trying to load it and return the mdoel
+
+        Args:
+            model_name (str):
+                Name of sentence transformer model
+
+        Returns:
+            SentenceTransformer:
+                The loaded model
+
+        Raises:
+            ValueError:
+                If the name of the model is invalid.
+        """
+        try:
+            return SentenceTransformer(
+                model_name, similarity_fn_name=SimilarityFunction.COSINE
+            )
+        except Exception as e:
+            err_msg = f"Invalid sentence transformer model name: {model_name}"
+            raise ValueError(err_msg) from e
+
+    def _load_examples(self, example_data_path: str) -> tuple[list[str], np.ndarray]:
+        """
+        Loads the example records from a given example data path. Returns the 'text'
+        values from each example record in a list and the embeddings generated using
+        the object's model attribute.
+
+        Args:
+            example_data_path (str):
+                Path where the example data are stored
+
+        Returns:
+            tuple[list[str], np.ndarray]: A tuple containing:
+                - list[str]: all the possible example records
+                - np.ndarray: the embeddings of each text record
+        """
+        # Load the data
+        example_data = load_data(example_data_path)
+        # Extract the 'text' for each example record - these will be needed for the
+        # prompts
+        example_text = [record["text"] for record in example_data]
+        # Encode all the examples and store in object - these will be needed to compare
+        # with the text for each record
+        example_embeddings = self._model.encode(example_text)
+        return example_data, example_embeddings
+
+    def _get_examples(self) -> list[dict]:
+        """
+        Selects a subset of example records from a dataset based on the cosine
+        similarity given by a sentence transformer model.
+
+        Returns:
+            list[dict]: A list of randomly selected example records.
+        """
+        # Embed the input text
+        target_embedding = self._model.encode(self._input_text)
+
+        # Compute cosine similarity between the target and all text records
+        cos_scores = self._model.similarity(target_embedding, self._example_embeddings)[
+            0
+        ]
+
+        # Get the indices of the top `num_examples` most similar records
+        top_results = torch.topk(cos_scores, k=self._num_examples)
+
+        selected_examples = []
+        for _, idx in zip(top_results[0], top_results[1], strict=False):
+            selected_examples.append(self._example_data[idx])
+
+        return selected_examples
 
 
 class EAEPrompter1(EEPrompt):
@@ -409,21 +742,20 @@ class EAEPrompter1(EEPrompt):
     - requests JSON output
     """
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, schema: dict, **kwargs: Any) -> None:
+        super().__init__(schema)
 
     def _get_ids(self, data: dict[str, str | int | list]) -> dict[str, str]:
         """
-        Method to return the IDs to be attached to the LLM's response,
-        which will ensure the record can be identified.
-        Parameters
-        ----------
-        data : dict[str, str | int | list]
-            A dictionary containing the data record.
-        Returns
-        -------
-        dict[str, str]
-            A dictionary containing the IDs for the record.
+        Retrieves the IDs to be attached to the LLM's response to ensure
+        the record can be identified.
+
+        Args:
+            data (dict[str, str | int | list]):
+                A dictionary containing the data record.
+
+        Returns:
+            dict[str, str]: A dictionary containing the IDs for the record.
         """
         if "event_mentions" not in data:
             err_msg = "Key 'event_mentions' is missing from the data."
@@ -455,28 +787,20 @@ class EAEPrompter1(EEPrompt):
             "---\n"
         )
 
-    def _construct_prompt(
-        self,
-        data: dict[str, str | int | list],
-        schema: dict,
-    ) -> tuple[str, str | dict, dict]:
+    def _construct_prompt(self) -> tuple[str, str | dict, dict]:
         """
-        Construct a prompt for event trigger detection.
+        Constructs a prompt for event trigger detection.
 
-        Parameters
-        ----------
-        data : dict[str, str | int]
-            A dictionary containing the data record.
-        schema: dict
-            A dictionary of the possible event types and their definitions.
+        Returns:
+            tuple[str, str]: A tuple containing:
 
-        Returns
-        -------
-        tuple[str, str]
-            A tuple containing the prompt and the output format.
+            - str: The constructed prompt.
+            - str | dict: The output format, either 'json' or a JSON schema.
+            - dict: A dictionary of IDs to be attached to the LLM's response
+              that identify the record.
         """
 
-        event_mention, tokens = self._confirm_arg_data_format(data)
+        event_mention, tokens = self._confirm_arg_data_format(self._input_data)
 
         # Get trigger span for 1st event mention (should be only event mention)
         trig_start, trig_end, event_type = self._get_event_trigger(event_mention)
@@ -485,7 +809,7 @@ class EAEPrompter1(EEPrompt):
         input_text = self._get_tagged_text(tokens, trig_start, trig_end)
 
         # Get additional details for the prompt
-        arg_roles = get_arg_roles(schema, event_type)
+        arg_roles = get_arg_roles(self._schema, event_type)
         number_of_args_str = (
             "There will be at most one argument for each role "
             "and there may be no arguments for a given role. "
@@ -510,7 +834,7 @@ class EAEPrompter1(EEPrompt):
                 "that role.\n"
             ),
             "json",
-            self._get_ids(data),
+            self._get_ids(self._input_data),
         )
 
 
@@ -523,31 +847,22 @@ class EAEPrompter2(EAEPrompter1):
     - requests JSON output and gives a specific schema
     """
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, schema: dict, **kwargs: Any) -> None:
+        super().__init__(schema)
 
-    def _construct_prompt(
-        self,
-        data: dict[str, str | int | list],
-        schema: dict,
-    ) -> tuple[str, str | dict, dict]:
+    def _construct_prompt(self) -> tuple[str, str | dict, dict]:
         """
-        Construct a prompt for event trigger detection.
+        Constructs a prompt for event trigger detection.
 
-        Parameters
-        ----------
-        data : dict[str, str | int]
-            A dictionary containing the data record.
-        schema: dict
-            A dictionary of the possible event types and their definitions.
-
-        Returns
-        -------
-        tuple[str, str]
-            A tuple containing the prompt and the output format.
+        Returns:
+            tuple[str, str]: A tuple containing:
+                - str: The constructed prompt.
+                - str | dict: The output format, either 'json' or a JSON schema.
+                - dict: A dictionary of IDs to be attached to the LLM's response
+                that identify the record.
         """
 
-        event_mention, tokens = self._confirm_arg_data_format(data)
+        event_mention, tokens = self._confirm_arg_data_format(self._input_data)
 
         # Get trigger span for 1st event mention (should be only event mention)
         trig_start, trig_end, event_type = self._get_event_trigger(event_mention)
@@ -556,7 +871,7 @@ class EAEPrompter2(EAEPrompter1):
         input_text = self._get_tagged_text(tokens, trig_start, trig_end)
 
         # Get additional details for the prompt
-        arg_roles = get_arg_roles(schema, event_type)
+        arg_roles = get_arg_roles(self._schema, event_type)
         number_of_args_str = (
             "There will be at most one argument for each role "
             "and there may be no arguments for a given role. "
@@ -581,5 +896,5 @@ class EAEPrompter2(EAEPrompter1):
                 "that role.\n"
             ),
             pattern_to_json_schema(event_type, arg_roles),
-            self._get_ids(data),
+            self._get_ids(self._input_data),
         )

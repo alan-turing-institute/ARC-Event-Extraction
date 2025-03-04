@@ -312,3 +312,37 @@ def data_to_ed_schema(event_records: list[dict[str, Any]]) -> list[dict]:
         )
 
     return transformed_records
+
+
+def get_ed_json_schema(schema: dict) -> dict:
+    """
+    Returns a JSON schema given a dictionary where all the possible
+    event types are the keys.
+
+    Parameters
+    ----------
+    schema : dict
+        A dictionary where the keys are the event types and the values are
+        descriptions of the event types.
+
+    Returns
+    -------
+    dict
+        A JSON schema that represents the event types.
+    """
+
+    return {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "minProperties": 1,
+            "maxProperties": 1,
+            "additionalProperties": False,
+            "properties": {key: {"type": "string"} for key in schema},
+        },
+        "minItems": 0,
+        "description": (
+            "An array of objects, where each object contains exactly one key-value "
+            "pair with predefined keys."
+        ),
+    }

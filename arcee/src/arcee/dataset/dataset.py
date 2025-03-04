@@ -25,37 +25,33 @@ class EEDataset(Dataset):
         self,
         data: list[dict],
         prompt_constuctor: EEPrompt,
-        event_schema: dict,
-        **kwargs: str | int,
     ):
         super().__init__()
         self.data = data
         self.prompt_constuctor = prompt_constuctor
-        self.event_schema = event_schema
-        self.kwargs = kwargs
 
     @classmethod
     def from_file(
         cls,
         data_path: str,
         prompt_constuctor: EEPrompt,
-        event_schema: dict,
         argument_extraction: bool = False,
-        **kwargs: str | int,
     ) -> EEDataset:
         """
         A function for instantiating an EEDataset from a .jsonlines file.
 
         Args:
-        data_path: String denoting a path to a .jsolines file with which to
-            instantiate the dataset by loading using `arcee.dataset.load.load_dataset`
-        prompt_constructor: An instance of a class inheriting from
-            `arcee.prompts.prompts.EEPrompt`
-        event_schema: A dict describing an event schema, loaded by
-            `arcee.dataset.load.load_scehma`
+        data_path: str
+            String denoting a path to a .jsolines file with which to instantiate the
+            dataset by loading using `arcee.dataset.load.load_dataset`
+        prompt_constructor: EEPrompt
+            An instance of a class inheriting from `arcee.prompts.prompts.EEPrompt`
+        argument_extraction: bool
+            True if argument extraction is being performed (and therefore one record per
+            event type will be loaded)
         """
         data = load_data(data_path, record_per_event=argument_extraction)
-        return cls(data, prompt_constuctor, event_schema, **kwargs)
+        return cls(data, prompt_constuctor)
 
     def __len__(self) -> int:
         """
@@ -73,8 +69,6 @@ class EEDataset(Dataset):
         """
         prompt, output_format, record_ids = self.prompt_constuctor.get_prompt(
             data=self.data[idx],
-            schema=self.event_schema,
-            **self.kwargs,
         )
         return (
             {

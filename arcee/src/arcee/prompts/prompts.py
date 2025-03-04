@@ -509,14 +509,6 @@ class EDPrompter3(EDPrompter2):
         Select `num_examples` random samples from the data to be loaded from the
         `example_data_path`
 
-        Args:
-            example_data_path (str):
-                Path to the file containing example records.
-            num_examples (int):
-                The number of examples to retrieve and format.
-            seed (int):
-                Random seed to ensure reproducibility of the selected examples.
-
         Returns:
             list[dict]:
                 A list of `num_examples` of records
@@ -935,47 +927,31 @@ class EAEPrompter3(EAEPrompter2):
         )
         example_data_path, num_examples, seed = prompt_args
 
-        # Set the variables to use to select random examples
-        example_records = self._select_random_examples(
-            example_data_path, num_examples, seed
-        )
-        # Turn the selected examples into the text to use for the prompt.
-        self._examples_for_prompt = self._construct_examples(example_records)
+        # Load the example data
+        self._example_data = load_data(example_data_path, record_per_event=True)
+        self._num_examples = num_examples
+        # Set random number generator
+        self._rng = np.random.default_rng(seed)
+        # Which examples to use in the prompt will be defined at runtime, with
+        # potentially different examples selected for each record.
+        self._examples_for_prompt = ""
+        # Some classes may make use of the event type of each record, will be updated
+        # each time a prompt is created
+        self._event_type = ""
 
-    def _select_random_examples(
-        self, example_data_path: str, num_examples: int, seed: int, event_type: str = ""
-    ) -> list[dict]:
+    def _get_examples(self) -> list[dict]:
         """
         Select `num_examples` random samples from the data to be loaded from the
         `example_data_path`
-
-        Args:
-            example_data_path (str):
-                Path to the file containing example records.
-            num_examples (int):
-                The number of examples to retrieve and format.
-            seed (int):
-                Random seed to ensure reproducibility of the selected examples.
-            event_type (str):
-                The event type to filter the examples by, if an empty string, then won't
-                filter by event type
 
         Returns:
             list[dict]:
                 A list of `num_examples` of records
         """
-        # Load the example data
-        example_data = load_data(example_data_path, record_per_event=True)
-        if event_type:
-            example_data = [
-                record
-                for record in example_data
-                if record["event_mention"]["event_type"] == event_type
-            ]
-        # Set random number generator
-        rng = np.random.default_rng(seed)
         # Return 'num_examples' random examples from the data
-        return list(rng.choice(example_data, num_examples, replace=False))
+        return list(
+            self._rng.choice(self._example_data, self._num_examples, replace=False)
+        )
 
     def _construct_examples(self, example_records: list[dict]) -> str:
         """
@@ -1034,13 +1010,18 @@ class EAEPrompter3(EAEPrompter2):
         event_mention, tokens = self._confirm_arg_data_format(self._input_data)
 
         # Get trigger span for 1st event mention (should be only event mention)
-        trig_start, trig_end, event_type = self._get_event_trigger(event_mention)
+        trig_start, trig_end, self._event_type = self._get_event_trigger(event_mention)
 
         # Get trigger based on tagged tokens
         input_text = self._get_tagged_text(tokens, trig_start, trig_end)
 
         # Get additional details for the prompt
-        arg_roles = get_arg_roles(self._schema, event_type)
+        arg_roles = get_arg_roles(self._schema, self._event_type)
+
+        # Set the variables to use to select random examples
+        example_records = self._get_examples()
+        # Turn the selected examples into the text to use for the prompt.
+        self._examples_for_prompt = self._construct_examples(example_records)
 
         return (
             (
@@ -1048,12 +1029,12 @@ class EAEPrompter3(EAEPrompter2):
                 + "\n## Examples\n"
                 + self._examples_for_prompt
                 + "\n---\n\n## Now process the following input:\n"
-                "Event type: " + event_type + "\n"
+                "Event type: " + self._event_type + "\n"
                 "Argument roles: " + ", ".join(set(arg_roles)) + "\n"
                 "Input text: ```" + input_text + "```\n"
                 "Expected response (JSON):"
             ),
-            "json",
+            pattern_to_json_schema(self._event_type, arg_roles),
             self._get_ids(self._input_data),
         )
 
@@ -1066,6 +1047,34 @@ class EAEPrompter4(EAEPrompter3):
     - Uses RANDOM examples in the prompt, but with SAME EVENT TYPE
     - requests JSON output with specific schema for event type
     """
+
+    def __init__(self, schema: dict, **kwargs: Any) -> None:
+        super().__init__(schema, **kwargs)
+
+    def _get_examples(self) -> list[dict]:
+        """
+        Select `num_examples` random samples from the data to be loaded from the
+        `example_data_path`
+
+        Returns:
+            list[dict]:
+                A list of `num_examples` of records
+        """
+        example_data_same_event_type = [
+            record
+            for record in self._example_data
+            if record["event_mentions"][0]["event_type"] == self._event_type
+        ]
+        if len(example_data_same_event_type) >= self._num_examples:
+            return list(
+                self._rng.choice(
+                    example_data_same_event_type, self._num_examples, replace=False
+                )
+            )
+        # Return 'num_examples' random examples from the data
+        return list(
+            self._rng.choice(self._example_data, self._num_examples, replace=False)
+        )
 
 
 class EAEPrompter5(EAEPrompter3):

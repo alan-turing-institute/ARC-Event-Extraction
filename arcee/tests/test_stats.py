@@ -305,3 +305,126 @@ def test_stats_on_argument_detection(event_arg_jsonl_file):
     assert mistake_stats["argument_precision"] == 5 / 7
     assert mistake_stats["argument_recall"] == 5 / 7
     assert mistake_stats["argument_f1"] == 2 * (5 / 7) * (5 / 7) / ((5 / 7) + (5 / 7))
+
+
+def test_stats_on_event_detection_with_semi(event_trigger_jsonl_file):
+    gold_events = load_events(event_trigger_jsonl_file, "wnd_id")
+
+    perfect_stats = stats_on_event_detection(gold_events, gold_events, semi=True)
+
+    assert perfect_stats["total_passage"] == 4
+    assert perfect_stats["correct_passage"] == 4
+    assert perfect_stats["passage_accuracy"] == 1.0
+    assert perfect_stats["total_event"] == 4
+    assert perfect_stats["predict_event"] == 4
+    assert perfect_stats["correct_all"] == 4
+    assert perfect_stats["event_precision"] == 1.0
+    assert perfect_stats["event_recall"] == 1.0
+    assert perfect_stats["event_f1"] == 1.0
+    assert perfect_stats["event_type_precision"] == 1.0
+    assert perfect_stats["event_type_recall"] == 1.0
+    assert perfect_stats["event_type_f1"] == 1.0
+
+    output_with_mistakes = {
+        "p1": [],
+        "p2": [{"Life:Marry": "married"}, {"Life:Injure": "injured"}],  # Mistake here
+        "p3": [{"Movement:Transport": "transported"}],
+        "p4": [],  # Missing event here
+    }
+    mistake_stats = stats_on_event_detection(
+        gold_events, output_with_mistakes, semi=True
+    )
+
+    assert mistake_stats["total_passage"] == 4
+    assert mistake_stats["correct_passage"] == 2  # two passages are incorrect
+    assert mistake_stats["passage_accuracy"] == 2 / 4
+    assert mistake_stats["total_event"] == 4
+    assert mistake_stats["predict_event"] == 3
+    assert mistake_stats["correct_all"] == 2  # Two events are incorrect
+    assert mistake_stats["event_precision"] == 2 / 3
+    assert mistake_stats["event_recall"] == 2 / 4
+    assert mistake_stats["event_f1"] == 2 * (2 / 3) * (2 / 4) / ((2 / 3) + (2 / 4))
+    assert mistake_stats["event_type_precision"] == 3 / 3
+    assert mistake_stats["event_type_recall"] == 3 / 4
+    assert mistake_stats["event_type_f1"] == 2 * (3 / 3) * (3 / 4) / ((3 / 3) + (3 / 4))
+
+    output_with_overlap = {
+        "p1": [],
+        "p2": [{"Life:Marry": "married"}, {"Life:Injure": "badly wounded"}],
+        "p3": [{"Movement:Transport": "transport"}],
+        "p4": [{"Job:Hire": "fish"}],
+    }
+
+    overlap_stats = stats_on_event_detection(
+        gold_events, output_with_overlap, semi=True
+    )
+
+    assert overlap_stats["total_passage"] == 4
+    assert overlap_stats["correct_passage"] == 3  # one passage is incorrect
+    assert overlap_stats["passage_accuracy"] == 3 / 4
+    assert overlap_stats["total_event"] == 4
+    assert overlap_stats["predict_event"] == 4
+    assert overlap_stats["correct_all"] == 3  # One event is incorrect
+    assert overlap_stats["event_precision"] == 3 / 4
+    assert overlap_stats["event_recall"] == 3 / 4
+    assert overlap_stats["event_f1"] == 2 * (3 / 4) * (3 / 4) / ((3 / 4) + (3 / 4))
+    assert overlap_stats["event_type_precision"] == 4 / 4
+    assert overlap_stats["event_type_recall"] == 4 / 4
+    assert overlap_stats["event_type_f1"] == 2 * (4 / 4) * (4 / 4) / ((4 / 4) + (4 / 4))
+
+
+def test_stats_on_argument_detection_with_semi(event_arg_jsonl_file):
+    gold_events = load_events(event_arg_jsonl_file, "evt_id")
+
+    perfect_stats = stats_on_argument_detection(gold_events, gold_events, semi=True)
+
+    assert perfect_stats["total_event"] == 4
+    assert perfect_stats["correct_event"] == 4
+    assert perfect_stats["event_accuracy"] == 1.0
+    assert perfect_stats["total_argument"] == 7
+    assert perfect_stats["predict_argument"] == 7
+    assert perfect_stats["correct_argument"] == 7
+    assert perfect_stats["argument_precision"] == 1.0
+    assert perfect_stats["argument_recall"] == 1.0
+    assert perfect_stats["argument_f1"] == 1.0
+
+    output_with_mistakes = {
+        "e1": {"Person": "Alice", "Place": "Las Vegas"},
+        "e2": {"Person": "Bob", "Vehicle": "bike"},  # Mistake here
+        "e3": {"Person": "Charlie"},  # Missing argument here
+        "e4": {"Person": "Dave", "House": "apartment"},
+    }
+    mistake_stats = stats_on_argument_detection(
+        gold_events, output_with_mistakes, semi=True
+    )
+
+    assert mistake_stats["total_event"] == 4
+    assert mistake_stats["correct_event"] == 1  # Two events are incorrect
+    assert mistake_stats["event_accuracy"] == 1 / 4
+    assert mistake_stats["total_argument"] == 7
+    assert mistake_stats["predict_argument"] == 7
+    assert mistake_stats["correct_argument"] == 5  # Two arguments are incorrect
+    assert mistake_stats["argument_precision"] == 5 / 7
+    assert mistake_stats["argument_recall"] == 5 / 7
+    assert mistake_stats["argument_f1"] == 2 * (5 / 7) * (5 / 7) / ((5 / 7) + (5 / 7))
+
+    output_with_overlap = {
+        "e1": {"Person": "Alice", "Place": "Vegas"},
+        "e2": {"Person": "Bob", "Vehicle": "car"},
+        "e3": {"Person": "Charlie", "Place": "New York City"},
+        "e4": {"Person": "Fred", "House": None},
+    }
+
+    overlap_stats = stats_on_argument_detection(
+        gold_events, output_with_overlap, semi=True
+    )
+
+    assert overlap_stats["total_event"] == 4
+    assert overlap_stats["correct_event"] == 3  # one event is incorrect
+    assert overlap_stats["event_accuracy"] == 3 / 4
+    assert overlap_stats["total_argument"] == 7
+    assert overlap_stats["predict_argument"] == 7
+    assert overlap_stats["correct_argument"] == 6  # one argument is incorrect
+    assert overlap_stats["argument_precision"] == 6 / 7
+    assert overlap_stats["argument_recall"] == 6 / 7
+    assert overlap_stats["argument_f1"] == 2 * (6 / 7) * (6 / 7) / ((6 / 7) + (6 / 7))

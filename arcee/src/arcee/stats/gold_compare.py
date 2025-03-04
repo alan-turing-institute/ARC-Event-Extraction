@@ -46,6 +46,19 @@ class SemiString(str):
         return (self in other) or (other in self)
 
 
+def _dict_to_semi_dict(d: dict[str, str | None]) -> dict[str, SemiString | None]:
+    """
+    Convert a dictionary to a dictionary with SemiString values.
+
+    Args:
+        d (dict[str, str | None]): The dictionary to convert.
+
+    Returns:
+        dict[str, SemiString | None]: The dictionary with SemiString values.
+    """
+    return {key: SemiString(val) if val is not None else None for key, val in d.items()}
+
+
 def compare_events_detection(g_events: list, o_events: list) -> tuple[int, int, int]:
     """
     Compare gold events with output events and return the count of correct events and
@@ -103,12 +116,8 @@ def semi_compare_events_detection(
         correct_all (int): The total number of correct events in the output data.
         correct_type (int): The total number events whose type was correctly predicted.
     """
-    semi_g_events = [
-        {key: SemiString(val) for key, val in event.items()} for event in g_events
-    ]
-    semi_o_events = [
-        {key: SemiString(val) for key, val in event.items()} for event in o_events
-    ]
+    semi_g_events = [_dict_to_semi_dict(event) for event in g_events]
+    semi_o_events = [_dict_to_semi_dict(event) for event in o_events]
 
     return compare_events_detection(semi_g_events, semi_o_events)
 
@@ -150,14 +159,14 @@ def semi_compare_argument_detection(g_args: dict, o_args: dict) -> tuple[int, in
         correct_event (int): If the whole event is correct.
         correct_argument (int): The total number of correct arguments.
     """
-    semi_g_args = {key: SemiString(val) for key, val in g_args.items()}
-    semi_o_args = {key: SemiString(val) for key, val in o_args.items()}
+    semi_g_args = _dict_to_semi_dict(g_args)
+    semi_o_args = _dict_to_semi_dict(o_args)
 
     return compare_argument_detection(semi_g_args, semi_o_args)
 
 
 def stats_on_event_detection(
-    golds: dict[str, list], outputs: dict[str, list]
+    golds: dict[str, list], outputs: dict[str, list], semi: bool = False
 ) -> dict[str, int | float]:
     """
     Calculate the statistics on the event detection task.
@@ -167,6 +176,8 @@ def stats_on_event_detection(
             the key as the key and the 'output' as the value.
         outputs (dict[str, dict | list]): The output data in the format of a dictionary
             with the key as the key and the 'output' as the value.
+        semi (bool, optional): If the partial string match should be used. Defaults to
+            False.
 
     Returns:
         dict[str, int | float]: This is a dict with the following keys:
@@ -207,6 +218,8 @@ def stats_on_event_detection(
 
         this_correct_passage, this_correct_all, this_correct_type = (
             compare_events_detection(golds[key], output)
+            if not semi
+            else semi_compare_events_detection(golds[key], output)
         )
         correct_passage += this_correct_passage
         correct_all += this_correct_all
@@ -242,7 +255,7 @@ def stats_on_event_detection(
 
 
 def stats_on_argument_detection(
-    golds: dict[str, dict], outputs: dict[str, dict]
+    golds: dict[str, dict], outputs: dict[str, dict], semi: bool = False
 ) -> dict[str, int | float]:
     """
     Calculate the statistics on the argument detection task.
@@ -252,6 +265,8 @@ def stats_on_argument_detection(
             the key as the key and the 'output' as the value.
         outputs (dict[str, dict | list]): The output data in the format of a dictionary
             with the key as the key and the 'output' as the value.
+        semi (bool, optional): If the partial string match should be used. Defaults to
+            False.
 
     Returns:
         dict[str, int | float]: This is a dict with the following values:
@@ -280,8 +295,10 @@ def stats_on_argument_detection(
         predict_argument += len([val for val in output.values() if val])
         total_argument += len([val for val in golds[key].values() if val])
 
-        this_correct_event, this_correct_argument = compare_argument_detection(
-            golds[key], output
+        this_correct_event, this_correct_argument = (
+            compare_argument_detection(golds[key], output)
+            if not semi
+            else semi_compare_argument_detection(golds[key], output)
         )
         correct_event += this_correct_event
         correct_argument += this_correct_argument

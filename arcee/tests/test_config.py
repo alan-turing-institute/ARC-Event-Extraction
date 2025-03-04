@@ -51,7 +51,7 @@ def test_model_dump(dummy_experment_config: ExperimentConfig):
         },
         "prompt_kwargs": {
             "prompt_cls": EXPECTED_PROMPT_CLS,
-            "prompt_kwargs": EXPECTED_PROMPT_KWARGS,
+            "prompt_init_kwargs": EXPECTED_PROMPT_KWARGS,
         },
         "output_path": EXPECTED_OUTPUT,
     }

@@ -31,10 +31,10 @@ class EEPrompt(ABC):
             **kwargs: Additional keyword arguments
         """
         super().__init__()
-        self.schema = schema
+        self._schema = schema
         # The `input_data` attribute will be set each time the `get_prompt` method
         # is called
-        self.input_data: dict[str, str | int | list] = {}
+        self._input_data: dict[str, str | int | list] = {}
 
     def _get_system_content(self) -> str:
         """
@@ -307,7 +307,7 @@ class EEPrompt(ABC):
             that identify the record.
 
         """
-        self.input_data = data
+        self._input_data = data
         prompt, output_format, ids = self._construct_prompt()
 
         return prompt, output_format, ids
@@ -357,7 +357,7 @@ class EDPrompter1(EEPrompt):
             str: A string containing the event type definitions.
         """
 
-        return "\n".join([key + ": " + self.schema[key] for key in self.schema])
+        return "\n".join([key + ": " + self._schema[key] for key in self._schema])
 
     def _construct_prompt(
         self,
@@ -394,7 +394,7 @@ class EDPrompter1(EEPrompt):
                 "text."
             ),
             "json",
-            self._get_ids(self.input_data),
+            self._get_ids(self._input_data),
         )
 
     def get_prompt(
@@ -421,7 +421,7 @@ class EDPrompter2(EDPrompter1):
         """
         super().__init__(schema)
         # Define the JSON schema for the output
-        self.json_schema = get_ed_json_schema(self.schema)
+        self.json_schema = get_ed_json_schema(self._schema)
 
     def _construct_prompt(self) -> tuple[str, str | dict, dict]:
         """
@@ -456,7 +456,7 @@ class EDPrompter2(EDPrompter1):
                 "text."
             ),
             self.json_schema,
-            self._get_ids(self.input_data),
+            self._get_ids(self._input_data),
         )
 
 
@@ -594,7 +594,7 @@ class EDPrompter3(EDPrompter2):
                 "text."
             ),
             self.json_schema,
-            self._get_ids(self.input_data),
+            self._get_ids(self._input_data),
         )
 
 
@@ -816,7 +816,7 @@ class EAEPrompter1(EEPrompt):
               that identify the record.
         """
 
-        event_mention, tokens = self._confirm_arg_data_format(self.input_data)
+        event_mention, tokens = self._confirm_arg_data_format(self._input_data)
 
         # Get trigger span for 1st event mention (should be only event mention)
         trig_start, trig_end, event_type = self._get_event_trigger(event_mention)
@@ -825,7 +825,7 @@ class EAEPrompter1(EEPrompt):
         input_text = self._get_tagged_text(tokens, trig_start, trig_end)
 
         # Get additional details for the prompt
-        arg_roles = get_arg_roles(self.schema, event_type)
+        arg_roles = get_arg_roles(self._schema, event_type)
         number_of_args_str = (
             "There will be at most one argument for each role "
             "and there may be no arguments for a given role. "
@@ -850,7 +850,7 @@ class EAEPrompter1(EEPrompt):
                 "that role.\n"
             ),
             "json",
-            self._get_ids(self.input_data),
+            self._get_ids(self._input_data),
         )
 
 
@@ -878,7 +878,7 @@ class EAEPrompter2(EAEPrompter1):
                 that identify the record.
         """
 
-        event_mention, tokens = self._confirm_arg_data_format(self.input_data)
+        event_mention, tokens = self._confirm_arg_data_format(self._input_data)
 
         # Get trigger span for 1st event mention (should be only event mention)
         trig_start, trig_end, event_type = self._get_event_trigger(event_mention)
@@ -887,7 +887,7 @@ class EAEPrompter2(EAEPrompter1):
         input_text = self._get_tagged_text(tokens, trig_start, trig_end)
 
         # Get additional details for the prompt
-        arg_roles = get_arg_roles(self.schema, event_type)
+        arg_roles = get_arg_roles(self._schema, event_type)
         number_of_args_str = (
             "There will be at most one argument for each role "
             "and there may be no arguments for a given role. "
@@ -912,5 +912,5 @@ class EAEPrompter2(EAEPrompter1):
                 "that role.\n"
             ),
             pattern_to_json_schema(event_type, arg_roles),
-            self._get_ids(self.input_data),
+            self._get_ids(self._input_data),
         )

@@ -139,7 +139,7 @@ def test_get_arg_roles_invalid():
 class TestEDPrompter1:
     def setup_method(self):
         """Setup a subclass instance for testing since EEPrompt is abstract"""
-        self.prompter = EDPrompter1()
+        self.prompter = EDPrompter1(ED_SCHEMA)
 
     def test_get_system_content(self):
         """Test _get_system_content returns expected system message."""
@@ -178,20 +178,9 @@ class TestEDPrompter1:
         with pytest.raises(ValueError, match="Invalid trigger indices"):
             self.prompter._get_tagged_text(tokens, 3, 4)
 
-    def test_construct_prompt(self):
-        """Test _construct_prompt returns expected format and output."""
-        prompt, output_format, ids = self.prompter._construct_prompt(DATA, ED_SCHEMA)
-
-        assert output_format == "json"
-        assert "Explosion: An event where something bursts violently." in prompt
-        assert "Attack: A violent physical act causing harm or damage." in prompt
-        assert "The explosion destroyed the building." in prompt
-        assert "Format the output strictly as JSON" in prompt
-        assert ids == {"wnd_id": "wnd1"}
-
     def test_get_prompt(self):
         """Test get_prompt calls _construct_prompt and returns expected values."""
-        prompt, output_format, ids = self.prompter.get_prompt(DATA, ED_SCHEMA)
+        prompt, output_format, ids = self.prompter.get_prompt(DATA)
 
         assert output_format == "json"
         assert "Explosion: An event where something bursts violently." in prompt
@@ -205,24 +194,11 @@ class TestEDPrompter1:
 class TestEDPrompter2:
     def setup_method(self):
         """Setup an instance of EDPrompter2 for testing."""
-        self.prompter = EDPrompter2()
-
-    def test_construct_prompt(self):
-        """Test _construct_prompt for EDPrompter2 returns expected format and output."""
-        prompt, output_format, ids = self.prompter._construct_prompt(DATA, ED_SCHEMA)
-
-        assert isinstance(prompt, str)
-        assert isinstance(output_format, dict)  # Should return a JSON schema
-        assert output_format == JSON_SCHEMA
-        assert "Explosion: An event where something bursts violently." in prompt
-        assert "Attack: A violent physical act causing harm or damage." in prompt
-        assert "The explosion destroyed the building." in prompt
-        assert "Format the output strictly as JSON" in prompt
-        assert ids == {"wnd_id": "wnd1"}
+        self.prompter = EDPrompter2(ED_SCHEMA)
 
     def test_get_prompt(self):
         """Test get_prompt for EDPrompter2 works correctly."""
-        prompt, output_format, ids = self.prompter.get_prompt(DATA, ED_SCHEMA)
+        prompt, output_format, ids = self.prompter.get_prompt(DATA)
 
         assert isinstance(prompt, str)
         assert isinstance(output_format, dict)
@@ -238,11 +214,6 @@ class TestEDPrompter2:
 class TestEDPrompter3:
     def setup_method(self):
         """Setup an instance of EDPrompter3 for testing."""
-        self.prompter = EDPrompter3()
-
-    def test_get_examples(self):
-        """Test _get_examples returns expected examples."""
-
         with tempfile.NamedTemporaryFile(
             delete=False, mode="w", suffix=".json"
         ) as temp_file:
@@ -250,55 +221,36 @@ class TestEDPrompter3:
                 temp_file.write(json.dumps(record) + "\n")
             temp_file_path = temp_file.name
 
-        example_kwargs = {"seed": 42}
-        selected_examples = self.prompter._get_examples(
-            temp_file_path, num_examples=3, **example_kwargs
-        )
+        kwargs = {"example_data_path": temp_file_path, "num_examples": 3, "seed": 42}
+        self.prompter = EDPrompter3(ED_SCHEMA, **kwargs)
 
-        assert len(selected_examples) == 3, "Should select exactly 3 examples"
-        assert all(
-            example in EXAMPLE_RECORDS for example in selected_examples
-        ), "Selected examples should be from input data"
+    def test_get_prompt(self):
+        """Test get_prompt for EDPrompter2 works correctly."""
+        prompt, output_format, ids = self.prompter.get_prompt(DATA)
 
-        # Ensure reproducibility
-        selected_examples_again = self.prompter._get_examples(
-            temp_file_path, num_examples=3, **example_kwargs
-        )
-        assert (
-            selected_examples == selected_examples_again
-        ), "Results should be reproducible with the same seed"
-
-    def test_construct_examples(self):
-        """Test _construct_examples returns expected format and output."""
-        with tempfile.NamedTemporaryFile(
-            delete=False, mode="w", suffix=".json"
-        ) as temp_file:
-            for record in EXAMPLE_RECORDS:
-                temp_file.write(json.dumps(record) + "\n")
-            temp_file_path = temp_file.name
-
-        example_kwargs = {"seed": 42}
-        examples_text = self.prompter._construct_examples(
-            temp_file_path, num_examples=3, **example_kwargs
-        )
-        assert "### Example 1" in examples_text
-        assert "### Example 2" in examples_text
-        assert "### Example 3" in examples_text
-        assert EXAMPLE_RECORDS[0]["text"] in examples_text
-        assert EXAMPLE_RECORDS[3]["text"] in examples_text
-        assert EXAMPLE_RECORDS[4]["text"] in examples_text
-        assert "Expected Response (JSON):" in examples_text
+        assert isinstance(prompt, str)
+        assert isinstance(output_format, dict)
+        assert output_format == JSON_SCHEMA
+        assert "Explosion: An event where something bursts violently." in prompt
+        assert "Attack: A violent physical act causing harm or damage." in prompt
+        assert "The explosion destroyed the building." in prompt
+        assert "### Example 1" in prompt
+        assert "### Example 2" in prompt
+        assert "### Example 3" in prompt
+        assert "### Example 4" not in prompt
+        assert EXAMPLE_RECORDS[0]["text"] in prompt
+        assert EXAMPLE_RECORDS[1]["text"] not in prompt
+        assert EXAMPLE_RECORDS[2]["text"] not in prompt
+        assert EXAMPLE_RECORDS[3]["text"] in prompt
+        assert EXAMPLE_RECORDS[4]["text"] in prompt
+        assert "Format the output strictly as JSON" in prompt
+        assert ids == {"wnd_id": "wnd1"}
 
 
 ### TESTING EDPrompter4 ###
 class TestEDPrompter4:
     def setup_method(self):
         """Setup an instance of EDPrompter4 for testing."""
-        self.prompter = EDPrompter4()
-
-    def test_get_examples(self):
-        """Test _get_examples returns expected examples."""
-
         with tempfile.NamedTemporaryFile(
             delete=False, mode="w", suffix=".json"
         ) as temp_file:
@@ -306,53 +258,25 @@ class TestEDPrompter4:
                 temp_file.write(json.dumps(record) + "\n")
             temp_file_path = temp_file.name
 
-        model_name = "sentence-transformers-testing/stsb-bert-tiny-safetensors"
-        target_text = "An example of a target sentence."
-        example_kwargs = {
-            "sentence_transformer_model": model_name,
-            "target_text": target_text,
+        kwargs = {
+            "example_data_path": temp_file_path,
+            "num_examples": 3,
+            "sentence_transformer_model": (
+                "sentence-transformers-testing/stsb-bert-tiny-safetensors"
+            ),
         }
-        selected_examples = self.prompter._get_examples(
-            temp_file_path, num_examples=3, **example_kwargs
-        )
-
-        assert len(selected_examples) == 3, "Should select exactly 3 examples"
-        assert all(
-            example in EXAMPLE_RECORDS for example in selected_examples
-        ), "Selected examples should be from input data"
-
-        # Ensure reproducibility
-        selected_examples_again = self.prompter._get_examples(
-            temp_file_path, num_examples=3, **example_kwargs
-        )
-        assert (
-            selected_examples == selected_examples_again
-        ), "Results should be reproducible with the same settings"
+        self.prompter = EDPrompter4(ED_SCHEMA, **kwargs)
 
 
 ### TESTING EAEPrompter1 ###
 class TestEAEPrompter1:
     def setup_method(self):
         """Setup an instance of EAEPrompter1 for testing."""
-        self.prompter = EAEPrompter1()
-
-    def test_construct_prompt(self):
-        """
-        Test _construct_prompt for EAEPrompter1 returns expected format and output.
-        """
-        prompt, output_format, ids = self.prompter._construct_prompt(DATA, EAE_SCHEMA)
-
-        assert isinstance(prompt, str)
-        assert output_format == "json"
-        assert "Attacker" in prompt
-        assert "Victim" in prompt
-        assert "Location" in prompt
-        assert "Format the output strictly as JSON" in prompt
-        assert ids == {"evt_id": "ev1"}
+        self.prompter = EAEPrompter1(EAE_SCHEMA)
 
     def test_get_prompt(self):
         """Test get_prompt for EAEPrompter1 works correctly."""
-        prompt, output_format, ids = self.prompter.get_prompt(DATA, EAE_SCHEMA)
+        prompt, output_format, ids = self.prompter.get_prompt(DATA)
 
         assert isinstance(prompt, str)
         assert output_format == "json"
@@ -367,28 +291,11 @@ class TestEAEPrompter1:
 class TestEAEPrompter2:
     def setup_method(self):
         """Setup an instance of EAEPrompter2 for testing."""
-        self.prompter = EAEPrompter2()
-
-    def test_construct_prompt(self):
-        """
-        Test _construct_prompt for EAEPrompter2 returns expected format and output.
-        """
-        prompt, output_format, ids = self.prompter._construct_prompt(DATA, EAE_SCHEMA)
-
-        assert isinstance(prompt, str)
-        assert isinstance(output_format, dict)  # Should return a JSON schema
-        assert output_format == pattern_to_json_schema(
-            "Explosion", EAE_SCHEMA["Explosion"]["roles"]
-        )
-        assert "Attacker" in prompt
-        assert "Victim" in prompt
-        assert "Location" in prompt
-        assert "Format the output strictly as JSON" in prompt
-        assert ids == {"evt_id": "ev1"}
+        self.prompter = EAEPrompter2(EAE_SCHEMA)
 
     def test_get_prompt(self):
         """Test get_prompt for EAEPrompter2 works correctly."""
-        prompt, output_format, ids = self.prompter.get_prompt(DATA, EAE_SCHEMA)
+        prompt, output_format, ids = self.prompter.get_prompt(DATA)
 
         assert isinstance(prompt, str)
         assert isinstance(output_format, dict)

@@ -983,7 +983,7 @@ class EAEPrompter3(EAEPrompter2):
                 A list of `num_examples` of records
         """
         # Load the example data
-        example_data = load_data(example_data_path)
+        example_data = load_data(example_data_path, record_per_event=True)
         if event_type:
             example_data = [
                 record

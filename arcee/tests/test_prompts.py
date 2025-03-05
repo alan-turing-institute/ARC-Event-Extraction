@@ -265,33 +265,6 @@ class TestEDPrompter1:
         )
         assert self.prompter._get_system_content() == expected_content
 
-    def test_get_event_trigger_valid(self):
-        """Test _get_event_trigger extracts correct trigger details."""
-        event_mention = {"trigger": {"start": 5, "end": 10}, "event_type": "Explosion"}
-        assert self.prompter._get_event_trigger(event_mention) == (5, 10, "Explosion")
-
-    def test_get_event_trigger_invalid_format(self):
-        """Test _get_event_trigger raises TypeError for invalid format."""
-        invalid_event_mention = {"trigger": "not_a_dict", "event_type": 123}
-        with pytest.raises(TypeError, match="Invalid event_mention format"):
-            self.prompter._get_event_trigger(invalid_event_mention)
-
-    def test_get_tagged_text_valid(self):
-        """Test _get_tagged_text properly tags trigger words."""
-        tokens = ["The", "bomb", "exploded", "suddenly"]
-        trig_start, trig_end = 2, 3
-        expected_output = "The bomb <trigger>exploded</trigger> suddenly"
-        assert (
-            self.prompter._get_tagged_text(tokens, trig_start, trig_end)
-            == expected_output
-        )
-
-    def test_get_tagged_text_invalid_indices(self):
-        """Test _get_tagged_text raises ValueError for invalid indices."""
-        tokens = ["A", "small", "fire"]
-        with pytest.raises(ValueError, match="Invalid trigger indices"):
-            self.prompter._get_tagged_text(tokens, 3, 4)
-
     def test_get_prompt(self):
         """Test get_prompt calls _construct_prompt and returns expected values."""
         prompt, output_format, ids = self.prompter.get_prompt(DATA)
@@ -399,6 +372,33 @@ class TestEAEPrompter1:
         assert "Location" in prompt
         assert "Format the output strictly as JSON" in prompt
         assert ids == {"evt_id": "ev1"}
+
+    def test_get_event_trigger_valid(self):
+        """Test _get_event_trigger extracts correct trigger details."""
+        event_mention = {"trigger": {"start": 5, "end": 10}, "event_type": "Explosion"}
+        assert self.prompter._get_event_trigger(event_mention) == (5, 10, "Explosion")
+
+    def test_get_event_trigger_invalid_format(self):
+        """Test _get_event_trigger raises TypeError for invalid format."""
+        invalid_event_mention = {"trigger": "not_a_dict", "event_type": 123}
+        with pytest.raises(TypeError, match="Invalid event_mention format"):
+            self.prompter._get_event_trigger(invalid_event_mention)
+
+    def test_get_tagged_text_valid(self):
+        """Test _get_tagged_text properly tags trigger words."""
+        tokens = ["The", "bomb", "exploded", "suddenly"]
+        trig_start, trig_end = 2, 3
+        expected_output = "The bomb <trigger>exploded</trigger> suddenly"
+        assert (
+            self.prompter._get_tagged_text(tokens, trig_start, trig_end)
+            == expected_output
+        )
+
+    def test_get_tagged_text_invalid_indices(self):
+        """Test _get_tagged_text raises ValueError for invalid indices."""
+        tokens = ["A", "small", "fire"]
+        with pytest.raises(ValueError, match="Invalid trigger indices"):
+            self.prompter._get_tagged_text(tokens, 3, 4)
 
 
 ### TESTING EAEPrompter2 ###

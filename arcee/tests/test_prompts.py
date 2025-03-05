@@ -128,6 +128,109 @@ EXAMPLE_RECORDS = [
     },
 ]
 
+EXAMPLE_RECORDS_SAME_TYPE = [
+    {
+        "doc_id": "doc1",
+        "wnd_id": "wnd1",
+        "text": "The explosion destroyed the car.",
+        "tokens": ["The", "explosion", "destroyed", "the", "car", "."],
+        "event_mentions": [
+            {
+                "id": "ev1",
+                "trigger": {"text": "explosion", "start": 1, "end": 2},
+                "event_type": "Explosion",
+                "arguments": [{"role": "Victim", "text": "car"}],
+            }
+        ],
+    },
+    {
+        "doc_id": "doc2",
+        "wnd_id": "wnd2",
+        "text": "The explosion made it hard to hear the TV.",
+        "tokens": [
+            "The",
+            "explosion",
+            "made",
+            "it",
+            "hard",
+            "to",
+            "hear",
+            "the",
+            "TV",
+            ".",
+        ],
+        "event_mentions": [
+            {
+                "id": "ev1",
+                "trigger": {"text": "explosion", "start": 1, "end": 2},
+                "event_type": "Explosion",
+                "arguments": [{}],
+            }
+        ],
+    },
+    {
+        "doc_id": "doc3",
+        "wnd_id": "wnd3",
+        "text": "In the middle of the ocean there was an explosion.",
+        "tokens": [
+            "In",
+            "the",
+            "middle",
+            "of",
+            "the",
+            "ocean",
+            "there",
+            "was",
+            "an",
+            "explosion",
+            ".",
+        ],
+        "event_mentions": [
+            {
+                "id": "ev1",
+                "trigger": {"text": "explosion", "start": 9, "end": 10},
+                "event_type": "Explosion",
+                "arguments": [{"role": "Location", "text": "ocean"}],
+            }
+        ],
+    },
+    {
+        "doc_id": "doc1",
+        "wnd_id": "wnd1",
+        "text": "The bomb went off at the start of the attack in the city.",
+        "tokens": [
+            "The",
+            "bomb",
+            "went",
+            "off",
+            "at",
+            "the",
+            "start",
+            "of",
+            "the",
+            "attack",
+            "in",
+            "the",
+            "city",
+            ".",
+        ],
+        "event_mentions": [
+            {
+                "id": "ev1",
+                "trigger": {"text": "attack", "start": 9, "end": 210},
+                "event_type": "Attack",
+                "arguments": [],
+            },
+            {
+                "id": "ev2",
+                "trigger": {"text": "went off", "start": 2, "end": 4},
+                "event_type": "Explosion",
+                "arguments": [{"role": "Location", "text": "city"}],
+            },
+        ],
+    },
+]
+
 ### TESTING get_arg_roles ###
 
 
@@ -376,6 +479,18 @@ class TestEAEPrompter4:
         kwargs = {"example_data_path": temp_file_path, "num_examples": 3, "seed": 42}
         self.prompter_no_events = EAEPrompter4(EAE_SCHEMA, **kwargs)
 
+        with tempfile.NamedTemporaryFile(
+            delete=False, mode="w", suffix=".json"
+        ) as temp_file:
+            for record in EXAMPLE_RECORDS_SAME_TYPE:
+                temp_file.write(json.dumps(record) + "\n")
+            temp_file_path = temp_file.name
+
+        # Set up one prompt where the example data doesn't have enough of the same
+        # event type as the input data
+        kwargs = {"example_data_path": temp_file_path, "num_examples": 2, "seed": 42}
+        self.prompter_same_events = EAEPrompter4(EAE_SCHEMA, **kwargs)
+
     def test_get_prompt(self):
         """Test get_prompt for EAEPrompter4 works correctly."""
         # The 'prompter_no_events' doesn't have access to enough events of the same type
@@ -403,3 +518,23 @@ class TestEAEPrompter4:
         assert '{"evt_id": "ev1", "output": ' in prompt
         assert '{"evt_id": "ev4", "output": {"Location": "city"}}' in prompt
         assert '{"evt_id": "ev5", "output": {"Location": null}}' in prompt
+
+        prompt, output_format, ids = self.prompter_same_events.get_prompt(DATA)
+
+        assert isinstance(prompt, str)
+        assert isinstance(output_format, dict)
+        assert output_format == pattern_to_json_schema(
+            "Explosion", EAE_SCHEMA["Explosion"]["roles"]
+        )
+        assert ids == {"evt_id": "ev1"}
+
+        assert "The <trigger>explosion</trigger> destroyed the building ." in prompt
+        assert "### Example 1" in prompt
+        assert "### Example 2" in prompt
+        assert "### Example 3" not in prompt
+        assert "### Example 4" not in prompt
+        assert "The <trigger>explosion</trigger> destroyed the car ." in prompt
+        assert (
+            "The bomb <trigger>went off</trigger> at the start of the attack in the "
+            "city ." in prompt
+        )

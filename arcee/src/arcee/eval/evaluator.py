@@ -67,9 +67,10 @@ class Evaluator:
         self.model_id = model_id
 
         # Instantiate model
-        if model_type not in ["hf", "ollama"]:
+        if model_type not in MODEL_CLS_MAP:
             exception = (
-                "`model_type` should be one of `'hf'` or `'ollama'` `model_type` is "
+                f"`model_type` should be one of {list(MODEL_CLS_MAP.keys())} "
+                "`model_type` is "
                 f"currently being passed as {model_type}."
             )
             raise ValueError(exception)

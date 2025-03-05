@@ -838,16 +838,7 @@ class EAEPromptWithExamples(EEPromptWithExamples, EAEPrompt, ABC):
                 - str | dict: The JSON schema defining the expected output format.
                 - dict: A dictionary containing extracted IDs from the input data.
         """
-        event_mention, tokens = self._confirm_arg_data_format(self._input_data)
-
-        # Get trigger span for 1st event mention (should be only event mention)
-        trig_start, trig_end, self._event_type = self._get_event_trigger(event_mention)
-
-        # Get trigger based on tagged tokens
-        self._tagged_text = self._get_tagged_text(tokens, trig_start, trig_end)
-
-        # Get additional details for the prompt
-        arg_roles = get_arg_roles(self._schema, self._event_type)
+        self._set_vars_for_prompt()
 
         # Set the variables to use to select random examples
         example_records = self._get_examples()
@@ -861,7 +852,7 @@ class EAEPromptWithExamples(EEPromptWithExamples, EAEPrompt, ABC):
                 + self._examples_for_prompt
                 + "\n---\n\n## Now process the following input:\n"
                 "Event type: " + self._event_type + "\n"
-                "Argument roles: " + ", ".join(set(arg_roles)) + "\n"
+                "Argument roles: " + ", ".join(set(self._arg_roles)) + "\n"
                 "Input text: ```" + self._tagged_text + "```\n"
                 "Expected response (JSON):"
             ),
@@ -870,6 +861,10 @@ class EAEPromptWithExamples(EEPromptWithExamples, EAEPrompt, ABC):
         )
 
     def _set_vars_for_prompt(self) -> None:
+        """
+        Sets the variables required for constructing the prompt using the attributes
+        of the class instance. Also sets the JSON schema for the output.
+        """
         super()._set_vars_for_prompt()
         # Set for each input data record as it will depend on the event type
         self._json_schema = pattern_to_json_schema(self._event_type, self._arg_roles)
@@ -949,6 +944,10 @@ class EAEPrompter2(EAEPrompt):
         super().__init__(schema, **kwargs)
 
     def _set_vars_for_prompt(self) -> None:
+        """
+        Sets the variables required for constructing the prompt using the attributes
+        of the class instance. Also sets the JSON schema for the output.
+        """
         super()._set_vars_for_prompt()
         self._json_schema = pattern_to_json_schema(self._event_type, self._arg_roles)
 

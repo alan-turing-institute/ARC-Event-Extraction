@@ -11,6 +11,8 @@ from arcee.prompts.prompts import (
     EAEPrompter2,
     EAEPrompter3,
     EAEPrompter4,
+    EAEPrompter5,
+    EAEPrompter6,
     EDPrompter1,
     EDPrompter2,
     EDPrompter3,
@@ -312,7 +314,7 @@ class TestEDPrompter3:
         self.prompter = EDPrompter3(ED_SCHEMA, **kwargs)
 
     def test_get_prompt(self):
-        """Test get_prompt for EDPrompter2 works correctly."""
+        """Test get_prompt for EDPrompter3 works correctly."""
         prompt, output_format, ids = self.prompter.get_prompt(DATA)
 
         assert isinstance(prompt, str)
@@ -352,7 +354,61 @@ class TestEDPrompter4:
                 "sentence-transformers-testing/stsb-bert-tiny-safetensors"
             ),
         }
-        self.prompter = EDPrompter4(ED_SCHEMA, **kwargs)
+        self.prompter_no_events = EDPrompter4(ED_SCHEMA, **kwargs)
+
+        with tempfile.NamedTemporaryFile(
+            delete=False, mode="w", suffix=".json"
+        ) as temp_file:
+            for record in EXAMPLE_RECORDS_SAME_TYPE:
+                temp_file.write(json.dumps(record) + "\n")
+            temp_file_path = temp_file.name
+
+        kwargs["example_data_path"] = temp_file_path
+        kwargs["num_examples"] = 2
+        self.prompter_same_events = EDPrompter4(ED_SCHEMA, **kwargs)
+
+    def test_get_prompt(self):
+        """Test get_prompt for EDPrompter4 works correctly."""
+        # The 'prompter_no_events' doesn't have access to enough events of the same type
+        # as the input data, so it should just use random examples, regardless of type
+        prompt, output_format, ids = self.prompter_no_events.get_prompt(DATA)
+
+        assert isinstance(prompt, str)
+        assert isinstance(output_format, dict)
+        assert output_format == JSON_SCHEMA
+        assert "Explosion: An event where something bursts violently." in prompt
+        assert "Attack: A violent physical act causing harm or damage." in prompt
+        assert "The explosion destroyed the building." in prompt
+        assert "### Example 1" in prompt
+        assert "### Example 2" in prompt
+        assert "### Example 3" in prompt
+        assert "### Example 4" not in prompt
+        assert EXAMPLE_RECORDS[0]["text"] in prompt
+        assert EXAMPLE_RECORDS[1]["text"] in prompt
+        assert EXAMPLE_RECORDS[2]["text"] not in prompt
+        assert EXAMPLE_RECORDS[3]["text"] in prompt
+        assert EXAMPLE_RECORDS[4]["text"] not in prompt
+        assert "Format the output strictly as JSON" in prompt
+        assert ids == {"wnd_id": "wnd1"}
+
+        prompt, output_format, ids = self.prompter_same_events.get_prompt(DATA)
+
+        assert isinstance(prompt, str)
+        assert isinstance(output_format, dict)
+        assert output_format == JSON_SCHEMA
+        assert "Explosion: An event where something bursts violently." in prompt
+        assert "Attack: A violent physical act causing harm or damage." in prompt
+        assert "The explosion destroyed the building." in prompt
+        assert "### Example 1" in prompt
+        assert "### Example 2" in prompt
+        assert "### Example 3" not in prompt
+        assert "### Example 4" not in prompt
+        assert EXAMPLE_RECORDS_SAME_TYPE[0]["text"] in prompt
+        assert EXAMPLE_RECORDS_SAME_TYPE[1]["text"] not in prompt
+        assert EXAMPLE_RECORDS_SAME_TYPE[2]["text"] in prompt
+        assert EXAMPLE_RECORDS_SAME_TYPE[3]["text"] not in prompt
+        assert "Format the output strictly as JSON" in prompt
+        assert ids == {"wnd_id": "wnd1"}
 
 
 ### TESTING EAEPrompter1 ###
@@ -537,4 +593,127 @@ class TestEAEPrompter4:
         assert (
             "The bomb <trigger>went off</trigger> at the start of the attack in the "
             "city ." in prompt
+        )
+
+
+### TESTING EAEPrompter5 ###
+class TestEAEPrompter5:
+    def setup_method(self):
+        """Setup an instance of EAEPrompter5 for testing."""
+        with tempfile.NamedTemporaryFile(
+            delete=False, mode="w", suffix=".json"
+        ) as temp_file:
+            for record in EXAMPLE_RECORDS:
+                temp_file.write(json.dumps(record) + "\n")
+            temp_file_path = temp_file.name
+
+        kwargs = {
+            "example_data_path": temp_file_path,
+            "num_examples": 3,
+            "sentence_transformer_model": (
+                "sentence-transformers-testing/stsb-bert-tiny-safetensors"
+            ),
+        }
+        self.prompter = EAEPrompter5(EAE_SCHEMA, **kwargs)
+
+    def test_get_prompt(self):
+        """Test get_prompt for EAEPrompter5 works correctly."""
+        prompt, output_format, ids = self.prompter.get_prompt(DATA)
+
+        assert isinstance(prompt, str)
+        assert isinstance(output_format, dict)
+        assert output_format == pattern_to_json_schema(
+            "Explosion", EAE_SCHEMA["Explosion"]["roles"]
+        )
+        assert ids == {"evt_id": "ev1"}
+
+        assert "The <trigger>explosion</trigger> destroyed the building ." in prompt
+        assert "### Example 1" in prompt
+        assert "### Example 2" in prompt
+        assert "### Example 3" in prompt
+        assert "### Example 4" not in prompt
+        assert "The <trigger>explosion</trigger> destroyed the car ." in prompt
+        assert "A <trigger>fire</trigger> broke out in the warehouse ." in prompt
+        assert "The <trigger>hurricane</trigger> caused severe damage ." not in prompt
+        assert "An <trigger>earthquake</trigger> shook the city last night ." in prompt
+        assert "The <trigger>protest</trigger> escalated into a riot ." not in prompt
+        assert '{"evt_id": "ev1", "output": ' in prompt
+        assert '{"evt_id": "ev2", "output": ' in prompt
+        assert '{"evt_id": "ev4", "output": {"Location": "city"}}' in prompt
+
+
+### TESTING EAEPrompter6 ###
+class TestEAEPrompter6:
+    def setup_method(self):
+        """Setup an instance of EAEPrompter6 for testing."""
+        with tempfile.NamedTemporaryFile(
+            delete=False, mode="w", suffix=".json"
+        ) as temp_file:
+            for record in EXAMPLE_RECORDS:
+                temp_file.write(json.dumps(record) + "\n")
+            temp_file_path = temp_file.name
+
+        kwargs = {
+            "example_data_path": temp_file_path,
+            "num_examples": 3,
+            "sentence_transformer_model": (
+                "sentence-transformers-testing/stsb-bert-tiny-safetensors"
+            ),
+        }
+        self.prompter_no_events = EAEPrompter6(EAE_SCHEMA, **kwargs)
+
+        with tempfile.NamedTemporaryFile(
+            delete=False, mode="w", suffix=".json"
+        ) as temp_file:
+            for record in EXAMPLE_RECORDS_SAME_TYPE:
+                temp_file.write(json.dumps(record) + "\n")
+            temp_file_path = temp_file.name
+
+        kwargs["example_data_path"] = temp_file_path
+        kwargs["num_examples"] = 2
+        self.prompter_same_events = EAEPrompter6(EAE_SCHEMA, **kwargs)
+
+    def test_get_prompt(self):
+        """Test get_prompt for EAEPrompter5 works correctly."""
+        prompt, output_format, ids = self.prompter_no_events.get_prompt(DATA)
+
+        assert isinstance(prompt, str)
+        assert isinstance(output_format, dict)
+        assert output_format == pattern_to_json_schema(
+            "Explosion", EAE_SCHEMA["Explosion"]["roles"]
+        )
+        assert ids == {"evt_id": "ev1"}
+
+        assert "The <trigger>explosion</trigger> destroyed the building ." in prompt
+        assert "### Example 1" in prompt
+        assert "### Example 2" in prompt
+        assert "### Example 3" in prompt
+        assert "### Example 4" not in prompt
+        assert "The <trigger>explosion</trigger> destroyed the car ." in prompt
+        assert "A <trigger>fire</trigger> broke out in the warehouse ." in prompt
+        assert "The <trigger>hurricane</trigger> caused severe damage ." not in prompt
+        assert "An <trigger>earthquake</trigger> shook the city last night ." in prompt
+        assert "The <trigger>protest</trigger> escalated into a riot ." not in prompt
+        assert '{"evt_id": "ev1", "output": ' in prompt
+        assert '{"evt_id": "ev2", "output": ' in prompt
+        assert '{"evt_id": "ev4", "output": {"Location": "city"}}' in prompt
+
+        prompt, output_format, ids = self.prompter_same_events.get_prompt(DATA)
+
+        assert isinstance(prompt, str)
+        assert isinstance(output_format, dict)
+        assert output_format == pattern_to_json_schema(
+            "Explosion", EAE_SCHEMA["Explosion"]["roles"]
+        )
+        assert ids == {"evt_id": "ev1"}
+
+        assert "The <trigger>explosion</trigger> destroyed the building ." in prompt
+        assert "### Example 1" in prompt
+        assert "### Example 2" in prompt
+        assert "### Example 3" not in prompt
+        assert "### Example 4" not in prompt
+        assert "The <trigger>explosion</trigger> destroyed the car ." in prompt
+        assert (
+            "In the middle of the ocean there was an <trigger>explosion</trigger> ."
+            in prompt
         )

@@ -275,6 +275,30 @@ class EEPrompt(ABC):
             values.append(kwargs[key])
         return tuple(values)
 
+    def _load_model(self, model_name: str) -> SentenceTransformer:
+        """
+        Check that the model name is valid by trying to load it and return the mdoel
+
+        Args:
+            model_name (str):
+                Name of sentence transformer model
+
+        Returns:
+            SentenceTransformer:
+                The loaded model
+
+        Raises:
+            ValueError:
+                If the name of the model is invalid.
+        """
+        try:
+            return SentenceTransformer(
+                model_name, similarity_fn_name=SimilarityFunction.COSINE
+            )
+        except Exception as e:
+            err_msg = f"Invalid sentence transformer model name: {model_name}"
+            raise ValueError(err_msg) from e
+
     @abstractmethod
     def _construct_prompt(self) -> tuple[str, str | dict, dict]:
         """
@@ -309,6 +333,7 @@ class EEPrompt(ABC):
 
         """
         self._input_data = data
+        self._input_text = self._confirm_ed_data_format(data)
         prompt, output_format, ids = self._construct_prompt()
 
         return prompt, output_format, ids
@@ -401,8 +426,6 @@ class EDPrompter1(EEPrompt):
     def get_prompt(
         self, data: dict[str, str | int | list]
     ) -> tuple[str, str | dict, dict]:
-        # This override is specific to ED Prompts
-        self._input_text = self._confirm_ed_data_format(data)
         return super().get_prompt(data)
 
 
@@ -535,11 +558,11 @@ class EDPrompter3(EDPrompter2):
 
         output = []
         for i, record in enumerate(example_records):
-            input_text = self._confirm_ed_data_format(record)
+            example_input_text = self._confirm_ed_data_format(record)
 
             prompt_text = (
                 "### Example " + str(i + 1) + "\n"
-                "Input text: ```" + input_text + "```\n"
+                "Input text: ```" + example_input_text + "```\n"
                 "Expected Response (JSON): \n" + json.dumps(expected_output[i]) + "\n"
             )
             output.append(prompt_text)
@@ -638,9 +661,12 @@ class EDPrompter4(EDPrompter3):
         self._model = self._load_model(model_name)
 
         ### LOAD DATA FOR EXAMPLES
-        self._example_data, self._example_embeddings = self._load_examples(
-            example_data_path
-        )
+        # Load the data
+        self._example_data = load_data(example_data_path)
+        # Extract the 'text' for each example record - these will be needed for the
+        # prompts
+        example_text = [record["text"] for record in self._example_data]
+        self._example_embeddings = self._model.encode(example_text)
 
         ### SET ATTRIBUTES FOR SELECTING EXAMPLES
         # Set the number of examples as an object attribute, this will be used when
@@ -650,55 +676,6 @@ class EDPrompter4(EDPrompter3):
         # Which examples to use in the prompt will be defined at runtime, with
         # potentially different examples selected for each record.
         self._examples_for_prompt = ""
-
-    def _load_model(self, model_name: str) -> SentenceTransformer:
-        """
-        Check that the model name is valid by trying to load it and return the mdoel
-
-        Args:
-            model_name (str):
-                Name of sentence transformer model
-
-        Returns:
-            SentenceTransformer:
-                The loaded model
-
-        Raises:
-            ValueError:
-                If the name of the model is invalid.
-        """
-        try:
-            return SentenceTransformer(
-                model_name, similarity_fn_name=SimilarityFunction.COSINE
-            )
-        except Exception as e:
-            err_msg = f"Invalid sentence transformer model name: {model_name}"
-            raise ValueError(err_msg) from e
-
-    def _load_examples(self, example_data_path: str) -> tuple[list[str], np.ndarray]:
-        """
-        Loads the example records from a given example data path. Returns the 'text'
-        values from each example record in a list and the embeddings generated using
-        the object's model attribute.
-
-        Args:
-            example_data_path (str):
-                Path where the example data are stored
-
-        Returns:
-            tuple[list[str], np.ndarray]: A tuple containing:
-                - list[str]: all the possible example records
-                - np.ndarray: the embeddings of each text record
-        """
-        # Load the data
-        example_data = load_data(example_data_path)
-        # Extract the 'text' for each example record - these will be needed for the
-        # prompts
-        example_text = [record["text"] for record in example_data]
-        # Encode all the examples and store in object - these will be needed to compare
-        # with the text for each record
-        example_embeddings = self._model.encode(example_text)
-        return example_data, example_embeddings
 
     def _get_examples(self) -> list[dict]:
         """
@@ -1013,7 +990,7 @@ class EAEPrompter3(EAEPrompter2):
         trig_start, trig_end, self._event_type = self._get_event_trigger(event_mention)
 
         # Get trigger based on tagged tokens
-        input_text = self._get_tagged_text(tokens, trig_start, trig_end)
+        self._tagged_text = self._get_tagged_text(tokens, trig_start, trig_end)
 
         # Get additional details for the prompt
         arg_roles = get_arg_roles(self._schema, self._event_type)
@@ -1031,7 +1008,7 @@ class EAEPrompter3(EAEPrompter2):
                 + "\n---\n\n## Now process the following input:\n"
                 "Event type: " + self._event_type + "\n"
                 "Argument roles: " + ", ".join(set(arg_roles)) + "\n"
-                "Input text: ```" + input_text + "```\n"
+                "Input text: ```" + self._tagged_text + "```\n"
                 "Expected response (JSON):"
             ),
             pattern_to_json_schema(self._event_type, arg_roles),
@@ -1082,12 +1059,88 @@ class EAEPrompter5(EAEPrompter3):
     Event argument extraction:
     - only takes a SINGLE event trigger
     - predicts multiple argument roles
-    - Uses SIMILAR examples in the prompt
+    - Uses SIMILAR examples in the prompt (ANY EVENT TYPE)
     - requests JSON output with specific schema for event type
     """
 
+    def __init__(self, schema: dict, **kwargs: Any):
+        """
+        Initialises the object and sets the sentence embedding model to be used.
 
-class EAEPrompter6(EAEPrompter3):
+        The example data is loaded from a given file path, sets the sentence embedding
+        model, and encodes the example data using the model.
+
+        Args:
+            schema: dict
+                The event schema to be used for the data
+            **kwargs: Additional keyword arguments, must include:
+                - example_data_path (str):
+                    Path to the file containing example records.
+                - num_examples (int):
+                    The number of examples to retrieve and format.
+                - sentence_transformer_model (str):
+                    The name of the sentence transformer model to use for similarity
+                    comparison.
+        """
+        EEPrompt.__init__(self, schema)
+        # Check required keys exist and the values have expected types.
+        required_keys = {
+            "example_data_path": str,
+            "num_examples": int,
+            "sentence_transformer_model": str,
+        }
+        prompt_args: tuple[str, int, str] = self._check_required_keys(
+            required_keys, kwargs
+        )
+        example_data_path, num_examples, model_name = prompt_args
+
+        ### SET MODEL
+        # Set sentence embedding model name
+        self._model = self._load_model(model_name)
+
+        ### LOAD DATA FOR EXAMPLES
+        self._example_data = load_data(example_data_path, record_per_event=True)
+        # Extract the 'text' for each example record - these will be needed for the
+        # prompts
+        example_text = [record["text"] for record in self._example_data]
+        self._example_embeddings = self._model.encode(example_text)
+
+        ### SET ATTRIBUTES FOR SELECTING EXAMPLES
+        # Set the number of examples as an object attribute, this will be used when
+        # selecting the examples to use in the prompt.
+        # self._num_examples: int = kwargs["num_examples"]
+        self._num_examples = num_examples
+        # Which examples to use in the prompt will be defined at runtime, with
+        # potentially different examples selected for each record.
+        self._examples_for_prompt = ""
+
+    def _get_examples(self) -> list[dict]:
+        """
+        Selects a subset of example records from a dataset based on the cosine
+        similarity given by a sentence transformer model.
+
+        Returns:
+            list[dict]: A list of randomly selected example records.
+        """
+        # Embed the input text
+        target_embedding = self._model.encode(self._input_text)
+
+        # Compute cosine similarity between the target and all text records
+        cos_scores = self._model.similarity(target_embedding, self._example_embeddings)[
+            0
+        ]
+
+        # Get the indices of the top `num_examples` most similar records
+        top_results = torch.topk(cos_scores, k=self._num_examples)
+
+        selected_examples = []
+        for _, idx in zip(top_results[0], top_results[1], strict=False):
+            selected_examples.append(self._example_data[idx])
+
+        return selected_examples
+
+
+class EAEPrompter6(EAEPrompter5):
     """
     Event argument extraction:
     - only takes a SINGLE event trigger
@@ -1095,3 +1148,45 @@ class EAEPrompter6(EAEPrompter3):
     - Uses SIMILAR examples in the prompt, but with SAME EVENT TYPE
     - requests JSON output with specific schema for event type
     """
+
+    def _get_examples(self) -> list[dict]:
+        """
+        Selects a subset of example records from a dataset based on the cosine
+        similarity given by a sentence transformer model.
+
+        Returns:
+            list[dict]: A list of randomly selected example records.
+        """
+        # Filter example_data and example embeddings based on event type
+        filtered_data, filtered_embeddings = zip(
+            *[
+                (record, embedding)
+                for record, embedding in zip(
+                    self._example_data, self._example_embeddings, strict=False
+                )
+                if record["event_mentions"][0]["event_type"] == self._event_type
+            ],
+            strict=False,
+        )
+        # Convert zip object back to lists
+        example_data = list(filtered_data)
+        example_embeddings = list(filtered_embeddings)
+
+        if len(example_data) < self._num_examples:
+            example_data = self._example_data
+            example_embeddings = self._example_embeddings
+
+        # Embed the input text
+        target_embedding = self._model.encode(self._input_text)
+
+        # Compute cosine similarity between the target and all text records
+        cos_scores = self._model.similarity(target_embedding, example_embeddings)[0]
+
+        # Get the indices of the top `num_examples` most similar records
+        top_results = torch.topk(cos_scores, k=self._num_examples)
+
+        selected_examples = []
+        for _, idx in zip(top_results[0], top_results[1], strict=False):
+            selected_examples.append(example_data[idx])
+
+        return selected_examples

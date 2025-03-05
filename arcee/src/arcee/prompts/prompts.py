@@ -26,6 +26,9 @@ class EEPrompt(ABC):
 
     def __init__(self, schema: dict, **kwargs: Any) -> None:
         """
+        Initialises the EEPrompt class and sets the attributes that may be required
+        when constructing a prompt.
+
         Args:
             schema: dict
                 The event schema to be used for the data
@@ -44,20 +47,14 @@ class EEPrompt(ABC):
         # is generating prompts for event argument extraction
         self._eae: bool = False
 
+    @abstractmethod
     def _get_system_content(self) -> str:
         """
         Returns the system content message to be used.
 
-        This method provides a default system content message, which can be
-        overridden by a child class.
-
         Returns:
             str: The system content message.
         """
-        return (
-            "You are an assistant that helps conducts event extraction "
-            "from input text.\n"
-        )
 
     def _confirm_ed_data_format(self, data: dict[str, str | int | list]) -> str:
         """
@@ -129,17 +126,13 @@ class EEPrompt(ABC):
         return tuple(values)
 
     @abstractmethod
-    def _get_ids(self, data: dict[str, str | int | list]) -> dict[str, str]:
+    def _get_ids(self) -> dict[str, str]:
         """
-        Retrieves the IDs to be attached to the LLM's response
-        for record identification.
-
-        Args:
-            data (dict[str, str | int | list]):
-                A dictionary containing the input data.
+        Retrieves the IDs for the current 'input_data' record to be attached to the
+        LLM's response for record identification.
 
         Returns:
-            dict[str, str]: A dictionary containing the IDs for the record
+            dict[str, str]: A dictionary containing the IDs for the record.
         """
 
     @abstractmethod
@@ -160,7 +153,7 @@ class EEPrompt(ABC):
         self, data: dict[str, str | int | list]
     ) -> tuple[str, str | dict, dict]:
         """
-        Returns a prompt, which may be overridden by child classes.
+        Returns a prompt for a given data record.
 
         Args:
             data (dict[str, str | int | list]):
@@ -175,17 +168,19 @@ class EEPrompt(ABC):
             that identify the record.
 
         """
+        # Set the `input_data` and `input_text` attributes, now that we have a data
+        # record to construct a prompt for
         self._input_data = data
         self._input_text = self._confirm_ed_data_format(data)
+        # Call the `_construct_prompt` method to generate the prompt
         prompt, output_format, ids = self._construct_prompt()
-
         return prompt, output_format, ids
 
 
 class EDPrompt(EEPrompt, ABC):
     """
     Abstract class for event detection prompt construction. This will define common
-    functionality that child prompt classes will inherit.
+    functionality that child prompt classes for event detection will inherit.
     """
 
     def __init__(self, schema: dict, **kwargs: Any) -> None:
@@ -221,14 +216,10 @@ class EDPrompt(EEPrompt, ABC):
 
         return "\n".join([key + ": " + self._schema[key] for key in self._schema])
 
-    def _get_ids(self, data: dict[str, str | int | list]) -> dict[str, str]:
+    def _get_ids(self) -> dict[str, str]:
         """
-        Retrieves the document and window IDs to be attached to the LLM's response
-        for record identification.
-
-        Args:
-            data (dict[str, str | int | list]):
-                A dictionary containing the input data.
+        Retrieves the window id for the current `input_data` attributed to be attached
+        to the LLM's response for record identification.
 
         Returns:
             dict[str, str]: A dictionary containing the window ID (`wnd_id`).
@@ -237,16 +228,16 @@ class EDPrompt(EEPrompt, ABC):
             KeyError: If the `wnd_id` key is missing from the data.
             TypeError: If the value of `wnd_id` is not a string.
         """
-        if "wnd_id" not in data:
+        if "wnd_id" not in self._input_data:
             err_msg = "Key 'wnd_id' is missing from the data."
             raise KeyError(err_msg)
-        if not isinstance(data["wnd_id"], str):
+        if not isinstance(self._input_data["wnd_id"], str):
             err_msg = (
                 "Expected 'wnd_id' to be a str, but got "
-                f"{type(data['wnd_id']).__name__}."
+                f"{type(self._input_data['wnd_id']).__name__}."
             )
             raise TypeError(err_msg)
-        return {"wnd_id": data["wnd_id"]}
+        return {"wnd_id": self._input_data["wnd_id"]}
 
     def _construct_prompt(
         self,
@@ -283,7 +274,7 @@ class EDPrompt(EEPrompt, ABC):
                 "text."
             ),
             self._json_schema,
-            self._get_ids(self._input_data),
+            self._get_ids(),
         )
 
 
@@ -296,6 +287,7 @@ class EAEPrompt(EEPrompt, ABC):
     def __init__(self, schema: dict, **kwargs: Any) -> None:
         super().__init__(schema, **kwargs)
         self._eae = True
+        # Some attributes specific to argument extraction
         self._tagged_text: str = ""
         self._arg_roles: list[str] = []
         self._event_type: str = ""
@@ -400,19 +392,17 @@ class EAEPrompt(EEPrompt, ABC):
         The event mention is expected to be in the same format as the processed
         data from TextEE.
 
-        Parameters
-        ----------
-        event_mention : dict[str, int | str]
-            A dictionary containing event mention data with a "trigger" and
-            "event_type" keys.
+        Args:
+            event_mention : dict[str, int | str]
+                A dictionary containing event mention data with a "trigger" and
+                "event_type" keys.
 
-        Returns
-        -------
-        tuple of (int, int, str)
-            A tuple containing:
-                - start (int): The starting index of the event trigger.
-                - end (int): The exclusive ending index of the event trigger.
-                - event_type (str): The type of the event.
+        Returns:
+            tuple of (int, int, str)
+                A tuple containing:
+                    - start (int): The starting index of the event trigger.
+                    - end (int): The exclusive ending index of the event trigger.
+                    - event_type (str): The type of the event.
         """
         trigger = event_mention["trigger"]  # `trigger` has type dict[str, int]
         if not isinstance(trigger, dict) or not isinstance(
@@ -427,39 +417,41 @@ class EAEPrompt(EEPrompt, ABC):
 
         return start, end, event_type
 
-    def _get_ids(self, data: dict[str, str | int | list]) -> dict[str, str]:
+    def _get_ids(self) -> dict[str, str]:
         """
-        Retrieves the IDs to be attached to the LLM's response to ensure
-        the record can be identified.
-
-        Args:
-            data (dict[str, str | int | list]):
-                A dictionary containing the data record.
+        Retrieves the event id for the current `input_data` record to be attached to the
+        LLM's response to ensure the record can be identified.
 
         Returns:
             dict[str, str]: A dictionary containing the IDs for the record.
         """
-        if "event_mentions" not in data:
+        if "event_mentions" not in self._input_data:
             err_msg = "Key 'event_mentions' is missing from the data."
             raise KeyError(err_msg)
-        if not isinstance(data["event_mentions"], list):
+        if not isinstance(self._input_data["event_mentions"], list):
             err_msg = (
                 "Expected 'event_mentions' to be a list, but got "
-                f"{type(data['event_mentions']).__name__}."
+                f"{type(self._input_data['event_mentions']).__name__}."
             )
             raise TypeError(err_msg)
-        if "id" not in data["event_mentions"][0]:
+        if "id" not in self._input_data["event_mentions"][0]:
             err_msg = "Key 'id' is missing from the event mention record."
             raise KeyError(err_msg)
-        if not isinstance(data["event_mentions"][0]["id"], str):
+        if not isinstance(self._input_data["event_mentions"][0]["id"], str):
             err_msg = (
                 "Expected 'id' to be a str, but got "
-                f"{type(data['event_mentions'][0]['id']).__name__}."
+                f"{type(self._input_data['event_mentions'][0]['id']).__name__}."
             )
             raise TypeError(err_msg)
-        return {"evt_id": data["event_mentions"][0]["id"]}
+        return {"evt_id": self._input_data["event_mentions"][0]["id"]}
 
     def _get_system_content(self) -> str:
+        """
+        Returns the system content message to be used.
+
+        Returns:
+            str: The system content message
+        """
         return (
             "You are an assistant that extracts event arguments from input text. "
             "Event arguments are the key entities, participants, and attributes "
@@ -470,6 +462,10 @@ class EAEPrompt(EEPrompt, ABC):
         )
 
     def _set_vars_for_prompt(self) -> None:
+        """
+        Sets the variables required for constructing the prompt using the attributes
+        of the class instance.
+        """
         event_mention, tokens = self._confirm_arg_data_format(self._input_data)
 
         # Get trigger span for 1st event mention (should be only event mention)
@@ -515,13 +511,21 @@ class EAEPrompt(EEPrompt, ABC):
                 "that role.\n"
             ),
             self._json_schema,
-            self._get_ids(self._input_data),
+            self._get_ids(),
         )
 
 
 class EEPromptWithExamples(EEPrompt, ABC):
+    """
+    Abstract class for creating a prompt with examples in it. This class will define
+    the common functionality that child classes will inherit, which could be classes
+    for both event trigger detection and event argument extraction.
+    """
+
     def __init__(self, schema: dict, **kwargs: Any) -> None:
         super().__init__(schema, **kwargs)
+
+        # Define the attributes that may be used when constructing a prompt
         self._example_embeddings: list = []
         self._rng: np.random.Generator | None = None
         self._model: SentenceTransformer | None = None
@@ -544,7 +548,7 @@ class EEPromptWithExamples(EEPrompt, ABC):
         Method for retrieving examples to be used in the prompt
 
         Returns:
-            list[dict]: _description_
+            list[dict]: A list of examples to be used in the prompt
 
         Raises:
             ValueError: If the random number generator needed and is None
@@ -586,6 +590,16 @@ class EEPromptWithExamples(EEPrompt, ABC):
         return selected_examples
 
     def _filter_examples_by_event_type(self) -> tuple[list, list]:
+        """
+        A method that filters the examples by the event type of the input data record.
+
+        Returns:
+            tuple[list, list]:
+                A tuple containing:
+                - list: The filtered example data
+                - list: The filtered example embeddings (which could be empty if the
+                    random selection is being used)
+        """
         filtered_indices = [
             i
             for i, record in enumerate(self._example_data)
@@ -606,28 +620,44 @@ class EEPromptWithExamples(EEPrompt, ABC):
 
 
 class EEPromptRandomExamples(EEPromptWithExamples, ABC):
+    """
+    Abstract class that defines the functionality for selecting random examples to
+    use in the prompt. This class could be inherited by classes for both event trigger
+    detection and event argument extraction.
+    """
+
     def __init__(self, schema: dict, **kwargs: Any) -> None:
         super().__init__(schema, **kwargs)
+        # Ensure random selection will occur:
         self._random_selection = True
-
+        # Set the key required for random selection
         required_keys = {"seed": int}
         prompt_args: tuple[int] = self._check_required_keys(required_keys, kwargs)
         seed = prompt_args[0]
-        # Set random number generator
+        # Initialise the random number generator
         self._rng = np.random.default_rng(seed)
 
 
 class EEPromptSimilarExamples(EEPromptWithExamples, ABC):
+    """
+    Abstract class that defines the functionality for selected examples based on
+    similarity to the input text. This class could be inherited by classes for both
+    event trigger detection and event argument extraction.
+    """
+
     def __init__(self, schema: dict, **kwargs: Any) -> None:
         super().__init__(schema, **kwargs)
+        # Selecting based on similarity, so set random selection to False
         self._random_selection = False
-
+        # The name of the sentence transformer model is required for this class
         required_keys = {"sentence_transformer_model": str}
         prompt_args: tuple[str] = self._check_required_keys(required_keys, kwargs)
         model_name = prompt_args[0]
 
-        # Set sentence embedding model name
+        # Load the model
         self._model = self._load_model(model_name)
+
+        # Embed the example text for use later
         example_text = [record["text"] for record in self._example_data]
         self._example_embeddings = self._model.encode(example_text)
 
@@ -657,6 +687,11 @@ class EEPromptSimilarExamples(EEPromptWithExamples, ABC):
 
 
 class EDPromptWithExamples(EEPromptWithExamples, EDPrompt, ABC):
+    """
+    An abstract class for event trigger detection with examples. This class will define
+    the common functionality that child classes will inherit.
+    """
+
     def __init__(self, schema: dict, **kwargs: Any) -> None:
         super().__init__(schema, **kwargs)
         # Never filter by same event type for event trigger detection
@@ -736,11 +771,16 @@ class EDPromptWithExamples(EEPromptWithExamples, EDPrompt, ABC):
                 "text."
             ),
             self._json_schema,
-            self._get_ids(self._input_data),
+            self._get_ids(),
         )
 
 
 class EAEPromptWithExamples(EEPromptWithExamples, EAEPrompt, ABC):
+    """
+    Abstract class for event argument extraction with examples. This class will define
+    the common functionality that child classes will inherit.
+    """
+
     def __init__(self, schema: dict, **kwargs: Any) -> None:
         super().__init__(schema, **kwargs)
 
@@ -825,12 +865,13 @@ class EAEPromptWithExamples(EEPromptWithExamples, EAEPrompt, ABC):
                 "Input text: ```" + self._tagged_text + "```\n"
                 "Expected response (JSON):"
             ),
-            pattern_to_json_schema(self._event_type, arg_roles),
-            self._get_ids(self._input_data),
+            self._json_schema,
+            self._get_ids(),
         )
 
     def _set_vars_for_prompt(self) -> None:
         super()._set_vars_for_prompt()
+        # Set for each input data record as it will depend on the event type
         self._json_schema = pattern_to_json_schema(self._event_type, self._arg_roles)
 
 
@@ -842,12 +883,6 @@ class EDPrompter1(EDPrompt):
     """
 
     def __init__(self, schema: dict, **kwargs: Any) -> None:
-        """
-        Args:
-            schema: dict
-                The event schema to be used for the data
-            **kwargs: Additional keyword arguments
-        """
         super().__init__(schema, **kwargs)
 
 
@@ -859,12 +894,6 @@ class EDPrompter2(EDPrompt):
     """
 
     def __init__(self, schema: dict, **kwargs: Any) -> None:
-        """
-        Args:
-            schema: dict
-                The event schema to be used for the data
-            **kwargs: Additional keyword arguments
-        """
         super().__init__(schema, **kwargs)
         # Define the JSON schema for the output
         self._json_schema = get_ed_json_schema(self._schema)
@@ -879,23 +908,6 @@ class EDPrompter3(EEPromptRandomExamples, EDPromptWithExamples):
     """
 
     def __init__(self, schema: dict, **kwargs: Any) -> None:
-        """
-        Initialises the object and sets the examples to be used in each prompt.
-
-        The example data is loaded from a given file path, sets a random seed for
-        reproducibility, and selects `num_examples` random examples without replacement.
-
-        Args:
-            schema: dict
-                The event schema to be used for the data
-            **kwargs: Additional keyword arguments, for this class these must include:
-                - example_data_path (str):
-                    Path to the file containing example records.
-                - num_examples (int):
-                    The number of examples to retrieve and format.
-                - seed (int):
-                    Random seed to ensure reproducibility of the selected examples.
-        """
         super().__init__(schema, **kwargs)
 
 
@@ -908,24 +920,6 @@ class EDPrompter4(EEPromptSimilarExamples, EDPromptWithExamples):
     """
 
     def __init__(self, schema: dict, **kwargs: Any):
-        """
-        Initialises the object and sets the sentence embedding model to be used.
-
-        The example data is loaded from a given file path, sets the sentence embedding
-        model, and encodes the example data using the model.
-
-        Args:
-            schema: dict
-                The event schema to be used for the data
-            **kwargs: Additional keyword arguments, must include:
-                - example_data_path (str):
-                    Path to the file containing example records.
-                - num_examples (int):
-                    The number of examples to retrieve and format.
-                - sentence_transformer_model (str):
-                    The name of the sentence transformer model to use for similarity
-                    comparison.
-        """
         super().__init__(schema, **kwargs)
 
 
@@ -969,23 +963,6 @@ class EAEPrompter3(EAEPromptWithExamples, EEPromptRandomExamples):
     """
 
     def __init__(self, schema: dict, **kwargs: Any) -> None:
-        """
-        Initialises the object and sets the examples to be used in each prompt.
-
-        The example data is loaded from a given file path, sets a random seed for
-        reproducibility, and selects `num_examples` random examples without replacement.
-
-        Args:
-            schema: dict
-                The event schema to be used for the data
-            **kwargs: Additional keyword arguments, for this class these must include:
-                - example_data_path (str):
-                    Path to the file containing example records.
-                - num_examples (int):
-                    The number of examples to retrieve and format.
-                - seed (int):
-                    Random seed to ensure reproducibility of the selected examples.
-        """
         super().__init__(schema, **kwargs)
         self._same_event_type = False
 
@@ -1014,24 +991,6 @@ class EAEPrompter5(EAEPromptWithExamples, EEPromptSimilarExamples):
     """
 
     def __init__(self, schema: dict, **kwargs: Any):
-        """
-        Initialises the object and sets the sentence embedding model to be used.
-
-        The example data is loaded from a given file path, sets the sentence embedding
-        model, and encodes the example data using the model.
-
-        Args:
-            schema: dict
-                The event schema to be used for the data
-            **kwargs: Additional keyword arguments, must include:
-                - example_data_path (str):
-                    Path to the file containing example records.
-                - num_examples (int):
-                    The number of examples to retrieve and format.
-                - sentence_transformer_model (str):
-                    The name of the sentence transformer model to use for similarity
-                    comparison.
-        """
         super().__init__(schema, **kwargs)
         self._same_event_type = False
 

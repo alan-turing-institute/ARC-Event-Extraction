@@ -151,7 +151,7 @@ class EEPrompt(ABC):
 
     def get_prompt(
         self, data: dict[str, str | int | list]
-    ) -> tuple[str, str | dict, dict]:
+    ) -> tuple[str, str | dict, dict, str]:
         """
         Returns a prompt for a given data record.
 
@@ -166,6 +166,7 @@ class EEPrompt(ABC):
             - str | dict: The output format, either 'json' or a JSON schema.
             - dict: A dictionary of IDs to be attached to the LLM's response
             that identify the record.
+            - str: The input text
 
         """
         # Set the `input_data` and `input_text` attributes, now that we have a data
@@ -174,7 +175,7 @@ class EEPrompt(ABC):
         self._input_text = self._confirm_ed_data_format(data)
         # Call the `_construct_prompt` method to generate the prompt
         prompt, output_format, ids = self._construct_prompt()
-        return prompt, output_format, ids
+        return prompt, output_format, ids, self._input_text
 
 
 class EDPrompt(EEPrompt, ABC):

@@ -269,7 +269,7 @@ class TestEDPrompter1:
 
     def test_get_prompt(self):
         """Test get_prompt calls _construct_prompt and returns expected values."""
-        prompt, output_format, ids = self.prompter.get_prompt(DATA)
+        prompt, output_format, ids, input_text = self.prompter.get_prompt(DATA)
 
         assert output_format == "json"
         assert "Explosion: An event where something bursts violently." in prompt
@@ -277,6 +277,7 @@ class TestEDPrompter1:
         assert "The explosion destroyed the building." in prompt
         assert "Format the output strictly as JSON" in prompt
         assert ids == {"wnd_id": "wnd1"}
+        assert input_text == DATA["text"]
 
 
 ### TESTING EDPrompter2 ###
@@ -287,7 +288,7 @@ class TestEDPrompter2:
 
     def test_get_prompt(self):
         """Test get_prompt for EDPrompter2 works correctly."""
-        prompt, output_format, ids = self.prompter.get_prompt(DATA)
+        prompt, output_format, ids, input_text = self.prompter.get_prompt(DATA)
 
         assert isinstance(prompt, str)
         assert isinstance(output_format, dict)
@@ -297,6 +298,7 @@ class TestEDPrompter2:
         assert "The explosion destroyed the building." in prompt
         assert "Format the output strictly as JSON" in prompt
         assert ids == {"wnd_id": "wnd1"}
+        assert input_text == DATA["text"]
 
 
 ### TESTING EDPrompter3 ###
@@ -315,7 +317,7 @@ class TestEDPrompter3:
 
     def test_get_prompt(self):
         """Test get_prompt for EDPrompter3 works correctly."""
-        prompt, output_format, ids = self.prompter.get_prompt(DATA)
+        prompt, output_format, ids, input_text = self.prompter.get_prompt(DATA)
 
         assert isinstance(prompt, str)
         assert isinstance(output_format, dict)
@@ -334,6 +336,7 @@ class TestEDPrompter3:
         assert EXAMPLE_RECORDS[4]["text"] in prompt
         assert "Format the output strictly as JSON" in prompt
         assert ids == {"wnd_id": "wnd1"}
+        assert input_text == DATA["text"]
 
 
 ### TESTING EDPrompter4 ###
@@ -371,7 +374,9 @@ class TestEDPrompter4:
         """Test get_prompt for EDPrompter4 works correctly."""
         # The 'prompter_no_events' doesn't have access to enough events of the same type
         # as the input data, so it should just use random examples, regardless of type
-        prompt, output_format, ids = self.prompter_no_events.get_prompt(DATA)
+        prompt, output_format, ids, input_text = self.prompter_no_events.get_prompt(
+            DATA
+        )
 
         assert isinstance(prompt, str)
         assert isinstance(output_format, dict)
@@ -390,8 +395,11 @@ class TestEDPrompter4:
         assert EXAMPLE_RECORDS[4]["text"] not in prompt
         assert "Format the output strictly as JSON" in prompt
         assert ids == {"wnd_id": "wnd1"}
+        assert input_text == DATA["text"]
 
-        prompt, output_format, ids = self.prompter_same_events.get_prompt(DATA)
+        prompt, output_format, ids, input_text = self.prompter_same_events.get_prompt(
+            DATA
+        )
 
         assert isinstance(prompt, str)
         assert isinstance(output_format, dict)
@@ -409,6 +417,7 @@ class TestEDPrompter4:
         assert EXAMPLE_RECORDS_SAME_TYPE[3]["text"] not in prompt
         assert "Format the output strictly as JSON" in prompt
         assert ids == {"wnd_id": "wnd1"}
+        assert input_text == DATA["text"]
 
 
 ### TESTING EAEPrompter1 ###
@@ -419,7 +428,7 @@ class TestEAEPrompter1:
 
     def test_get_prompt(self):
         """Test get_prompt for EAEPrompter1 works correctly."""
-        prompt, output_format, ids = self.prompter.get_prompt(DATA)
+        prompt, output_format, ids, input_text = self.prompter.get_prompt(DATA)
 
         assert isinstance(prompt, str)
         assert output_format == "json"
@@ -428,6 +437,7 @@ class TestEAEPrompter1:
         assert "Location" in prompt
         assert "Format the output strictly as JSON" in prompt
         assert ids == {"evt_id": "ev1"}
+        assert input_text == DATA["text"]
 
     def test_get_event_trigger_valid(self):
         """Test _get_event_trigger extracts correct trigger details."""
@@ -465,7 +475,7 @@ class TestEAEPrompter2:
 
     def test_get_prompt(self):
         """Test get_prompt for EAEPrompter2 works correctly."""
-        prompt, output_format, ids = self.prompter.get_prompt(DATA)
+        prompt, output_format, ids, input_text = self.prompter.get_prompt(DATA)
 
         assert isinstance(prompt, str)
         assert isinstance(output_format, dict)
@@ -477,6 +487,7 @@ class TestEAEPrompter2:
         assert "Location" in prompt
         assert "Format the output strictly as JSON" in prompt
         assert ids == {"evt_id": "ev1"}
+        assert input_text == DATA["text"]
 
 
 ### TESTING EAEPrompter3 ###
@@ -495,7 +506,7 @@ class TestEAEPrompter3:
 
     def test_get_prompt(self):
         """Test get_prompt for EAEPrompter3 works correctly."""
-        prompt, output_format, ids = self.prompter.get_prompt(DATA)
+        prompt, output_format, ids, input_text = self.prompter.get_prompt(DATA)
 
         assert isinstance(prompt, str)
         assert isinstance(output_format, dict)
@@ -518,6 +529,7 @@ class TestEAEPrompter3:
         assert '"Location": null' in prompt
         assert '"Attacker": null' in prompt
         assert '"Victim": "car"' in prompt
+        assert input_text == DATA["text"]
 
 
 ### TESTING EAEPrompter4 ###
@@ -553,7 +565,9 @@ class TestEAEPrompter4:
         # The 'prompter_no_events' doesn't have access to enough events of the same type
         # as the input data, so it should just use random examples, regardless of type
         # (i.e., the same as EAEPrompter3)
-        prompt, output_format, ids = self.prompter_no_events.get_prompt(DATA)
+        prompt, output_format, ids, input_text = self.prompter_no_events.get_prompt(
+            DATA
+        )
 
         assert isinstance(prompt, str)
         assert isinstance(output_format, dict)
@@ -576,8 +590,11 @@ class TestEAEPrompter4:
         assert '"Location": null' in prompt
         assert '"Attacker": null' in prompt
         assert '"Victim": "car"' in prompt
+        assert input_text == DATA["text"]
 
-        prompt, output_format, ids = self.prompter_same_events.get_prompt(DATA)
+        prompt, output_format, ids, input_text = self.prompter_same_events.get_prompt(
+            DATA
+        )
 
         assert isinstance(prompt, str)
         assert isinstance(output_format, dict)
@@ -596,6 +613,7 @@ class TestEAEPrompter4:
             "The bomb <trigger>went off</trigger> at the start of the attack in the "
             "city ." in prompt
         )
+        assert input_text == DATA["text"]
 
 
 ### TESTING EAEPrompter5 ###
@@ -620,7 +638,7 @@ class TestEAEPrompter5:
 
     def test_get_prompt(self):
         """Test get_prompt for EAEPrompter5 works correctly."""
-        prompt, output_format, ids = self.prompter.get_prompt(DATA)
+        prompt, output_format, ids, input_text = self.prompter.get_prompt(DATA)
 
         assert isinstance(prompt, str)
         assert isinstance(output_format, dict)
@@ -644,6 +662,7 @@ class TestEAEPrompter5:
         assert '"Attacker": null' in prompt
         assert '"Victim": "car"' in prompt
         assert '"Location": "warehouse' in prompt
+        assert input_text == DATA["text"]
 
 
 ### TESTING EAEPrompter6 ###
@@ -679,7 +698,9 @@ class TestEAEPrompter6:
 
     def test_get_prompt(self):
         """Test get_prompt for EAEPrompter5 works correctly."""
-        prompt, output_format, ids = self.prompter_no_events.get_prompt(DATA)
+        prompt, output_format, ids, input_text = self.prompter_no_events.get_prompt(
+            DATA
+        )
 
         assert isinstance(prompt, str)
         assert isinstance(output_format, dict)
@@ -703,8 +724,11 @@ class TestEAEPrompter6:
         assert '"Attacker": null' in prompt
         assert '"Victim": "car"' in prompt
         assert '"Location": "warehouse' in prompt
+        assert input_text == DATA["text"]
 
-        prompt, output_format, ids = self.prompter_same_events.get_prompt(DATA)
+        prompt, output_format, ids, input_text = self.prompter_same_events.get_prompt(
+            DATA
+        )
 
         assert isinstance(prompt, str)
         assert isinstance(output_format, dict)
@@ -723,3 +747,4 @@ class TestEAEPrompter6:
             "In the middle of the ocean there was an <trigger>explosion</trigger> ."
             in prompt
         )
+        assert input_text == DATA["text"]

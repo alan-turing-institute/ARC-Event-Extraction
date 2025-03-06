@@ -2,11 +2,23 @@ from __future__ import annotations
 
 import argparse
 
+import wandb
 from arcee.config.experiment import ExperimentConfig
 from arcee.eval.evaluator import Evaluator
 
 
 def main(config: ExperimentConfig) -> None:
+    # Initialise wandb run
+    run = wandb.init(
+        entity="turing-arc",
+        project="event-extraction",
+        name="dummy-run",
+        config={
+            "job_type": "dummy-inference",
+            **config.to_dict(),
+        },
+    )
+
     # Initialise evaluator
     evaluator = Evaluator(
         output_path=config.output_path,
@@ -19,6 +31,8 @@ def main(config: ExperimentConfig) -> None:
     # TODO: don't return outputs, don't print - log to wandb instead
     outputs = evaluator.evaluate()
     print(outputs)
+
+    run.finish()
 
 
 if __name__ == "__main__":

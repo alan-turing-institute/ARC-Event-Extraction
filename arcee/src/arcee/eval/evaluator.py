@@ -4,6 +4,7 @@ import json
 import os
 
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 import arcee.prompts.prompts as prompts
 from arcee.dataset.dataset import EEDataset
@@ -111,11 +112,12 @@ class Evaluator:
         When this method is called, the evaluator will perform evaluation by batching
         over the dataset and passing inputs to the model.
         """
+
         # Get model ouputs and decode using tokenzier
         outputs = []
 
         # TODO: total_preds, correct_preds, total_golds = 0, 0, 0
-        for batch in iter(self.dataloader):
+        for batch in tqdm(iter(self.dataloader)):
             batch_outputs = self.model.predict(batch)
             outputs.extend(batch_outputs)
             with open(self.output_path, "a") as f:
@@ -130,9 +132,6 @@ class Evaluator:
 
         # TODO: other things to log:
         # - total time taken (or is this logged by wandb?)
-
-        # Compute f1 scores
-        # TODO: to match TextEE (without trig start / end matching)
 
         # Log scores
         # TODO: get wandb setup

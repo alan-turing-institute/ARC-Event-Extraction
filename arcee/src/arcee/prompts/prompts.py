@@ -720,8 +720,10 @@ class EDPromptWithExamples(EEPromptWithExamples, EDPrompt, ABC):
 
             prompt_text = (
                 "### Example " + str(i + 1) + "\n"
-                "Input text: ```" + example_input_text + "```\n"
-                "Expected Response (JSON): \n" + json.dumps(expected_output[i]) + "\n"
+                "Input text: \n```" + example_input_text + "```\n"
+                "Expected Response (JSON): \n"
+                + json.dumps(expected_output[i]["output"], indent=4, sort_keys=True)
+                + "\n"
             )
             output.append(prompt_text)
 
@@ -816,8 +818,10 @@ class EAEPromptWithExamples(EEPromptWithExamples, EAEPrompt, ABC):
                 "### Example " + str(i + 1) + "\n"
                 "Event type: " + event_type + "\n"
                 "Argument roles: " + ", ".join(set(arg_roles)) + "\n"
-                "Input text: ```" + tagged_text + "```\n"
-                "Expected Response (JSON): \n" + json.dumps(expected_output[i]) + "\n"
+                "Input text: \n```" + tagged_text + "```\n"
+                "Expected Response (JSON): \n"
+                + json.dumps(expected_output[i]["output"], indent=4, sort_keys=True)
+                + "\n"
             )
             output.append(prompt_text)
 

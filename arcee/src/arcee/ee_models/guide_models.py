@@ -139,7 +139,7 @@ class GuideFreeJSONModel(BaseGuideModel):
         self.max_tokens = max_tokens
 
     def predict(
-        self, input: list[tuple[dict[str, str], str | dict, dict]]
+        self, input: list[tuple[dict[str, str], str | dict, dict, str]]
     ) -> list[dict[str, str | dict]]:
         """This uses the
 
@@ -150,7 +150,7 @@ class GuideFreeJSONModel(BaseGuideModel):
             list[str]: _description_
         """
         responses = []
-        for chat, _, ids in input:
+        for chat, _, ids, _ in input:
             lm = self.model.copy()
             with gi.user():
                 lm += chat["content"]

@@ -185,6 +185,12 @@ def stats_on_event_detection(
     """
     Calculate the statistics on the event detection task.
 
+    For the event type it calculates if an real event is included in the listed events.
+    This means for passages with multiple events, it will count as correct if at least
+    one event is of the correct type.
+
+    The last field `event_f1` is the relevant F1 score to compare with TextEE.
+
     Args:
         golds (dict[str, dict | list]): The gold data in the format of a dictionary with
             the key as the key and the 'output' as the value.
@@ -201,12 +207,12 @@ def stats_on_event_detection(
             - total_event (int): The total number of events in the gold data.
             - predict_event (int): The total number of events in the output data.
             - correct_all (int): The total number of correct events in the output data.
-            - event_precision (float): The percision of the events.
-            - event_recall (float): The recall of the events.
-            - event_f1 (float): The f1 score of the events.
-            - event_type_precision (float): The percision of the event types.
+            - event_type_precision (float): The precision of the event types.
             - event_type_recall (float): The recall of the event types.
             - event_type_f1 (float): The f1 score of the event types.
+            - event_precision (float): The precision of the events.
+            - event_recall (float): The recall of the events.
+            - event_f1 (float): The f1 score of the events.
     """
 
     total_passage = 0
@@ -259,12 +265,12 @@ def stats_on_event_detection(
         "total_event": total_event,
         "predict_event": predict_event,
         "correct_all": correct_all,
-        "event_precision": event_precision,
-        "event_recall": event_recall,
-        "event_f1": event_f1,
         "event_type_precision": event_type_precision,
         "event_type_recall": event_type_recall,
         "event_type_f1": event_type_f1,
+        "event_precision": event_precision,
+        "event_recall": event_recall,
+        "event_f1": event_f1,
     }
 
 
@@ -273,6 +279,8 @@ def stats_on_argument_detection(
 ) -> dict[str, int | float]:
     """
     Calculate the statistics on the argument detection task.
+
+    The last field `argument_f1` is the relevant F1 score to compare with TextEE.
 
     Args:
         golds (dict[str, dict | list]): The gold data in the format of a dictionary with
@@ -290,7 +298,7 @@ def stats_on_argument_detection(
             - total_argument (int): The total number of arguments in the gold data.
             - predict_argument (int): The total number of arguments in the output data.
             - correct_argument (int): The total number of correct arguments.
-            - argument_precision (float): The percision of the arguments.
+            - argument_precision (float): The precision of the arguments.
             - argument_recall (float): The recall of the arguments.
             - argument_f1 (float): The f1 score of the arguments.
     """

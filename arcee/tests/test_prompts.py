@@ -525,9 +525,10 @@ class TestEAEPrompter3:
         assert "The <trigger>hurricane</trigger> caused severe damage ." not in prompt
         assert "An <trigger>earthquake</trigger> shook the city last night ." in prompt
         assert "The <trigger>protest</trigger> escalated into a riot ." in prompt
-        assert '{"evt_id": "ev1", "output": ' in prompt
-        assert '{"evt_id": "ev4", "output": {"Location": "city"}}' in prompt
-        assert '{"evt_id": "ev5", "output": {"Location": null}}' in prompt
+        assert '"Location": "city"' in prompt
+        assert '"Location": null' in prompt
+        assert '"Attacker": null' in prompt
+        assert '"Victim": "car"' in prompt
         assert input_text == DATA["text"]
 
 
@@ -585,9 +586,10 @@ class TestEAEPrompter4:
         assert "The <trigger>hurricane</trigger> caused severe damage ." not in prompt
         assert "An <trigger>earthquake</trigger> shook the city last night ." in prompt
         assert "The <trigger>protest</trigger> escalated into a riot ." in prompt
-        assert '{"evt_id": "ev1", "output": ' in prompt
-        assert '{"evt_id": "ev4", "output": {"Location": "city"}}' in prompt
-        assert '{"evt_id": "ev5", "output": {"Location": null}}' in prompt
+        assert '"Location": "city"' in prompt
+        assert '"Location": null' in prompt
+        assert '"Attacker": null' in prompt
+        assert '"Victim": "car"' in prompt
         assert input_text == DATA["text"]
 
         prompt, output_format, ids, input_text = self.prompter_same_events.get_prompt(
@@ -655,9 +657,11 @@ class TestEAEPrompter5:
         assert "The <trigger>hurricane</trigger> caused severe damage ." not in prompt
         assert "An <trigger>earthquake</trigger> shook the city last night ." in prompt
         assert "The <trigger>protest</trigger> escalated into a riot ." not in prompt
-        assert '{"evt_id": "ev1", "output": ' in prompt
-        assert '{"evt_id": "ev2", "output": ' in prompt
-        assert '{"evt_id": "ev4", "output": {"Location": "city"}}' in prompt
+        assert '"Location": "city"' in prompt
+        assert '"Location": null' in prompt
+        assert '"Attacker": null' in prompt
+        assert '"Victim": "car"' in prompt
+        assert '"Location": "warehouse' in prompt
         assert input_text == DATA["text"]
 
 
@@ -715,9 +719,11 @@ class TestEAEPrompter6:
         assert "The <trigger>hurricane</trigger> caused severe damage ." not in prompt
         assert "An <trigger>earthquake</trigger> shook the city last night ." in prompt
         assert "The <trigger>protest</trigger> escalated into a riot ." not in prompt
-        assert '{"evt_id": "ev1", "output": ' in prompt
-        assert '{"evt_id": "ev2", "output": ' in prompt
-        assert '{"evt_id": "ev4", "output": {"Location": "city"}}' in prompt
+        assert '"Location": "city"' in prompt
+        assert '"Location": null' in prompt
+        assert '"Attacker": null' in prompt
+        assert '"Victim": "car"' in prompt
+        assert '"Location": "warehouse' in prompt
         assert input_text == DATA["text"]
 
         prompt, output_format, ids, input_text = self.prompter_same_events.get_prompt(

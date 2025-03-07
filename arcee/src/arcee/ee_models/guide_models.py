@@ -10,7 +10,9 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from arcee.ee_models.ee_models import EEBaseModel
 
 
-def remove_unimplemented_keys(given_json: str | list | dict) -> str | list | dict:
+def remove_unimplemented_keys(
+    given_json: str | list | dict | None,
+) -> str | list | dict | None:
     """
     Remove unimplemented keys from a JSON schema as guidance does not support
     `minProperties` and `maxProperties`.
@@ -208,7 +210,10 @@ class GuideJSONModel(BaseGuideModel):
         """
         responses = []
         for chat, schema, ids, _ in input:
-            striped_schema = remove_unimplemented_keys(schema)
+            if schema == "json":
+                striped_schema = None
+            else:
+                striped_schema = remove_unimplemented_keys(schema)
             lm = self.model.copy()
             with gi.user():
                 lm += chat["content"]

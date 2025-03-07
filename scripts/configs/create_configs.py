@@ -29,7 +29,7 @@ PROMPTS = [
 PROMPTS_RANDOM_EXAMPLES = ["EDPrompter3", "EAEPrompter3", "EAEPrompter4"]
 PROMPTS_SIMILAR_EXAMPLES = ["EDPrompter4", "EAEPrompter5", "EAEPrompter6"]
 SENTENCE_EMBEDDINGS = {
-    "all-mpnet-base-v2": "all-mpnet-base",
+    "all-mpnet-base-v2": "mpnetbase",
     "intfloat/multilingual-e5-small": "e5small",
 }
 NUM_EXAMPLES = [3, 5, 10]
@@ -101,7 +101,7 @@ for model, split, prompt in itertools.product(MODELS, SPLITS, PROMPTS):
                 "num_examples": num_examples,
             }
             if prompt in PROMPTS_RANDOM_EXAMPLES:
-                exp_name = f"{exp_name_init}_{num_examples}_{SEED}"
+                exp_name = f"{exp_name_init}_{num_examples}_rand{SEED}"
                 prompt_init_kwargs["seed"] = SEED
             elif prompt in PROMPTS_SIMILAR_EXAMPLES:
                 for sentence_embedding in SENTENCE_EMBEDDINGS:

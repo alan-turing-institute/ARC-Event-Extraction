@@ -80,12 +80,12 @@ for model, split, prompt in itertools.product(MODELS, SPLITS, PROMPTS):
     }
 
     # DEFINE DATA KWARGS
-    data_path = f"data/{DATASET}/split{split}/test.jsonlines"
-    schema_path = f"data/{DATASET}/event_type_short_definitions.json"
+    data_path = f"data/{DATASET}/output/split{split}/test.jsonlines"
+    schema_path = f"data/{DATASET}/schema/event_type_short_definitions.json"
     argument_extraction = False
     if "EAE" in prompt:
         argument_extraction = True
-        schema_path = f"data/{DATASET}/pattern.json"
+        schema_path = f"data/{DATASET}/schema/pattern.json"
     data_kwargs = {
         "data_path": data_path,
         "schema_path": schema_path,

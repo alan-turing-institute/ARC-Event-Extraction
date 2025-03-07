@@ -30,10 +30,9 @@ def main(config: ExperimentConfig, wandb_job_name: str) -> None:
     )
 
     # Evaluate
-    # TODO: don't return outputs, don't print - log to wandb instead
-    outputs = evaluator.evaluate()
-    print(outputs)
+    evaluator.evaluate()
 
+    # Finish run
     run.finish()
 
 

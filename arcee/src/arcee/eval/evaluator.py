@@ -130,12 +130,5 @@ class Evaluator:
             # - Save correct predictions, total predicts and total golds
             # - Save to wandb?
 
-        # TODO: other things to log:
-        # - total time taken (or is this logged by wandb?)
-
-        # Log scores
-        # TODO: get wandb setup
-
-        # TODO: remove return statement once metrics are being logged (and set return
-        # to None type)
+        # Return
         return outputs

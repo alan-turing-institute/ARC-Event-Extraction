@@ -18,12 +18,14 @@ class ExperimentConfig(BaseConfig):
 
     def __init__(
         self,
+        experiment: str,
         data_kwargs: dict,
         model_kwargs: dict,
         prompt_kwargs: dict,
         output_path: str = "OUTPUT_NOT_SET.jsonl",
     ) -> None:
         super().__init__()
+        self.experiment = experiment
         self.data_kwargs = DataArguments.from_dict(data_kwargs)
         self.model_kwargs = ModelArguments.from_dict(model_kwargs)
         self.prompt_kwargs = PromptArguments.from_dict(prompt_kwargs)
@@ -36,6 +38,7 @@ class ExperimentConfig(BaseConfig):
             Dict representation of the config.
         """
         return {
+            "experiment": self.experiment,
             "data_kwargs": self.data_kwargs.to_dict(),
             "model_kwargs": self.model_kwargs.to_dict(),
             "prompt_kwargs": self.prompt_kwargs.to_dict(),

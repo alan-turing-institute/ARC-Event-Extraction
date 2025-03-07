@@ -16,6 +16,7 @@ EXPECTED_INIT_KWARGS = {
 EXPECTED_PROMPT_CLS = "DummyEAEPrompter"
 EXPECTED_PROMPT_KWARGS = {}
 EXPECTED_OUTPUT = "outputs/dummy_experiment.jsonl"
+EXPECTED_EXP_NAME = "dummy_experiment"
 
 
 def test_DataArguments(dummy_experment_config: ExperimentConfig):
@@ -37,6 +38,7 @@ def test_PromptArguments(dummy_experment_config: ExperimentConfig):
 
 def test_model_dump(dummy_experment_config: ExperimentConfig):
     expected_kwargs = {
+        "experiment": EXPECTED_EXP_NAME,
         "data_kwargs": {
             "data_path": EXPECTED_DATA_PATH,
             "schema_path": EXPECTED_SCHEMA_PATH,

@@ -34,6 +34,7 @@ SENTENCE_EMBEDDINGS = {
 }
 NUM_EXAMPLES = [3, 5, 10]
 SEED = 42
+CONFIG_FOLDER = "ollama_set1"
 
 
 def save_yaml(
@@ -109,7 +110,7 @@ for model, split, prompt in itertools.product(MODELS, SPLITS, PROMPTS):
                     ]
                     exp_name = (
                         f"{exp_name_init}_{num_examples}"
-                        "_{sentence_embedding_short_name}"
+                        f"_{sentence_embedding_short_name}"
                     )
                     prompt_init_kwargs["sentence_transformer_model"] = (
                         sentence_embedding
@@ -121,7 +122,7 @@ for model, split, prompt in itertools.product(MODELS, SPLITS, PROMPTS):
                 model_kwargs,
                 data_kwargs,
                 prompt_kwargs,
-                f"scripts/configs/ollama_group1/{exp_name}.yaml",
+                f"scripts/configs/{CONFIG_FOLDER}/{exp_name}.yaml",
             )
     else:
         exp_name = exp_name_init
@@ -131,5 +132,5 @@ for model, split, prompt in itertools.product(MODELS, SPLITS, PROMPTS):
             model_kwargs,
             data_kwargs,
             prompt_kwargs,
-            f"scripts/configs/ollama_group1/{exp_name}.yaml",
+            f"scripts/configs/{CONFIG_FOLDER}/{exp_name}.yaml",
         )

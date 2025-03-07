@@ -10,11 +10,40 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from arcee.ee_models.ee_models import EEBaseModel
 
 
+def remove_unimplemented_keys(
+    given_json: str | list | dict | None,
+) -> str | list | dict | None:
+    """
+    Remove unimplemented keys from a JSON schema as guidance does not support
+    `minProperties` and `maxProperties`.
+
+    Args:
+        given_json (list | dict): The JSON schema to remove unimplemented keys from.
+
+    Returns:
+        list | dict: The JSON schema with unimplemented keys removed.
+    """
+    if isinstance(given_json, dict):
+        given_json.pop("maxProperties", None)
+        given_json.pop("minProperties", None)
+        for value in given_json.values():
+            remove_unimplemented_keys(value)
+    elif isinstance(given_json, list):
+        for item in given_json:
+            remove_unimplemented_keys(item)
+
+    return given_json
+
+
 class Llama3ChatTemplate(gi.chat.ChatTemplate):
     # available_roles = ["user", "assistant"]
     # template_str = llama31_template
 
     def get_role_start(self, role_name: str) -> str:
+        """
+        This method returns the string which precedes the content of the message.
+        It needs to be consistent with how the model was trained.
+        """
         if role_name == "system":
             return "<|start_header_id|>system<|end_header_id|>\n\nYou are helpful!"
         if role_name == "user":
@@ -24,14 +53,15 @@ class Llama3ChatTemplate(gi.chat.ChatTemplate):
         raise gi.chat.UnsupportedRoleException(role_name, self)
 
     def get_role_end(self, role_name: str | None = None) -> str:
+        """
+        This method returns the string which follows the content of the message.
+        """
         del role_name  # Unused include for compatibility
         return "<|eot_id|>"
 
 
 CHAT_TEMPLATES = {
     "llama3": Llama3ChatTemplate,
-    "llama2": gi.chat.Llama2ChatTemplate,
-    "Phi3Mini": gi.chat.Phi3MiniChatTemplate,
 }
 
 
@@ -45,9 +75,7 @@ class BaseGuideModel(EEBaseModel):
             instruction-tuned model whose tokenizer has a chat template.
         tokenizer: An instance of a `transfomers.AutoTokenizer`, corresponding to the
             model. Should contain a chat template.
-        device: A string denoting what device to place the model on, defaults to `cpu`.
-            Pass `device_map="auto"` to init to automatically place on any available
-            GPU.
+        device: A string denoting what device to place the model on.
         options: Currently ignored, kept in to match base class signature.
     """
 
@@ -55,20 +83,41 @@ class BaseGuideModel(EEBaseModel):
         self,
         model_id: str,
         tokenizer_path: str | None = None,
-        chat_template: str | None = None,
+        chat_template: str = "llama3",
         options: dict | None = None,
     ) -> None:
+        """
+        Initialise the base model which will use constrained generation.
+
+        Args:
+            model_id (str): The location of the HF model to load.
+            tokenizer_path (str | None, optional): The location of the tokenizer to
+                load if different from the model. Defaults to None.
+            chat_template (str): The chat template to use with the model, this
+                should be one of the keys in `CHAT_TEMPLATES`. Defaults to "llama3".
+            options (dict | None, optional): Currently ignored might be needed for
+                classes that inherit from this. Defaults to None.
+        """
         # Options - not needed in basic implementation
         self.options = options
 
         # Need to set this environment variable to use guidance
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
+        models_dir = os.path.join(
+            os.path.dirname(
+                os.path.dirname(
+                    os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+                )
+            ),
+            "models",
+        )
+
         # Load tokenizer
         if tokenizer_path is None:
             tokenizer_path = model_id
         hf_tokenizer = AutoTokenizer.from_pretrained(
-            tokenizer_path, padding_side="left"
+            os.path.join(models_dir, tokenizer_path), padding_side="left"
         )
 
         # Setup special tokens for batching
@@ -93,7 +142,7 @@ class BaseGuideModel(EEBaseModel):
         # Load model
         self.device = device
         self.hf_model = AutoModelForCausalLM.from_pretrained(
-            model_id,
+            os.path.join(models_dir, model_id),
             device_map=self.device,
         )
         self.hf_model.eval()
@@ -106,10 +155,10 @@ class BaseGuideModel(EEBaseModel):
         )
 
 
-class GuideFreeJSONModel(BaseGuideModel):
+class GuideJSONModel(BaseGuideModel):
     """
     This uses the a Hugging Face model and a Guidence package to contrain a model so
-    it gives JSON.
+    it gives JSON in a schema.
 
     Attributes:
         model: An instance of a `transformers.AutoModelForCausalLM`. Should be an
@@ -126,7 +175,7 @@ class GuideFreeJSONModel(BaseGuideModel):
         self,
         model_id: str,
         tokenizer_path: str | None = None,
-        chat_template: str | None = None,
+        chat_template: str = "llama3",
         max_tokens: int = 500,
         options: dict | None = None,
     ) -> None:
@@ -140,29 +189,45 @@ class GuideFreeJSONModel(BaseGuideModel):
 
     def predict(
         self, input: list[tuple[dict[str, str], str | dict, dict, str]]
-    ) -> list[dict[str, str | dict]]:
-        """This uses the
+    ) -> list[dict]:
+        """
+        This method takes a list of inputs and returns a list of outputs. Each input
+        is a event or passage to run the event extraction model on. The output is a
+        list of events extracted from the input.
 
         Args:
-            input (list[dict[str, str]]): _description_
+            input (list[tuple]): A list of tuples where each tuple requires extraction.
+                - prompt (dict[str, str]): The chat prompt to use.
+                - schema (str | dict): The schema to use or 'json'
+                - ids (dict): The ids to use.
+                - sentence (str): The sentence to extract events from.
 
         Returns:
-            list[str]: _description_
+            list: A list of dictionaries where each dictionary contains the extracted
+                events in the schema. If the output cannot be parsed as JSON then the
+                output is a dictionary with a key 'JSON_ERROR' and the value is the
+                output.
         """
         responses = []
-        for chat, _, ids, _ in input:
+        for chat, schema, ids, _ in input:
+            if schema == "json":
+                striped_schema = None
+            else:
+                striped_schema = remove_unimplemented_keys(schema)
             lm = self.model.copy()
             with gi.user():
                 lm += chat["content"]
             with gi.assistant():
                 lm += "```json\n\n"
-                lm += gi.json(name="output", max_tokens=self.max_tokens)
+                lm += gi.json(
+                    name="output", schema=striped_schema, max_tokens=self.max_tokens
+                )
                 lm += "\n\n```"
 
             try:
                 output = json.loads(lm["output"])
             except json.JSONDecodeError:
-                output = {}
+                output = {"JSON_ERROR": lm["output"]}
 
             response = {**ids, "output": output}
             responses.append(response)

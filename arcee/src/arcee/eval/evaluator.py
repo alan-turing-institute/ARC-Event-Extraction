@@ -4,15 +4,18 @@ import json
 import os
 
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 import arcee.prompts.prompts as prompts
 from arcee.dataset.dataset import EEDataset
 from arcee.dataset.load import load_json
 from arcee.ee_models.ee_models import EEHFModel, EEOllamaModel
+from arcee.ee_models.guide_models import GuideJSONModel
 
 MODEL_CLS_MAP = {
     "hf": EEHFModel,
     "ollama": EEOllamaModel,
+    "guide_json": GuideJSONModel,
 }
 
 
@@ -67,9 +70,10 @@ class Evaluator:
         self.model_id = model_id
 
         # Instantiate model
-        if model_type not in ["hf", "ollama"]:
+        if model_type not in MODEL_CLS_MAP:
             exception = (
-                "`model_type` should be one of `'hf'` or `'ollama'` `model_type` is "
+                f"`model_type` should be one of {list(MODEL_CLS_MAP.keys())} "
+                "`model_type` is "
                 f"currently being passed as {model_type}."
             )
             raise ValueError(exception)
@@ -111,11 +115,12 @@ class Evaluator:
         When this method is called, the evaluator will perform evaluation by batching
         over the dataset and passing inputs to the model.
         """
+
         # Get model ouputs and decode using tokenzier
         outputs = []
 
         # TODO: total_preds, correct_preds, total_golds = 0, 0, 0
-        for batch in iter(self.dataloader):
+        for batch in tqdm(iter(self.dataloader)):
             batch_outputs = self.model.predict(batch)
             outputs.extend(batch_outputs)
             with open(self.output_path, "a") as f:
@@ -128,15 +133,5 @@ class Evaluator:
             # - Save correct predictions, total predicts and total golds
             # - Save to wandb?
 
-        # TODO: other things to log:
-        # - total time taken (or is this logged by wandb?)
-
-        # Compute f1 scores
-        # TODO: to match TextEE (without trig start / end matching)
-
-        # Log scores
-        # TODO: get wandb setup
-
-        # TODO: remove return statement once metrics are being logged (and set return
-        # to None type)
+        # Return
         return outputs

@@ -4,7 +4,6 @@ import itertools
 
 import yaml
 
-MODELS_LARGE = ["mistral-large:123b", "llama3.3:70b"]
 MODELS = {
     "llama3.1:8b": "llama8b",
     "gemma2:27b": "gemma27b",
@@ -68,9 +67,9 @@ for model, split, prompt in itertools.product(MODELS, SPLITS, PROMPTS):
 
     # DEFINE MODEL KWARGS
     model_short_name = MODELS[model]
-    num_ctx = 8192
-    if model in MODELS_LARGE:
-        num_ctx = 16384
+    num_ctx = 16384
+    if model == "gemma2:27b":
+        num_ctx = 8192
     model_kwargs = {
         "model_id": model,
         "model_type": "ollama",
@@ -116,31 +115,21 @@ for model, split, prompt in itertools.product(MODELS, SPLITS, PROMPTS):
                         sentence_embedding
                     )
             prompt_kwargs["prompt_init_kwargs"] = prompt_init_kwargs
-            if model in MODELS_LARGE:
-                large_model_config_id += 1
-                config_name = "large_model_config_" + str(large_model_config_id)
-            else:
-                config_id += 1
-                config_name = "config_" + str(config_id)
+            config_id += 1
             save_yaml(
                 exp_name,
                 model_kwargs,
                 data_kwargs,
                 prompt_kwargs,
-                f"scripts/configs/ollama_group1/{config_name}.yaml",
+                f"scripts/configs/ollama_group1/{exp_name}.yaml",
             )
     else:
         exp_name = exp_name_init
-        if model in MODELS_LARGE:
-            large_model_config_id += 1
-            config_name = "large_model_config_" + str(large_model_config_id)
-        else:
-            config_id += 1
-            config_name = "config_" + str(config_id)
+        config_id += 1
         save_yaml(
             exp_name,
             model_kwargs,
             data_kwargs,
             prompt_kwargs,
-            f"scripts/configs/ollama_group1/{config_name}.yaml",
+            f"scripts/configs/ollama_group1/{exp_name}.yaml",
         )

@@ -36,7 +36,8 @@ scripts/scratch.py
 scripts/scratch/*
 
 # Config for development
-scripts/configs/test/*
+scripts/configs/*
+!scripts/configs/examples/*
 
 ### ~~~~ FROM PYTHON TEMPLATE ~~~~ ###
 

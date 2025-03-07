@@ -2,11 +2,25 @@ from __future__ import annotations
 
 import argparse
 
+import wandb
 from arcee.config.experiment import ExperimentConfig
+from arcee.constants import WANDB_ENTITY_NAME, WANDB_PROJECT_NAME
 from arcee.eval.evaluator import Evaluator
+from arcee.utils import prepare_wandb_name
 
 
-def main(config: ExperimentConfig) -> None:
+def main(config: ExperimentConfig, wandb_job_name: str) -> None:
+    # Initialise wandb run
+    run = wandb.init(
+        entity=WANDB_ENTITY_NAME,
+        project=WANDB_PROJECT_NAME,
+        name=wandb_job_name,
+        config={
+            "job_type": "inference",
+            **config.to_dict(),
+        },
+    )
+
     # Initialise evaluator
     evaluator = Evaluator(
         output_path=config.output_path,
@@ -16,9 +30,10 @@ def main(config: ExperimentConfig) -> None:
     )
 
     # Evaluate
-    # TODO: don't return outputs, don't print - log to wandb instead
-    outputs = evaluator.evaluate()
-    print(outputs)
+    evaluator.evaluate()
+
+    # Finish run
+    run.finish()
 
 
 if __name__ == "__main__":
@@ -45,5 +60,11 @@ if __name__ == "__main__":
     if args.ollama_port:
         config.model_kwargs.model_init_kwargs["host_port"] = args.ollama_port
 
+    # Job name
+    wandb_job_name = args.config_path.replace("scripts/configs/", "").replace(
+        ".yaml", ""
+    )
+    wandb_job_name = prepare_wandb_name(wandb_job_name)
+
     # Run
-    main(config)
+    main(config, wandb_job_name)

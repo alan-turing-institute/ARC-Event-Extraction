@@ -37,6 +37,10 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
+    # model_kwargs/model_id
+    # data_kwargs/data_path
+    #
+
     # Init experiment config
     config = ExperimentConfig.from_yaml(args.config_path)
     output_path = args.config_path.replace("yaml", "jsonl")

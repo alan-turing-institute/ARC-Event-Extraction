@@ -215,7 +215,7 @@ class EDPrompt(EEPrompt, ABC):
             str: A string containing the event type definitions.
         """
 
-        return "\n".join([key + ": " + self._schema[key] for key in self._schema])
+        return "\n".join([key + self._schema[key] for key in self._schema])
 
     def _get_ids(self) -> dict[str, str]:
         """

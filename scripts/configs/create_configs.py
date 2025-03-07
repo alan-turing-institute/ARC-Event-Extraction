@@ -12,6 +12,7 @@ MODELS = {
     "mistral-large:123b": "mistral123b",
     "llama3.3:70b": "llama70b",
 }
+LARGE_MODELS = ["mistral-large:123b", "llama3.3:70b"]
 DATASET = "ACE05"
 SPLITS = [1]
 PROMPTS = [
@@ -59,8 +60,8 @@ def save_yaml(
     print(f"Generated {output_path}")
 
 
-config_id = 0
-large_model_config_id = 0
+large_model_filenames = []
+small_model_filenames = []
 for model, split, prompt in itertools.product(MODELS, SPLITS, PROMPTS):
     model_short_name = MODELS[model]
     # Initialise experiment name
@@ -116,21 +117,41 @@ for model, split, prompt in itertools.product(MODELS, SPLITS, PROMPTS):
                         sentence_embedding
                     )
             prompt_kwargs["prompt_init_kwargs"] = prompt_init_kwargs
-            config_id += 1
+
+            filename = f"scripts/configs/{CONFIG_FOLDER}/{exp_name}.yaml"
+            if model in LARGE_MODELS:
+                large_model_filenames.append(filename)
+            else:
+                small_model_filenames.append(filename)
             save_yaml(
                 exp_name,
                 model_kwargs,
                 data_kwargs,
                 prompt_kwargs,
-                f"scripts/configs/{CONFIG_FOLDER}/{exp_name}.yaml",
+                filename,
             )
     else:
         exp_name = exp_name_init
-        config_id += 1
+        filename = f"scripts/configs/{CONFIG_FOLDER}/{exp_name}.yaml"
+        if model in LARGE_MODELS:
+            large_model_filenames.append(filename)
+        else:
+            small_model_filenames.append(filename)
         save_yaml(
             exp_name,
             model_kwargs,
             data_kwargs,
             prompt_kwargs,
-            f"scripts/configs/{CONFIG_FOLDER}/{exp_name}.yaml",
+            filename,
         )
+
+filename = f"scripts/slurm/{CONFIG_FOLDER}/small_models.txt"
+with open(filename, "w") as file:
+    for name in small_model_filenames:
+        file.write(f"{name}\n")
+
+
+filename = f"scripts/slurm/{CONFIG_FOLDER}/large_models.txt"
+with open(filename, "w") as file:
+    for name in large_model_filenames:
+        file.write(f"{name}\n")

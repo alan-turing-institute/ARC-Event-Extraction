@@ -215,7 +215,7 @@ class EDPrompt(EEPrompt, ABC):
             str: A string containing the event type definitions.
         """
 
-        return "\n".join([key + ": " + self._schema[key] for key in self._schema])
+        return "\n".join([key + self._schema[key] for key in self._schema])
 
     def _get_ids(self) -> dict[str, str]:
         """
@@ -722,7 +722,7 @@ class EDPromptWithExamples(EEPromptWithExamples, EDPrompt, ABC):
             prompt_text = (
                 "### Example " + str(i + 1) + "\n"
                 "Input text: \n```" + example_input_text + "```\n"
-                "Expected Response (JSON): \n"
+                "Response (JSON): \n"
                 + json.dumps(expected_output[i]["output"], indent=4, sort_keys=True)
                 + "\n"
             )
@@ -755,15 +755,9 @@ class EDPromptWithExamples(EEPromptWithExamples, EDPrompt, ABC):
         return (
             (
                 self._get_system_content()
-                + "These are the possible event types you can chose from:\n"
-                + self._event_type_defs
-                + "\nHere are some examples:\n"
-                + self._examples_for_prompt
-                + "\nGiven this text:\n```"
-                + self._input_text
-                + "```\n"
-                "Do any of the event types appear in the text? "
-                "Not all event types will appear in the text, there may be some "
+                + "You will be give some text and have to determine if any event types "
+                "appear in the text. "
+                "Not all event types will appear, there may be some "
                 "that appear multiple times and there may be no event types "
                 "in the text.\n"
                 "If you identify one or more event type, then what is the trigger "
@@ -771,7 +765,15 @@ class EDPromptWithExamples(EEPromptWithExamples, EDPrompt, ABC):
                 + "\nFormat the output strictly as JSON. The output is an array of "
                 "JSON objects with exactly one key-value pair. The valid keys are "
                 "the event types and the values are the trigger words from the input "
-                "text."
+                "text.\n\n"
+                + "These are the possible event types you can chose from:\n"
+                + self._event_type_defs
+                + "\nHere are some examples:\n"
+                + self._examples_for_prompt
+                + "\nNow process this input text:\n```"
+                + self._input_text
+                + "```\n"
+                + "Response (JSON): "
             ),
             self._json_schema,
             self._get_ids(),
@@ -820,7 +822,7 @@ class EAEPromptWithExamples(EEPromptWithExamples, EAEPrompt, ABC):
                 "Event type: " + event_type + "\n"
                 "Argument roles: " + ", ".join(set(arg_roles)) + "\n"
                 "Input text: \n```" + tagged_text + "```\n"
-                "Expected Response (JSON): \n"
+                "Response (JSON): \n"
                 + json.dumps(expected_output[i]["output"], indent=4, sort_keys=True)
                 + "\n"
             )
@@ -859,7 +861,7 @@ class EAEPromptWithExamples(EEPromptWithExamples, EAEPrompt, ABC):
                 "Event type: " + self._event_type + "\n"
                 "Argument roles: " + ", ".join(set(self._arg_roles)) + "\n"
                 "Input text: ```" + self._tagged_text + "```\n"
-                "Expected response (JSON):"
+                "Response (JSON):"
             ),
             self._json_schema,
             self._get_ids(),

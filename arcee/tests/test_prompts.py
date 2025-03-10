@@ -30,8 +30,8 @@ DATA = {
 }
 
 ED_SCHEMA = {
-    "Explosion": "An event where something bursts violently.",
-    "Attack": "A violent physical act causing harm or damage.",
+    "Explosion": ": An event where something bursts violently.",
+    "Attack": ": A violent physical act causing harm or damage.",
 }
 JSON_SCHEMA = {
     "type": "array",

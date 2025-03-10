@@ -32,13 +32,16 @@ data/ACE05/*
 data/ACE05/schema/*
 !data/ACE05/schema/pattern.json
 !data/ACE05/schema/event_type_definitions.json
+!data/ACE05/schema/event_type_short_definitions.json
+!data/ACE05/schema/event_type_no_definitions.json
 
 # Scratch file and folder
 scripts/scratch.py
 scripts/scratch/*
 
 # Config for development
-scripts/configs/test/*
+scripts/configs/*
+!scripts/configs/examples/*
 
 ### ~~~~ FROM PYTHON TEMPLATE ~~~~ ###
 

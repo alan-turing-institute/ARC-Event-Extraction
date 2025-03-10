@@ -300,7 +300,6 @@ def data_to_ed_schema(event_records: list[dict[str, Any]]) -> list[dict]:
     list of dict
         A list of transformed event argument records. Each dictionary contains:
         - `wnd_id` (str): The window ID of the event record.
-        - `evt_id` (str): The event mention ID.
         - `output` (dict): A dictionary mapping event types to trigger words.
     """
     # List to store the transformed event types

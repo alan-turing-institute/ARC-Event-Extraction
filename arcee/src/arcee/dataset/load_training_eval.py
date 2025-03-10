@@ -18,6 +18,7 @@ def load_training_eval_data(
     """
     This function loads the training and evaluation data from the specified locations
     and formats it for training an event extraction model
+    TODO: Update function so that it can work on prompts with examples
 
     Args:
     training_data_path: str
@@ -34,6 +35,10 @@ def load_training_eval_data(
     arg_extraction: bool
         If set to True, then it will load the records so that there is one event type
         per record (in order to do argument extraction per event type)
+
+    Returns:
+    Dataset
+        A dataset object with the formatted training and evaluation data
     """
     dataset = load_dataset(
         "json", data_files={"train": training_data_path, "eval": eval_data_path}
@@ -42,7 +47,8 @@ def load_training_eval_data(
         dataset = dataset.filter(lambda x: len(x["event_mentions"]) > 0)
     with open(schema_path) as file:
         schema = json.load(file)
-    # AT THE MOMENT, ONLY WORKS WITH A PROMPT WITHOUT ANY EXAMPLES
+    # TODO: Update so that it can take more kwargs for the prompt constructor,
+    # e.g., to construct examples for a prompt.
     prompt_constructor = getattr(prompts, prompt_cls)(schema)
 
     formatted_dataset: Dataset = dataset.map(
@@ -63,6 +69,25 @@ def format_chat_message(
     schema: dict,
     arg_extraction: bool,
 ) -> dict:
+    """
+    Takes a data record, prompt and schema and returns messages to be used when
+    training a model. i.e., a question and an expected response.
+
+    Args:
+        data_record: dict[str, str  |  int  |  list])
+            A dictionary containing the input text and details of events (if they exist
+            in the text)
+        prompt_constructor: prompts.EEPrompt
+            An instance of EEPrompt
+        schema: dict
+            A dictionary containing the schema of event types and argument roles
+        arg_extraction: bool
+            If set to True, then it will load the records so that there is one event
+            type per record (in order to do argument extraction per event type)
+
+    Returns:
+        dict: A dictionary containing the formatted chat message.
+    """
     prompt, _, _, _ = prompt_constructor.get_prompt(data_record)
     if arg_extraction:
         # Doing argument extraction

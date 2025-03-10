@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 
-from datasets import IterableDataset, load_dataset
+from datasets import Dataset, load_dataset
 
 import arcee.prompts.prompts as prompts
 from arcee.dataset.schemas import data_to_argument_schema, data_to_ed_schema
@@ -14,7 +14,7 @@ def load_training_eval_data(
     prompt_cls: str,
     schema_path: str,
     arg_extraction: bool = False,
-) -> IterableDataset:
+) -> Dataset:
     """
     This function loads the training and evaluation data from the specified locations
     and formats it for training an event extraction model
@@ -38,12 +38,14 @@ def load_training_eval_data(
     dataset = load_dataset(
         "json", data_files={"train": training_data_path, "eval": eval_data_path}
     )
+    if arg_extraction:
+        dataset = dataset.filter(lambda x: len(x["event_mentions"]) > 0)
     with open(schema_path) as file:
         schema = json.load(file)
     # AT THE MOMENT, ONLY WORKS WITH A PROMPT WITHOUT ANY EXAMPLES
     prompt_constructor = getattr(prompts, prompt_cls)(schema)
 
-    formatted_dataset: IterableDataset = dataset.map(
+    formatted_dataset: Dataset = dataset.map(
         format_chat_message,
         fn_kwargs={
             "prompt_constructor": prompt_constructor,
@@ -64,12 +66,14 @@ def format_chat_message(
     prompt, _, _, _ = prompt_constructor.get_prompt(data_record)
     if arg_extraction:
         # Doing argument extraction
-        response = data_to_argument_schema([data_record], schema=schema)[0]["output"]
+        response = data_to_argument_schema([dict(data_record)], schema=schema)[0][
+            "output"
+        ]
     else:
         # Doing event trigger detection
         response = data_to_ed_schema([data_record])[0]["output"]
     json_response = "```json\n" + json.dumps(response, indent=2) + "\n```"
-    print(json_response)
+
     return {
         "messages": [
             {"role": "user", "content": prompt},

@@ -5,6 +5,7 @@ import os
 
 import guidance as gi
 import torch
+from peft import PeftModel
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from arcee.ee_models.ee_models import EEBaseModel
@@ -26,6 +27,8 @@ def remove_unimplemented_keys(
     if isinstance(given_json, dict):
         given_json.pop("maxProperties", None)
         given_json.pop("minProperties", None)
+        if "type" in given_json and given_json["type"] == "object":
+            given_json["additionalProperties"] = False
         for value in given_json.values():
             remove_unimplemented_keys(value)
     elif isinstance(given_json, list):
@@ -82,7 +85,7 @@ class BaseGuideModel(EEBaseModel):
     def __init__(
         self,
         model_id: str,
-        tokenizer_path: str | None = None,
+        adapter_id: str | None = None,
         chat_template: str = "llama3",
         options: dict | None = None,
     ) -> None:
@@ -91,8 +94,8 @@ class BaseGuideModel(EEBaseModel):
 
         Args:
             model_id (str): The location of the HF model to load.
-            tokenizer_path (str | None, optional): The location of the tokenizer to
-                load if different from the model. Defaults to None.
+            adapter_id (str | None, optional): The location of the adapter to
+                load if different from the base model. Defaults to None.
             chat_template (str): The chat template to use with the model, this
                 should be one of the keys in `CHAT_TEMPLATES`. Defaults to "llama3".
             options (dict | None, optional): Currently ignored might be needed for
@@ -114,10 +117,8 @@ class BaseGuideModel(EEBaseModel):
         )
 
         # Load tokenizer
-        if tokenizer_path is None:
-            tokenizer_path = model_id
         hf_tokenizer = AutoTokenizer.from_pretrained(
-            os.path.join(models_dir, tokenizer_path), padding_side="left"
+            os.path.join(models_dir, model_id), padding_side="left"
         )
 
         # Setup special tokens for batching
@@ -139,12 +140,21 @@ class BaseGuideModel(EEBaseModel):
         else:
             device = "cpu"
 
-        # Load model
         self.device = device
-        self.hf_model = AutoModelForCausalLM.from_pretrained(
+
+        base_model = AutoModelForCausalLM.from_pretrained(
             os.path.join(models_dir, model_id),
             device_map=self.device,
         )
+
+        # Load Model
+        if adapter_id:
+            self.hf_model = PeftModel.from_pretrained(
+                base_model, os.path.join(models_dir, adapter_id)
+            )
+        else:
+            self.hf_model = base_model
+
         self.hf_model.eval()
 
         # Wrap in guidance model
@@ -163,8 +173,7 @@ class GuideJSONModel(BaseGuideModel):
     Attributes:
         model: An instance of a `transformers.AutoModelForCausalLM`. Should be an
             instruction-tuned model whose tokenizer has a chat template.
-        tokenizer: An instance of a `transfomers.AutoTokenizer`, corresponding to the
-            model. Should contain a chat template.
+        adapter_id: The location of the adapted file weights to update the model.
         device: A string denoting what device to place the model on, defaults to `cpu`.
             Pass `device_map="auto"` to init to automatically place on any available
             GPU.
@@ -174,14 +183,14 @@ class GuideJSONModel(BaseGuideModel):
     def __init__(
         self,
         model_id: str,
-        tokenizer_path: str | None = None,
+        adapter_id: str | None = None,
         chat_template: str = "llama3",
         max_tokens: int = 500,
         options: dict | None = None,
     ) -> None:
         super().__init__(
             model_id=model_id,
-            tokenizer_path=tokenizer_path,
+            adapter_id=adapter_id,
             chat_template=chat_template,
             options=options,
         )

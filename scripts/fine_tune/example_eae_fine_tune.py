@@ -11,8 +11,8 @@ from trl import DataCollatorForCompletionOnlyLM, SFTConfig, SFTTrainer
 wandb.login()
 
 main_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-MODEL_LOC = os.path.join(main_dir, "models/Llama-3.2-1B-Instruct")
-MADE_MODEL_LOC = os.path.join(main_dir, "models/ADT-Llama-3.2-1B-Instruct")
+MODEL_LOC = os.path.join(main_dir, "models/Llama-3.2-3B-Instruct")
+MADE_MODEL_LOC = os.path.join(main_dir, "models/ADT-eae-Llama-3.2-3B-Instruct")
 
 TRAIN_DATA = "data/ACE05/output/split_dev/train.jsonlines"
 EVAL_DATA = "data/ACE05/output/split_dev/dev.jsonlines"

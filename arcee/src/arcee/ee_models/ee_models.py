@@ -117,8 +117,7 @@ class EEOllamaModel(EEBaseModel):
         """
         Get the response from the Ollama model.
 
-        Parameters:
-        -----------
+        Args:
         messages : list[dict[Any, Any]])
             The list of messages to send to the model. They are in the format
             {"role": "user", "content": "message"}.
@@ -147,8 +146,7 @@ class EEOllamaModel(EEBaseModel):
         This method makes predictions using an Ollama model, a given prompt and
         a dataset
 
-        Parameters
-        ----------
+        Args:
         input: list[tuple[str, str | dict, dict, str]]
             A list of tuples. Each tuple will contain:
             - dict[str,str]: The prompt stored in a dict to be used in the task.
@@ -157,8 +155,7 @@ class EEOllamaModel(EEBaseModel):
             that identify the record.
             - str: The input text
 
-        Returns
-        -------
+        Returns:
         list[dict[str, str | list | dict]]
             A list of dictionaries, with the record IDs and the output from the model
             If the output is not in JSON format, then it will be logged with a key of
@@ -187,21 +184,27 @@ class EEOllamaModel(EEBaseModel):
 
 class EEMockOllamaModel(EEOllamaModel):
     """
-    Only used in tests to avoid loading a Ollama or HF model while running tests
+    Only used in tests to avoid loading an Ollama model while running tests
     """
 
-    def __init__(self) -> None:
-        pass
+    def __init__(self, output_format: str) -> None:
+        if output_format not in ["", "json", "json_schema"]:
+            err_msg = "output_format must be one of '', 'json', or 'json_schema'."
+            raise ValueError(err_msg)
+        self.output_format = output_format
 
     def _get_response(
         self,
         messages: list[dict[str, str]],
         response_format: str | dict,
     ) -> str:
-        # To prevent the linter throwing a wobbly, do something with the args
+        # To prevent the linter throwing a wobbly, do something with the message arg
         del messages
-        del response_format
-        return '{"object": "mock object"}'
+        return (
+            '{"response": "mock object with output format '
+            + str(response_format)
+            + '"}'
+        )
 
     def predict(
         self, input: list[tuple[dict[str, str], str | dict, dict, str]]

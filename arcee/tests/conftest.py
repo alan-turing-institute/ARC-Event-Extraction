@@ -252,7 +252,9 @@ def test_event_records():
                     "event_subtype": "TransferOwnership",
                     "event_type": "Transaction:TransferOwnership",
                     "trigger": {"text": "acquired", "start": 2, "end": 3},
-                    "arguments": [],
+                    "arguments": [
+                        {"entity_id": "doc_005-E2", "role": "Item", "text": "startup"}
+                    ],
                 }
             ],
             "relation_mentions": [

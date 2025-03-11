@@ -57,11 +57,11 @@ class EEOllamaModel(EEBaseModel):
         options: dict | None = None,
         keep_alive: int = 300,
         host_port: int = 11434,
+        output_format: str = "",
     ) -> None:
         super().__init__()
         """
-        Parameters
-        ----------
+        Args:
         model: str
             The name of an Ollama model, will try to download if it doesn't already
             exist
@@ -76,9 +76,22 @@ class EEOllamaModel(EEBaseModel):
         host_port: int
             Needed when running on HPC to make sure the Ollama models don't interfere
             with one another
+        output_format: str
+            The output format required from the model. If blank then natural language
+            is returned. If "json" is passed then the response will be in JSON format,
+            and if "json_schema" is passed then the JSON schema from the prompt will
+            be used to define the output format.
+
+        Raises:
+        ValueError: If the output_format is not one of '', 'json', or 'json_schema'
 
         """
         super().__init__()
+        if output_format not in ["", "json", "json_schema"]:
+            err_msg = "output_format must be one of '', 'json', or 'json_schema'."
+            raise ValueError(err_msg)
+        self.output_format = output_format
+
         if options is None:
             # Set temperature to zero (less creative)
             # Ollama's context window length (option `num_ctx`) defaults to 2048, which
@@ -99,7 +112,7 @@ class EEOllamaModel(EEBaseModel):
     def _get_response(
         self,
         messages: list[dict[str, str]],
-        response_format: str | dict = "json",
+        response_format: str | dict,
     ) -> str:
         """
         Get the response from the Ollama model.
@@ -110,9 +123,9 @@ class EEOllamaModel(EEBaseModel):
             The list of messages to send to the model. They are in the format
             {"role": "user", "content": "message"}.
         response_format : str
+            If an empty string then natural language is returned
             Expected 'json' if JSON format is to be used
-            If blank then natural language is returned
-            Might want to add a check that nothing else is passed?
+            If a dictionary, then this is the JSON schema to be used
 
         Returns:
             str | None: This is the response from the model. It will only include the
@@ -155,7 +168,9 @@ class EEOllamaModel(EEBaseModel):
         outputs = []
         for record in input:
             messages = [record[0]]
-            output_format = record[1]
+            output_format = (
+                record[1] if self.output_format == "json_schema" else self.output_format
+            )
             # Create an output dictionary that consists of the record IDs
             ids = record[2]
             response = self._get_response(messages, output_format)
@@ -181,7 +196,7 @@ class EEMockOllamaModel(EEOllamaModel):
     def _get_response(
         self,
         messages: list[dict[str, str]],
-        response_format: str | dict = "json",
+        response_format: str | dict,
     ) -> str:
         # To prevent the linter throwing a wobbly, do something with the args
         del messages

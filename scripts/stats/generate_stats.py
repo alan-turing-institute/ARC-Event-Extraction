@@ -6,11 +6,14 @@ from collections.abc import Callable
 from glob import glob
 
 import pandas as pd
+import wandb
+from arcee.constants import WANDB_ENTITY_NAME, WANDB_PROJECT_NAME
 from arcee.stats.gold_compare import (
     load_events,
     stats_on_argument_detection,
     stats_on_event_detection,
 )
+from arcee.utils import prepare_wandb_name
 from tqdm import tqdm
 
 MAIN_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -25,6 +28,7 @@ def run_through_files(
     output_folder: str,
     save_name: str,
     semi_compare: bool = False,
+    use_wandb: bool = True,
 ) -> None:
     results_df = pd.DataFrame()
 
@@ -32,9 +36,25 @@ def run_through_files(
         outputs = load_events(file, id_key)
         if outputs is None:
             continue
-        file_name = os.path.basename(file)[: -len(".jsonl")]
-        stats = process_func(golds, outputs, semi=semi_compare)
 
+        file_name = os.path.basename(file)[: -len(".jsonl")]
+
+        # Optionally use weights and biases
+        if use_wandb:
+            run_name = prepare_wandb_name(file_name)
+            run = wandb.init(
+                entity=WANDB_ENTITY_NAME,
+                project=WANDB_PROJECT_NAME,
+                name=run_name,
+                job_type="stats",
+                config={
+                    "file": file_name,
+                    "job_type": "stats",  # legacy reasons
+                    "semi_compare": semi_compare,
+                },
+            )
+
+        stats = process_func(golds, outputs, semi=semi_compare)
         results_df = pd.concat(
             [
                 results_df,
@@ -47,6 +67,10 @@ def run_through_files(
             ],
             ignore_index=True,
         )
+
+        if use_wandb:
+            run.log(stats)
+            run.finish()
 
     os.makedirs(os.path.dirname(os.path.join(MAIN_DIR, save_name)), exist_ok=True)
 
@@ -72,6 +96,12 @@ def main():
         default="ACE05",
         help="Dataset to use for comparison.",
     )
+    parser.add_argument(
+        "--use_wandb",
+        type=bool,
+        default=True,
+        help="Whether to log stats to weights and biases",
+    )
     args = parser.parse_args()
 
     gold_arg_file = f"data/{args.dataset}/gold/gold_label_args.jsonl"
@@ -87,6 +117,7 @@ def main():
         args.output_folder,
         args.save_loc + "_eae.csv",
         semi_compare=args.semi_compare,
+        use_wandb=args.use_wandb,
     )
     run_through_files(
         ed_golds,
@@ -95,6 +126,7 @@ def main():
         args.output_folder,
         args.save_loc + "_ed.csv",
         semi_compare=args.semi_compare,
+        use_wandb=args.use_wandb,
     )
 
 

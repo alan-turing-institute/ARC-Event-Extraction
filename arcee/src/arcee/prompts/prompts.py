@@ -47,6 +47,16 @@ class EEPrompt(ABC):
         # is generating prompts for event argument extraction
         self._eae: bool = False
 
+    def get_is_arg_extraction(self) -> bool:
+        """
+        Returns whether the prompt is for event argument extraction.
+
+        Returns:
+            bool: True if the prompt is doing event argument extraction, False
+            otherwise.
+        """
+        return self._eae
+
     @abstractmethod
     def _get_system_content(self) -> str:
         """

@@ -30,8 +30,7 @@ class Evaluator:
         model_type: str,
         output_path: str,
         data_path: str,
-        # TODO: add check that the prompt is doing the same as arg extraction value
-        argument_extraction: bool,
+        only_events: bool,
         prompt_cls: str,
         schema_path: str,
         batch_size: int,
@@ -46,7 +45,7 @@ class Evaluator:
             model_type (str): _description_
             output_path (str): _description_
             data_path (str): _description_
-            argument_extraction (bool): _description_
+            only_events (bool): _description_
             prompt_cls (str): _description_
             schema_path (str): _description_
             batch_size (int): _description_
@@ -86,6 +85,11 @@ class Evaluator:
         # Load data schema and create instance of prompt constructor
         schema = load_json(schema_path)
         prompt_constructor = getattr(prompts, prompt_cls)(schema, **prompt_init_kwargs)
+        self.argument_extraction = prompt_constructor.get_is_arg_extraction()
+
+        # This will be needed when we want to know how to extract the results
+        # i.e., do we only want to compare with records that have events
+        self.only_events = only_events or self.argument_extraction
 
         # Shuffle defaults to False
         if shuffle is None:
@@ -95,7 +99,7 @@ class Evaluator:
         self.data = EEDataset.from_file(
             data_path=data_path,
             prompt_constuctor=prompt_constructor,
-            argument_extraction=argument_extraction,
+            only_events=self.only_events,
         )
         self.dataloader = DataLoader(
             self.data,
@@ -104,9 +108,6 @@ class Evaluator:
             collate_fn=lambda x: x,
         )
 
-        # This will be needed when we want to know how to extract the results
-        # i.e., trigger or arg extraction
-        self.argument_extraction = argument_extraction
         # TODO: handle result extraction
         # self.extractor= extractor
 

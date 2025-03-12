@@ -35,7 +35,7 @@ class EEDataset(Dataset):
         cls,
         data_path: str,
         prompt_constuctor: EEPrompt,
-        argument_extraction: bool = False,
+        only_events: bool = False,
     ) -> EEDataset:
         """
         A function for instantiating an EEDataset from a .jsonlines file.
@@ -46,11 +46,10 @@ class EEDataset(Dataset):
             dataset by loading using `arcee.dataset.load.load_dataset`
         prompt_constructor: EEPrompt
             An instance of a class inheriting from `arcee.prompts.prompts.EEPrompt`
-        argument_extraction: bool
-            True if argument extraction is being performed (and therefore one record per
-            event type will be loaded)
+        only_events: bool
+            If True then one record per event type will be loaded
         """
-        data = load_data(data_path, record_per_event=argument_extraction)
+        data = load_data(data_path, record_per_event=only_events)
         return cls(data, prompt_constuctor)
 
     def __len__(self) -> int:

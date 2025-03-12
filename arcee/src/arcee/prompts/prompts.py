@@ -1022,7 +1022,7 @@ class EAEPrompter1(EAEPrompt):
         super().__init__(schema)
 
 
-class EAEPrompter2(EAEPrompt):
+class EAEPrompter2(EAEPromptWithExampleSchema):
     """
     Event argument extraction:
     - only takes a SINGLE event trigger

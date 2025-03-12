@@ -299,6 +299,10 @@ class TestEDPrompter2:
         assert "Format the output strictly as JSON" in prompt
         assert ids == {"wnd_id": "wnd1"}
         assert input_text == DATA["text"]
+        assert (
+            '[{"EventTypeA": "trigger1"}, {"EventTypeB": "trigger words2"}, '
+            '{"EventTypeA": "trigger words3"}]' in prompt
+        )
 
 
 ### TESTING EDPrompter3 ###
@@ -488,6 +492,9 @@ class TestEAEPrompter2:
         assert "Format the output strictly as JSON" in prompt
         assert ids == {"evt_id": "ev1"}
         assert input_text == DATA["text"]
+        assert (
+            '{"role1": "arg1", "role2": null, "role3": null, "role4": "arg4"}' in prompt
+        )
 
 
 ### TESTING EAEPrompter3 ###

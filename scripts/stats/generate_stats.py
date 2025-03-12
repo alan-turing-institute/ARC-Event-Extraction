@@ -49,7 +49,7 @@ def run_through_files(
                 name=run_name,
                 job_type="stats",
                 config={
-                    "file": file_name,
+                    "file_name": file_name,
                     "job_type": "stats",  # legacy reasons
                     "semi_compare": semi_compare,
                     "dataset": dataset,

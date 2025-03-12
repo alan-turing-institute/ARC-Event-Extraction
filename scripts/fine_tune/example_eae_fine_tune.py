@@ -18,7 +18,6 @@ TRAIN_DATA = "data/ACE05/output/split_dev/train.jsonlines"
 EVAL_DATA = "data/ACE05/output/split_dev/dev.jsonlines"
 PROMPT_CLS = "EAEPrompter1"
 SCHEMA_PATH = "data/ACE05/schema/pattern.json"
-ARG_EXTRACTION = True
 
 LOG_DIR = os.path.join(main_dir, "logs")
 OUTPUT_DIR = os.path.join(main_dir, "models/output")
@@ -30,9 +29,7 @@ def main():
     model = AutoModelForCausalLM.from_pretrained(MODEL_LOC)
 
     # Load the dataset
-    dataset = load_training_eval_data(
-        TRAIN_DATA, EVAL_DATA, PROMPT_CLS, SCHEMA_PATH, ARG_EXTRACTION
-    )
+    dataset = load_training_eval_data(TRAIN_DATA, EVAL_DATA, PROMPT_CLS, SCHEMA_PATH)
 
     # And the completion only settings
     responce_template = "<|start_header_id|>assistant<|end_header_id|>"

@@ -18,7 +18,7 @@ TRAIN_DATA = "data/ACE05/output/split_dev/train.jsonlines"
 EVAL_DATA = "data/ACE05/output/split_dev/small_dev.jsonlines"
 PROMPT_CLS = "EDPrompter1"
 SCHEMA_PATH = "data/ACE05/schema/event_type_short_definitions.json"
-ARG_EXTRACTION = False
+ONLY_EVENTS = False
 
 LOG_DIR = os.path.join(main_dir, "logs")
 OUTPUT_DIR = os.path.join(main_dir, "models/output")
@@ -31,7 +31,7 @@ def main():
 
     # Load the dataset
     dataset = load_training_eval_data(
-        TRAIN_DATA, EVAL_DATA, PROMPT_CLS, SCHEMA_PATH, ARG_EXTRACTION
+        TRAIN_DATA, EVAL_DATA, PROMPT_CLS, SCHEMA_PATH, ONLY_EVENTS
     )
 
     # And the completion only settings

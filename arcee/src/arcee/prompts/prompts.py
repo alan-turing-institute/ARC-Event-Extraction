@@ -190,6 +190,8 @@ class EDPrompt(EEPrompt, ABC):
         # Concatenate event type definitions into a single string, with a line break
         # between each definition
         self._event_type_defs = self._get_event_types_defs()
+        # Define the JSON schema for the output
+        self._json_schema = get_ed_json_schema(self._schema)
 
     def _get_system_content(self) -> str:
         """
@@ -240,9 +242,7 @@ class EDPrompt(EEPrompt, ABC):
             raise TypeError(err_msg)
         return {"wnd_id": self._input_data["wnd_id"]}
 
-    def _construct_prompt(
-        self,
-    ) -> tuple[str, str | dict, dict]:
+    def _construct_prompt(self) -> tuple[str, str | dict, dict]:
         """
         Constructs a prompt for event trigger detection.
 
@@ -273,6 +273,56 @@ class EDPrompt(EEPrompt, ABC):
                 "JSON objects with exactly one key-value pair. The valid keys are "
                 "the event types and the values are the trigger words from the input "
                 "text."
+            ),
+            self._json_schema,
+            self._get_ids(),
+        )
+
+
+class EDPromptWithExampleSchema(EDPrompt, ABC):
+    def __init__(self, schema: dict, **kwargs: Any) -> None:
+        super().__init__(schema, **kwargs)
+        # To be correct JSON schema, the keys & values have to be in double quotes
+        self._example_schema = (
+            '[{"EventTypeA": "trigger1"}, {"EventTypeB": "trigger words2"}, '
+            '{"EventTypeA": "trigger words3"}]'
+        )
+
+    def _construct_prompt(self) -> tuple[str, str | dict, dict]:
+        """
+        Constructs a prompt for event trigger detection.
+
+        Returns:
+            tuple[str, str | dict, dict]: A tuple containing:
+
+            - str: The prompt to be used in the task.
+            - str | dict: The output format, either 'json' or a JSON schema.
+            - dict: A dictionary of IDs to be attached to the LLM's response
+              that identify the record.
+        """
+        # Return the constructed prompt
+        return (
+            (
+                self._get_system_content()
+                + "You will be give some text and have to determine if any event types "
+                "appear in the text. "
+                "Not all event types will appear, there may be some "
+                "that appear multiple times and there may be no event types "
+                "in the text.\n"
+                "If you identify one or more event type, then what is the trigger "
+                "word or words in the input text?"
+                + "\nFormat the output strictly as JSON. The output is an array of "
+                "JSON objects with exactly one key-value pair. The valid keys are "
+                "the event types and the values are the trigger words from the input "
+                "text. An example of the schema is:\n"
+                + self._example_schema
+                + "\n\n"
+                + "These are the possible event types you can chose from:\n"
+                + self._event_type_defs
+                + "\nNow process this input text:\n```"
+                + self._input_text
+                + "```\n"
+                + "Response (JSON): "
             ),
             self._json_schema,
             self._get_ids(),
@@ -881,14 +931,13 @@ class EDPrompter1(EDPrompt):
     """
     Class to construct prompts for event trigger detection:
     - does NOT use any examples in the prompt
-    - requests JSON output with a description of the schema
     """
 
     def __init__(self, schema: dict, **kwargs: Any) -> None:
         super().__init__(schema, **kwargs)
 
 
-class EDPrompter2(EDPrompt):
+class EDPrompter2(EDPromptWithExampleSchema):
     """
     Class to construct prompts for event trigger detection:
     - does NOT use any examples in the prompt
@@ -897,8 +946,6 @@ class EDPrompter2(EDPrompt):
 
     def __init__(self, schema: dict, **kwargs: Any) -> None:
         super().__init__(schema, **kwargs)
-        # Define the JSON schema for the output
-        self._json_schema = get_ed_json_schema(self._schema)
 
 
 class EDPrompter3(EEPromptRandomExamples, EDPromptWithExamples):

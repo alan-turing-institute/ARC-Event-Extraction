@@ -57,7 +57,7 @@ class EEOllamaModel(EEBaseModel):
         options: dict | None = None,
         keep_alive: int = 300,
         host_port: int = 11434,
-        output_format: str = "",
+        output_format: str = "json_schema",
     ) -> None:
         super().__init__()
         """

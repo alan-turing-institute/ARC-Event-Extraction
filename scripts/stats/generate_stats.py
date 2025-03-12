@@ -29,6 +29,7 @@ def run_through_files(
     save_name: str,
     semi_compare: bool = False,
     use_wandb: bool = True,
+    dataset: str | None = None,
 ) -> None:
     results_df = pd.DataFrame()
 
@@ -51,6 +52,7 @@ def run_through_files(
                     "file": file_name,
                     "job_type": "stats",  # legacy reasons
                     "semi_compare": semi_compare,
+                    "dataset": dataset,
                 },
             )
 
@@ -118,6 +120,7 @@ def main():
         args.save_loc + "_eae.csv",
         semi_compare=args.semi_compare,
         use_wandb=args.use_wandb,
+        dataset=args.dataset,
     )
     run_through_files(
         ed_golds,
@@ -127,6 +130,7 @@ def main():
         args.save_loc + "_ed.csv",
         semi_compare=args.semi_compare,
         use_wandb=args.use_wandb,
+        dataset=args.dataset,
     )
 
 

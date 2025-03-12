@@ -8,13 +8,17 @@ The templates for the prompts that have been used for the experimental work are 
 The abstract classes contain all the functionality, and the concrete classes use multiple inheritence to determine their implementation.
 
 There is a base class `EEPrompt` which all other prompt classes inherit from. The class contains the only method that is intended to be called externally:
-- `get_prompt(self, data: dict[str, str | int | list], schema: dict, **kwargs: str | int) -> tuple[str, str | dict, dict]`: Returns a prompt.
-The `get_prompt` method takes a data record and returns a prompt, the specified output format (could either be a string 'json' or a dictionary represneting a JSON schema) and an identifier for the data record.
+- `get_prompt(self, data: dict[str, str | int | list], schema: dict, **kwargs: str | int) -> tuple[str, dict, dict]`: Returns a prompt.
+The `get_prompt` method takes a data record and returns a prompt, a dictionary representing a JSON schema that is the expected output format from the model and a dictionary containing a unique identifier for the data record.
 
 The other abstract classes are:
 #### `EDPrompt`
 
 A class containing common functionality for all event detectiction prompts. Inherits from `EEPrompt`.
+
+#### `EDPromptWithExampleSchema`
+
+A class that adds an example of the required ED JSON schema into the prompt. Inherits from `EDPrompt`.
 
 #### `EAEPrompt`
 
@@ -44,27 +48,27 @@ A class containing common functionality for all EAE prompts that include example
 
 #### `EDPrompter1`
 
-A class for constructing prompts for event trigger detection. This class does not use any examples in the prompt and requests JSON output with only a description of the schema in the prompt.
+A class for constructing prompts for event trigger detection. This class does not use any examples in the prompt and describes the required schema without providing an explicit example of the format.
 
 #### `EDPrompter2`
 
-A class for constructing prompts for event trigger detection. This class does not use any examples in the prompt and requests JSON output with a defined JSON schema.
+A class for constructing prompts for event trigger detection. This class does not use any examples in the prompt and describes the required schema and provides an explicit example of the format.
 
 #### `EDPrompter3`
-A class for constructing prompts for event trigger detection. This class uses random examples in the prompt (the number determined by an input argument) and requests JSON output with a defined JSON schema.
+A class for constructing prompts for event trigger detection. This class uses random examples in the prompt (the number determined by an input argument).
 
 #### `EDPrompter4`
-A class for constructing prompts for event trigger detection. This class uses similar examples in the prompt (the number determined by an input argument and the similarity determined by a sentence transformer using cosine similarity) and requests JSON output with a defined JSON schema.
+A class for constructing prompts for event trigger detection. This class uses similar examples in the prompt (the number determined by an input argument and the similarity determined by a sentence transformer using cosine similarity).
 
 ### Prompt classes for event argument extraction
 
 #### `EAEPrompter1`
 
-A class for constructing prompts for event argument extraction. This class only takes a single event trigger, predicts multiple argument roles, does not use examples in the prompt, and requests JSON output (with only a description of the required schema in the prompt).
+A class for constructing prompts for event argument extraction. This class only takes a single event trigger, predicts multiple argument roles, does not use examples in the prompt.
 
 #### `EAEPrompter2`
 
-A class for constructing prompts for event argument extraction. This class only takes a single event trigger, predicts multiple argument roles, does not use examples in the prompt, and requests JSON output with a specific schema.
+This class is not implemented.
 
 #### `EAEPrompter3`
 A class for constructing prompts for event argument extraction. This class uses random examples in the prompt (the number determined by an input argument) and requests JSON output with a specific schema.

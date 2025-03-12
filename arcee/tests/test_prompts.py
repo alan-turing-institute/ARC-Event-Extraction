@@ -431,7 +431,7 @@ class TestEAEPrompter1:
         prompt, output_format, ids, input_text = self.prompter.get_prompt(DATA)
 
         assert isinstance(prompt, str)
-        assert output_format == "json"
+        assert isinstance(output_format, dict)
         assert "Attacker" in prompt
         assert "Victim" in prompt
         assert "Location" in prompt

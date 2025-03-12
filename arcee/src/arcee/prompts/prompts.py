@@ -569,6 +569,55 @@ class EAEPrompt(EEPrompt, ABC):
         )
 
 
+class EAEPromptWithExampleSchema(EAEPrompt, ABC):
+    def __init__(self, schema: dict, **kwargs: Any) -> None:
+        super().__init__(schema, **kwargs)
+        # To be correct JSON schema, the keys & values have to be in double quotes
+        self._example_schema = (
+            '{"role1": "arg1", "role2": null, "role3": null, "role4": "arg4"}'
+        )
+
+    def _construct_prompt(self) -> tuple[str, dict, dict]:
+        """
+        Constructs a prompt for event argument extraction using an example of the
+        required schema.
+
+        Returns:
+            tuple[str, dict, dict]: A tuple containing:
+
+            - str: The prompt to be used in the task.
+            - dict: The output format as a JSON schema.
+            - dict: A dictionary of IDs to be attached to the LLM's response
+              that identify the record.
+        """
+        self._set_vars_for_prompt()
+
+        return (
+            (
+                self._get_system_content()
+                + "An event type of "
+                + self._event_type
+                + " has been detected in the input "
+                "text. The trigger word is identified with a <trigger> tag.\n"
+                "Input text:\n```" + self._tagged_text + "```\n"
+                "What are the words in the input text that represent the following "
+                "argument roles? \n"
+                + "\n".join(self._arg_roles)
+                + "\n"
+                + "There will be at most one argument for each role "
+                "and there may be no arguments for a given role. "
+                + "\nFormat the output strictly as JSON, ensuring each argument "
+                "role has a corresponding key. "
+                "If an argument is not explicitly mentioned, return `null` for "
+                "that role. An example of the required schema is:\n"
+                + self._example_schema
+                + "\n"
+            ),
+            self._json_schema,
+            self._get_ids(),
+        )
+
+
 class EEPromptWithExamples(EEPrompt, ABC):
     """
     Abstract class for creating a prompt with examples in it. This class will define

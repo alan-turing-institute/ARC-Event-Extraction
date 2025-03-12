@@ -43,6 +43,8 @@ scripts/scratch/*
 scripts/configs/*
 !scripts/configs/examples/*
 
+wandb/
+
 ### ~~~~ FROM PYTHON TEMPLATE ~~~~ ###
 
 # Byte-compiled / optimized / DLL files

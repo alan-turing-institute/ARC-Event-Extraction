@@ -1,3 +1,4 @@
+experiment: bask_test_ed3
 model_kwargs:
   model_id: gemma2:27b
   model_type: ollama

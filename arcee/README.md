@@ -24,6 +24,10 @@ A class that adds an example of the required ED JSON schema into the prompt. Inh
 
 A class containing common functionality for all event argument extraction prompts. Inherits from `EEPrompt`.
 
+#### `EAEPromptWithExampleSchema`
+
+A class that adds an example of the required EAE JSON schema into the prompt. Inherits from `EAPrompt`.
+
 #### `EEPromptWithExamples`
 
 A class containing common functionality for all prompts that include examples - common to both ED and EAE implementations. Inherits from `EEPrompt`.
@@ -68,19 +72,19 @@ A class for constructing prompts for event argument extraction. This class only 
 
 #### `EAEPrompter2`
 
-This class is not implemented.
+A class for constructing prompts for event argument extraction. This class does not use any examples in the prompt and describes the required schema and provides an explicit example of the format.
 
 #### `EAEPrompter3`
-A class for constructing prompts for event argument extraction. This class uses random examples in the prompt (the number determined by an input argument) and requests JSON output with a specific schema.
+A class for constructing prompts for event argument extraction. This class uses random examples in the prompt (the number determined by an input argument).
 
 #### `EAEPrompter4`
-A class for constructing prompts for event argument extraction. This class uses random examples in the prompt (the number determined by an input argument) and requests JSON output with a specific schema. The random examples are chosen from the examples with the same event type as the input record; if there are not enough examples with the same event type to choose from, then examples will be selected at random (as per `EAEPrompter3`).
+A class for constructing prompts for event argument extraction. This class uses random examples in the prompt (the number determined by an input argument). The random examples are chosen from the examples with the same event type as the input record; if there are not enough examples with the same event type to choose from, then examples will be selected at random (as per `EAEPrompter3`).
 
 #### `EAEPrompter5`
-A class for constructing prompts for event argument extraction. This class uses similar examples in the prompt (the number determined by an input argument and the similarity determined by a sentence transformer using cosine similarity) and requests JSON output with a defined JSON schema.
+A class for constructing prompts for event argument extraction. This class uses similar examples in the prompt (the number determined by an input argument and the similarity determined by a sentence transformer using cosine similarity).
 
 #### `EAEPrompter6`
-A class for constructing prompts for event argument extraction. This class uses random examples in the prompt (the number determined by an input argument and the similarity determined by a sentence transformer using cosine similarity) and requests JSON output with a defined JSON schema. The similar examples are chosen from the examples with the same event type as the input record; if there are not enough examples with the same event type to choose from, then examples will be selected as the most similar, regardless of event type (as per `EAEPrompter5`).
+A class for constructing prompts for event argument extraction. This class uses random examples in the prompt (the number determined by an input argument and the similarity determined by a sentence transformer using cosine similarity). The similar examples are chosen from the examples with the same event type as the input record; if there are not enough examples with the same event type to choose from, then examples will be selected as the most similar, regardless of event type (as per `EAEPrompter5`).
 
 ## EE Models
 The only class that has been created to date is:

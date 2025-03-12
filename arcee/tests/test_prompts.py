@@ -271,7 +271,7 @@ class TestEDPrompter1:
         """Test get_prompt calls _construct_prompt and returns expected values."""
         prompt, output_format, ids, input_text = self.prompter.get_prompt(DATA)
 
-        assert output_format == "json"
+        assert isinstance(output_format, dict)
         assert "Explosion: An event where something bursts violently." in prompt
         assert "Attack: A violent physical act causing harm or damage." in prompt
         assert "The explosion destroyed the building." in prompt

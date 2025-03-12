@@ -13,7 +13,7 @@ def load_training_eval_data(
     eval_data_path: str,
     prompt_cls: str,
     schema_path: str,
-    arg_extraction: bool = False,
+    only_events: bool = False,
 ) -> Dataset:
     """
     This function loads the training and evaluation data from the specified locations
@@ -32,9 +32,9 @@ def load_training_eval_data(
         'EDPrompter1'
     schema_path: str
         The file path where the schema is stored for the dataset
-    arg_extraction: bool
+    only_events: bool
         If set to True, then it will load the records so that there is one event type
-        per record (in order to do argument extraction per event type)
+        per record (might be wanted for training event detection models)
 
     Returns:
     Dataset
@@ -43,13 +43,19 @@ def load_training_eval_data(
     dataset = load_dataset(
         "json", data_files={"train": training_data_path, "eval": eval_data_path}
     )
-    if arg_extraction:
-        dataset = dataset.filter(lambda x: len(x["event_mentions"]) > 0)
+    # if arg_extraction:
+    #     dataset = dataset.filter(lambda x: len(x["event_mentions"]) > 0)
     with open(schema_path) as file:
         schema = json.load(file)
     # TODO: Update so that it can take more kwargs for the prompt constructor,
     # e.g., to construct examples for a prompt.
     prompt_constructor = getattr(prompts, prompt_cls)(schema)
+    arg_extraction = prompt_constructor.get_is_arg_extraction()
+
+    if only_events or arg_extraction:
+        # If doing argument extraction, then we only want to keep records that have
+        # events. If doing event extraction, this might sometimes be wanted.
+        dataset = dataset.filter(lambda x: len(x["event_mentions"]) > 0)
 
     formatted_dataset: Dataset = dataset.map(
         format_chat_message,

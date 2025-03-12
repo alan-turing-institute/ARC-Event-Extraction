@@ -10,7 +10,6 @@ model_kwargs:
 data_kwargs:
   data_path: data/ACE05/output/split_dev/dev.jsonlines
   schema_path: data/ACE05/schema/event_type_definitions.json
-  argument_extraction: False
 prompt_kwargs:
   prompt_cls: EDPrompter3
   prompt_init_kwargs:

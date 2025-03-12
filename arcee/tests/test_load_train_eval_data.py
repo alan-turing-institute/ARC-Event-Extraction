@@ -27,6 +27,7 @@ def test_format_chat_message(test_event_records, arg_extraction, prompter_class)
     (a list of messages with 'user' and 'assistant') and that the
     JSON response is well-formed for ED (event detection) or EA (argument extraction).
     """
+
     if arg_extraction:
         fake_schema = {
             "Conflict:Demonstrate": {"roles": ["Demonstrator", "Audience"]},
@@ -127,18 +128,20 @@ def fake_data_files(tmp_path, test_event_records):
 
 
 @pytest.mark.parametrize(
-    ("arg_extraction", "prompt_cls_str"),
+    ("arg_extraction", "only_events", "prompt_cls_str"),
     [
-        (False, "EDPrompter1"),  # event detection
-        (True, "EAEPrompter1"),  # argument extraction
+        (False, False, "EDPrompter1"),  # event detection
+        (False, True, "EDPrompter1"),  # event detection
+        (True, False, "EAEPrompter1"),  # argument extraction
     ],
-    ids=["event_detection", "argument_extraction"],
+    ids=["event_detection", "event_detection_only_events", "argument_extraction"],
 )
 def test_load_training_eval_data(
     fake_data_files,
     fake_ed_schema_json,
     fake_eae_schema_json,
     arg_extraction,
+    only_events,
     prompt_cls_str,
 ):
     """
@@ -146,6 +149,7 @@ def test_load_training_eval_data(
     and that records are transformed into the expected messages structure.
     """
     train_path, eval_path = fake_data_files
+
     if arg_extraction:
         schema_path = str(fake_eae_schema_json)
     else:
@@ -156,7 +160,7 @@ def test_load_training_eval_data(
         eval_data_path=str(eval_path),
         prompt_cls=prompt_cls_str,
         schema_path=schema_path,
-        arg_extraction=arg_extraction,
+        only_events=only_events,
     )
 
     # Check that a DatasetDict with "train" and "eval" splits was returned

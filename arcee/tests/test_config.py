@@ -4,7 +4,7 @@ from arcee.config.experiment import ExperimentConfig
 
 EXPECTED_DATA_PATH = "data/RAMS/output/splits/split1/test.jsonlines"
 EXPECTED_SCHEMA_PATH = "data/RAMS/patterns/pattern.json"
-EXPECTED_ARG_EXTRACTION = False
+EXPECTED_ONLY_EVENTS = False
 EXPECTED_SHUFFLE = None
 EXPECTED_MODEL_ID = "meta-llama/Llama-3.2-1B-Instruct"
 EXPECTED_MODEL_TYPE = "hf"
@@ -42,7 +42,7 @@ def test_model_dump(dummy_experment_config: ExperimentConfig):
         "data_kwargs": {
             "data_path": EXPECTED_DATA_PATH,
             "schema_path": EXPECTED_SCHEMA_PATH,
-            "argument_extraction": EXPECTED_ARG_EXTRACTION,
+            "only_events": EXPECTED_ONLY_EVENTS,
             "shuffle": EXPECTED_SHUFFLE,
         },
         "model_kwargs": {

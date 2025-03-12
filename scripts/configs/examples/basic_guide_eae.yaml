@@ -6,6 +6,5 @@ model_kwargs:
 data_kwargs:
   data_path: data/ACE05/output/split_dev/dev.jsonlines
   schema_path: data/ACE05/schema/pattern.json
-  argument_extraction: True
 prompt_kwargs:
   prompt_cls: EAEPrompter2

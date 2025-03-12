@@ -83,11 +83,12 @@ class EEOllamaModel(EEBaseModel):
             be used to define the output format.
 
         Raises:
-        ValueError: If the output_format is not one of '', 'json', or 'json_schema'
+        ValueError: If the output_format is not one of None, 'json', or 'json_schema'
 
         """
         super().__init__()
-        if output_format not in ["", "json", "json_schema"]:
+        # Checks that the output format is either None, 'json' or 'json_schema'
+        if output_format and output_format not in ["json", "json_schema"]:
             err_msg = "output_format must be one of '', 'json', or 'json_schema'."
             raise ValueError(err_msg)
         self.output_format = output_format
@@ -188,7 +189,7 @@ class EEMockOllamaModel(EEOllamaModel):
     """
 
     def __init__(self, output_format: str) -> None:
-        if output_format not in ["", "json", "json_schema"]:
+        if output_format and output_format not in ["json", "json_schema"]:
             err_msg = "output_format must be one of '', 'json', or 'json_schema'."
             raise ValueError(err_msg)
         self.output_format = output_format

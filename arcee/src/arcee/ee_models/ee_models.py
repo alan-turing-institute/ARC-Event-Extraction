@@ -172,11 +172,15 @@ class EEOllamaModel(EEBaseModel):
             # Create an output dictionary that consists of the record IDs
             ids = record[2]
             response = self._get_response(messages, output_format)
+            # If not constrained to json or a json schema then the repsponse may
+            # start with the string "```json" and end with "```" - these need to be
+            # removed before it can be loaded as JSON
+            formatted_response = response.replace("```json", "").replace("```", "")
             # Append the response to the output dict
             try:
-                output = json.loads(response)
+                output = json.loads(formatted_response)
             except json.JSONDecodeError:
-                output = {"JSON_ERROR": response}
+                output = {"JSON_ERROR": formatted_response}
 
             outputs.append({**ids, "output": output})
 

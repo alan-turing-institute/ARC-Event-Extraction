@@ -214,9 +214,9 @@ class GuideFreeModel(BaseGuideModel):
             with gi.user():
                 lm += chat["content"]
             with gi.assistant():
-                lm += "```json\n\n"
-                lm += gi.gen(name="output", stop="\n\n```", max_tokens=self.max_tokens)
-                lm += "\n\n```"
+                lm += "```json\n"
+                lm += gi.gen(name="output", stop="\n```", max_tokens=self.max_tokens)
+                lm += "\n```"
 
             try:
                 output = json.loads(lm["output"])
@@ -288,9 +288,13 @@ class GuideJSONModel(BaseGuideModel):
             with gi.user():
                 lm += chat["content"]
             with gi.assistant():
-                lm += "```json\n\n"
-                lm += gi.json(name="output", schema="json", max_tokens=self.max_tokens)
-                lm += "\n\n```"
+                lm += "```json\n"
+                lm += gi.json(
+                    name="output",
+                    schema=True,
+                    max_tokens=self.max_tokens,
+                )
+                lm += "\n```"
 
             try:
                 output = json.loads(lm["output"])
@@ -363,11 +367,13 @@ class GuideSchemaModel(BaseGuideModel):
             with gi.user():
                 lm += chat["content"]
             with gi.assistant():
-                lm += "```json\n\n"
+                lm += "```json\n"
                 lm += gi.json(
-                    name="output", schema=striped_schema, max_tokens=self.max_tokens
+                    name="output",
+                    schema=striped_schema,
+                    max_tokens=self.max_tokens,
                 )
-                lm += "\n\n```"
+                lm += "\n```"
 
             try:
                 output = json.loads(lm["output"])

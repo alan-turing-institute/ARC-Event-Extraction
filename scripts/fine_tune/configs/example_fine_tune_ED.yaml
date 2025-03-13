@@ -1,0 +1,30 @@
+model_loc: models/Llama-3.2-3B-Instruct
+adapter_loc: models/ADT-ed-Llama-3.2-3B-Instruct
+train_data: data/ACE05/output/split_dev/train.jsonlines
+eval_data: data/ACE05/output/split_dev/small_dev.jsonlines
+prompt_cls: EDPrompter1
+schema_path: data/ACE05/schema/event_type_short_definitions.json
+only_events: false
+stf_config:
+  num_train_epochs: 1
+  per_device_train_batch_size: 2
+  max_steps: 800
+  report_to: "wandb"
+  log_level: "info"
+  logging_steps: 100
+  do_eval: true
+  eval_strategy: steps
+  output_dir: models/cp_output
+  learning_rate: 1e-5
+  weight_decay: 0.1
+peft_config:
+  r: 4
+  lora_alpha: 4
+  lora_dropout: 0.1
+  use_rslora: true
+  bias: none
+  task_type: CAUSAL_LM
+  target_modules:
+    - "k_proj"
+    - "v_proj"
+    - "up_proj"

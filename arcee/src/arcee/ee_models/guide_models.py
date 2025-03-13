@@ -258,7 +258,7 @@ class GuideJSONModel(BaseGuideModel):
     def __init__(
         self,
         model_id: str,
-        tokenizer_path: str | None = None,
+        adapter_id: str | None = None,
         chat_template: str = "llama3",
         max_tokens: int = 500,
         options: dict | None = None,
@@ -266,7 +266,7 @@ class GuideJSONModel(BaseGuideModel):
     ) -> None:
         super().__init__(
             model_id=model_id,
-            tokenizer_path=tokenizer_path,
+            adapter_id=adapter_id,
             chat_template=chat_template,
             options=options,
         )
@@ -340,7 +340,7 @@ class GuideSchemaModel(BaseGuideModel):
     def __init__(
         self,
         model_id: str,
-        tokenizer_path: str | None = None,
+        adapter_id: str | None = None,
         chat_template: str = "llama3",
         max_tokens: int = 500,
         options: dict | None = None,
@@ -348,7 +348,7 @@ class GuideSchemaModel(BaseGuideModel):
     ) -> None:
         super().__init__(
             model_id=model_id,
-            tokenizer_path=tokenizer_path,
+            adapter_id=adapter_id,
             chat_template=chat_template,
             options=options,
         )

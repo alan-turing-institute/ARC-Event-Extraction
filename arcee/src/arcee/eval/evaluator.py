@@ -10,12 +10,18 @@ import arcee.prompts.prompts as prompts
 from arcee.dataset.dataset import EEDataset
 from arcee.dataset.load import load_json
 from arcee.ee_models.ee_models import EEHFModel, EEOllamaModel
-from arcee.ee_models.guide_models import GuideJSONModel
+from arcee.ee_models.guide_models import (
+    GuideFreeModel,
+    GuideJSONModel,
+    GuideSchemaModel,
+)
 
 MODEL_CLS_MAP = {
     "hf": EEHFModel,
     "ollama": EEOllamaModel,
+    "guide_free": GuideFreeModel,
     "guide_json": GuideJSONModel,
+    "guide_schema": GuideSchemaModel,
 }
 
 

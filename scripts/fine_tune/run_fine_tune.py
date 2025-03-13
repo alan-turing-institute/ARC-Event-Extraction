@@ -67,8 +67,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Fine-tune a model for event extraction."
     )
-    parser.add_argument(
-        "config_loc", type=str, required=True, help="Path to the configuration file."
-    )
+    parser.add_argument("config_loc", type=str, help="Path to the configuration file.")
     args = parser.parse_args()
     main(args.config_loc)

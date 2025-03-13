@@ -243,6 +243,7 @@ class GuideJSONModel(BaseGuideModel):
             Pass `device_map="auto"` to init to automatically place on any available
             GPU.
         options: Currently ignored, kept in to match base class signature.
+        whitespace_flexible: If whitespace is allowed in the JSON.
     """
 
     def __init__(
@@ -252,6 +253,7 @@ class GuideJSONModel(BaseGuideModel):
         chat_template: str = "llama3",
         max_tokens: int = 500,
         options: dict | None = None,
+        whitespace_flexible: bool = True,
     ) -> None:
         super().__init__(
             model_id=model_id,
@@ -260,6 +262,7 @@ class GuideJSONModel(BaseGuideModel):
             options=options,
         )
         self.max_tokens = max_tokens
+        self.whitespace_flexible = whitespace_flexible
 
     def predict(
         self, input: list[tuple[dict[str, str], str | dict, dict, str]]
@@ -293,6 +296,7 @@ class GuideJSONModel(BaseGuideModel):
                     name="output",
                     schema=True,
                     max_tokens=self.max_tokens,
+                    whitespace_flexible=self.whitespace_flexible,
                 )
                 lm += "\n```"
 
@@ -321,6 +325,7 @@ class GuideSchemaModel(BaseGuideModel):
             Pass `device_map="auto"` to init to automatically place on any available
             GPU.
         options: Currently ignored, kept in to match base class signature.
+        whitespace_flexible: If whitespace is allowed in the JSON.
     """
 
     def __init__(
@@ -330,6 +335,7 @@ class GuideSchemaModel(BaseGuideModel):
         chat_template: str = "llama3",
         max_tokens: int = 500,
         options: dict | None = None,
+        whitespace_flexible: bool = True,
     ) -> None:
         super().__init__(
             model_id=model_id,
@@ -338,6 +344,7 @@ class GuideSchemaModel(BaseGuideModel):
             options=options,
         )
         self.max_tokens = max_tokens
+        self.whitespace_flexible = whitespace_flexible
 
     def predict(
         self, input: list[tuple[dict[str, str], str | dict, dict, str]]
@@ -372,6 +379,7 @@ class GuideSchemaModel(BaseGuideModel):
                     name="output",
                     schema=striped_schema,
                     max_tokens=self.max_tokens,
+                    whitespace_flexible=self.whitespace_flexible,
                 )
                 lm += "\n```"
 

@@ -101,7 +101,7 @@ def main():
     parser.add_argument(
         "--use_wandb",
         type=bool,
-        default=True,
+        default=False,
         help="Whether to log stats to weights and biases",
     )
     args = parser.parse_args()

@@ -54,6 +54,10 @@ def main(config_loc: str):
     tokenizer.pad_token = "<|finetune_right_pad_id|>"
 
     # Config Settings
+    output_loc = config["stf_config"].get("output_dir")
+    if output_loc:
+        config["stf_config"]["output_dir"] = os.path.join(main_dir, output_loc)
+
     training_args = SFTConfig(**config["stf_config"])
     peft_config = LoraConfig(**config["peft_config"])
 

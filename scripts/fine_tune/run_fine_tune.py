@@ -6,6 +6,7 @@ import os
 import wandb
 import yaml
 from arcee.dataset.load_training_eval import load_training_eval_data
+from arcee.ee_models.guide_models import load_quatised_config
 from peft import LoraConfig
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from trl import DataCollatorForCompletionOnlyLM, SFTConfig, SFTTrainer
@@ -24,10 +25,18 @@ def load_config(config_loc: str) -> dict:
 def main(config_loc: str):
     config = load_config(config_loc)
 
+    # Quantised Training
+
+    if config.get("quantised"):
+        q_config = config.get("quant_config", None)
+        bnb_config = load_quatised_config(q_config)
+    else:
+        bnb_config = None
+
     # Load the model
     model_loc = os.path.join(main_dir, config["model_loc"])
     tokenizer = AutoTokenizer.from_pretrained(model_loc)
-    model = AutoModelForCausalLM.from_pretrained(model_loc)
+    model = AutoModelForCausalLM.from_pretrained(model_loc, quant_config=bnb_config)
 
     # Load the dataset
     train_data = os.path.join(main_dir, config["train_data"])

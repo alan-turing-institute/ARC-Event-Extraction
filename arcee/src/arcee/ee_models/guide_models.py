@@ -38,7 +38,7 @@ def remove_unimplemented_keys(
     return given_json
 
 
-def load_quatised_config(device: str, quant_config: dict | None) -> BitsAndBytesConfig:
+def load_quatised_config(quant_config: dict | None) -> BitsAndBytesConfig:
     """
     Load a quantised config from a dictionary.
     If no config is given then the default is to load in 4bit.
@@ -48,15 +48,13 @@ def load_quatised_config(device: str, quant_config: dict | None) -> BitsAndBytes
     dependencies are not installed.
 
     Args:
-        device (str): The device to place the model on, this needs to be "cuda"
-            to use quantisation.
         quant_config (dict, optional): The quantisation config to load. If not given
             then the default is to load in 4bit. Defaults to None.
 
     Returns:
         BitsAndBytesConfig: The quantised config.
     """
-    if device != "cuda":
+    if not torch.cuda.is_available():
         msg = "Quantisation only available on CUDA devices."
         raise ValueError(msg)
 
@@ -176,14 +174,7 @@ class BaseGuideModel(EEBaseModel):
             )
             raise ValueError(msg)
 
-        if torch.cuda.is_available():
-            device = "cuda"
-        elif torch.backends.mps.is_available():
-            device = "mps"
-        else:
-            device = "cpu"
-
-        bnb_config = load_quatised_config(device, quant_config) if quantised else None
+        bnb_config = load_quatised_config(quant_config) if quantised else None
 
         base_model = AutoModelForCausalLM.from_pretrained(
             os.path.join(models_dir, model_id),
@@ -217,9 +208,8 @@ class GuideFreeModel(BaseGuideModel):
         model: An instance of a `transformers.AutoModelForCausalLM`. Should be an
             instruction-tuned model whose tokenizer has a chat template.
         adapter_id: The location of the adapted file weights to update the model.
-        device: A string denoting what device to place the model on, defaults to `cpu`.
-            Pass `device_map="auto"` to init to automatically place on any available
-            GPU.
+
+
         options: Currently ignored, kept in to match base class signature.
     """
 

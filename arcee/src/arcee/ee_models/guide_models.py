@@ -6,7 +6,7 @@ import os
 import guidance as gi
 import torch
 from peft import PeftModel
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
 from arcee.ee_models.ee_models import EEBaseModel
 
@@ -36,6 +36,44 @@ def remove_unimplemented_keys(
             remove_unimplemented_keys(item)
 
     return given_json
+
+
+def load_quatised_config(device: str, quant_config: dict | None) -> BitsAndBytesConfig:
+    """
+    Load a quantised config from a dictionary.
+    If no config is given then the default is to load in 4bit.
+
+    This function will raise an error if the device is not "cuda" as quantisation
+    is only available on CUDA devices. It will also raise an error if the optional
+    dependencies are not installed.
+
+    Args:
+        device (str): The device to place the model on, this needs to be "cuda"
+            to use quantisation.
+        quant_config (dict, optional): The quantisation config to load. If not given
+            then the default is to load in 4bit. Defaults to None.
+
+    Returns:
+        BitsAndBytesConfig: The quantised config.
+    """
+    if device != "cuda":
+        msg = "Quantisation only available on CUDA devices."
+        raise ValueError(msg)
+
+    try:
+        import bitsandbytes  # This checks if the optional dependencies are installed
+
+        del bitsandbytes
+    except ImportError as exc:
+        msg = "Need the optional 'cuda' dependencies to use quantisation."
+        raise ImportError(msg) from exc
+
+    if quant_config:
+        bnb_config = BitsAndBytesConfig(**quant_config)
+    else:
+        bnb_config = BitsAndBytesConfig(load_in_4bit=True)
+
+    return bnb_config
 
 
 class Llama3ChatTemplate(gi.chat.ChatTemplate):
@@ -87,6 +125,8 @@ class BaseGuideModel(EEBaseModel):
         model_id: str,
         adapter_id: str | None = None,
         chat_template: str = "llama3",
+        quantised: bool = False,
+        quant_config: dict | None = None,
         options: dict | None = None,
     ) -> None:
         """
@@ -98,6 +138,9 @@ class BaseGuideModel(EEBaseModel):
                 load if different from the base model. Defaults to None.
             chat_template (str): The chat template to use with the model, this
                 should be one of the keys in `CHAT_TEMPLATES`. Defaults to "llama3".
+            quantised (bool, optional): If the model is quantised. Defaults to False.
+            quant_config (dict | None, optional): The quantisation config to use.
+                Defaults to None which will load in 4bit.
             options (dict | None, optional): Currently ignored might be needed for
                 classes that inherit from this. Defaults to None.
         """
@@ -140,11 +183,11 @@ class BaseGuideModel(EEBaseModel):
         else:
             device = "cpu"
 
-        self.device = device
+        bnb_config = load_quatised_config(device, quant_config) if quantised else None
 
         base_model = AutoModelForCausalLM.from_pretrained(
             os.path.join(models_dir, model_id),
-            device_map=self.device,
+            quant_config=bnb_config,
         )
 
         # Load Model
@@ -185,6 +228,8 @@ class GuideFreeModel(BaseGuideModel):
         model_id: str,
         adapter_id: str | None = None,
         chat_template: str = "llama3",
+        quantised: bool = False,
+        quant_config: dict | None = None,
         max_tokens: int = 500,
         options: dict | None = None,
     ) -> None:
@@ -192,6 +237,8 @@ class GuideFreeModel(BaseGuideModel):
             model_id=model_id,
             adapter_id=adapter_id,
             chat_template=chat_template,
+            quantised=quantised,
+            quant_config=quant_config,
             options=options,
         )
         self.max_tokens = max_tokens
@@ -260,14 +307,18 @@ class GuideJSONModel(BaseGuideModel):
         model_id: str,
         adapter_id: str | None = None,
         chat_template: str = "llama3",
-        max_tokens: int = 500,
+        quantised: bool = False,
+        quant_config: dict | None = None,
         options: dict | None = None,
+        max_tokens: int = 500,
         whitespace_flexible: bool = True,
     ) -> None:
         super().__init__(
             model_id=model_id,
             adapter_id=adapter_id,
             chat_template=chat_template,
+            quantised=quantised,
+            quant_config=quant_config,
             options=options,
         )
         self.max_tokens = max_tokens
@@ -342,14 +393,18 @@ class GuideSchemaModel(BaseGuideModel):
         model_id: str,
         adapter_id: str | None = None,
         chat_template: str = "llama3",
-        max_tokens: int = 500,
+        quantised: bool = False,
+        quant_config: dict | None = None,
         options: dict | None = None,
+        max_tokens: int = 500,
         whitespace_flexible: bool = True,
     ) -> None:
         super().__init__(
             model_id=model_id,
             adapter_id=adapter_id,
             chat_template=chat_template,
+            quantised=quantised,
+            quant_config=quant_config,
             options=options,
         )
         self.max_tokens = max_tokens

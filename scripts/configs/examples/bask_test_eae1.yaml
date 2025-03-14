@@ -11,5 +11,6 @@ model_kwargs:
 data_kwargs:
   data_path: data/ACE05/output/split_dev/dev.jsonlines
   schema_path: data/ACE05/schema/pattern.json
+  gold_path: data/ACE05/gold/gold_label_args.jsonl
 prompt_kwargs:
   prompt_cls: EAEPrompter1

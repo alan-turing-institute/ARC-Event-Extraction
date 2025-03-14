@@ -57,11 +57,11 @@ class EEOllamaModel(EEBaseModel):
         options: dict | None = None,
         keep_alive: int = 300,
         host_port: int = 11434,
+        output_format: str = "json_schema",
     ) -> None:
         super().__init__()
         """
-        Parameters
-        ----------
+        Args:
         model: str
             The name of an Ollama model, will try to download if it doesn't already
             exist
@@ -76,9 +76,23 @@ class EEOllamaModel(EEBaseModel):
         host_port: int
             Needed when running on HPC to make sure the Ollama models don't interfere
             with one another
+        output_format: str
+            The output format required from the model. If blank then natural language
+            is returned. If "json" is passed then the response will be in JSON format,
+            and if "json_schema" is passed then the JSON schema from the prompt will
+            be used to define the output format.
+
+        Raises:
+        ValueError: If the output_format is not one of None, 'json', or 'json_schema'
 
         """
         super().__init__()
+        # Checks that the output format is either None, 'json' or 'json_schema'
+        if output_format and output_format not in ["json", "json_schema"]:
+            err_msg = "output_format must be one of '', 'json', or 'json_schema'."
+            raise ValueError(err_msg)
+        self.output_format = output_format
+
         if options is None:
             # Set temperature to zero (less creative)
             # Ollama's context window length (option `num_ctx`) defaults to 2048, which
@@ -99,20 +113,19 @@ class EEOllamaModel(EEBaseModel):
     def _get_response(
         self,
         messages: list[dict[str, str]],
-        response_format: str | dict = "json",
+        response_format: str | dict,
     ) -> str:
         """
         Get the response from the Ollama model.
 
-        Parameters:
-        -----------
+        Args:
         messages : list[dict[Any, Any]])
             The list of messages to send to the model. They are in the format
             {"role": "user", "content": "message"}.
         response_format : str
+            If an empty string then natural language is returned
             Expected 'json' if JSON format is to be used
-            If blank then natural language is returned
-            Might want to add a check that nothing else is passed?
+            If a dictionary, then this is the JSON schema to be used
 
         Returns:
             str | None: This is the response from the model. It will only include the
@@ -134,8 +147,7 @@ class EEOllamaModel(EEBaseModel):
         This method makes predictions using an Ollama model, a given prompt and
         a dataset
 
-        Parameters
-        ----------
+        Args:
         input: list[tuple[str, str | dict, dict, str]]
             A list of tuples. Each tuple will contain:
             - dict[str,str]: The prompt stored in a dict to be used in the task.
@@ -144,8 +156,7 @@ class EEOllamaModel(EEBaseModel):
             that identify the record.
             - str: The input text
 
-        Returns
-        -------
+        Returns:
         list[dict[str, str | list | dict]]
             A list of dictionaries, with the record IDs and the output from the model
             If the output is not in JSON format, then it will be logged with a key of
@@ -155,15 +166,21 @@ class EEOllamaModel(EEBaseModel):
         outputs = []
         for record in input:
             messages = [record[0]]
-            output_format = record[1]
+            output_format = (
+                record[1] if self.output_format == "json_schema" else self.output_format
+            )
             # Create an output dictionary that consists of the record IDs
             ids = record[2]
             response = self._get_response(messages, output_format)
+            # If not constrained to json or a json schema then the repsponse may
+            # start with the string "```json" and end with "```" - these need to be
+            # removed before it can be loaded as JSON
+            formatted_response = response.replace("```json", "").replace("```", "")
             # Append the response to the output dict
             try:
-                output = json.loads(response)
+                output = json.loads(formatted_response)
             except json.JSONDecodeError:
-                output = {"JSON_ERROR": response}
+                output = {"JSON_ERROR": formatted_response}
 
             outputs.append({**ids, "output": output})
 
@@ -172,21 +189,27 @@ class EEOllamaModel(EEBaseModel):
 
 class EEMockOllamaModel(EEOllamaModel):
     """
-    Only used in tests to avoid loading a Ollama or HF model while running tests
+    Only used in tests to avoid loading an Ollama model while running tests
     """
 
-    def __init__(self) -> None:
-        pass
+    def __init__(self, output_format: str) -> None:
+        if output_format and output_format not in ["json", "json_schema"]:
+            err_msg = "output_format must be one of '', 'json', or 'json_schema'."
+            raise ValueError(err_msg)
+        self.output_format = output_format
 
     def _get_response(
         self,
         messages: list[dict[str, str]],
-        response_format: str | dict = "json",
+        response_format: str | dict,
     ) -> str:
-        # To prevent the linter throwing a wobbly, do something with the args
+        # To prevent the linter throwing a wobbly, do something with the message arg
         del messages
-        del response_format
-        return '{"object": "mock object"}'
+        return (
+            '{"response": "mock object with output format '
+            + str(response_format)
+            + '"}'
+        )
 
     def predict(
         self, input: list[tuple[dict[str, str], str | dict, dict, str]]

@@ -1,4 +1,4 @@
-experiment_name: bask_test_ed2
+experiment: bask_test_ed2
 model_kwargs:
   model_id: gemma2:27b
   model_type: ollama
@@ -7,6 +7,7 @@ model_kwargs:
     options:
       num_ctx: 8192
       temperature: 0
+    output_format: json
 data_kwargs:
   data_path: data/ACE05/output/split_dev/dev.jsonlines
   schema_path: data/ACE05/schema/event_type_definitions.json

@@ -7,6 +7,7 @@ model_kwargs:
     options:
       num_ctx: 16384
       temperature: 0
+    output_format: json_schema
 data_kwargs:
   data_path: data/ACE05/output/split_dev/dev.jsonlines
   schema_path: data/ACE05/schema/pattern.json

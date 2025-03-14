@@ -18,6 +18,12 @@ outputs/*
 stats/*
 !stats/README.md
 
+# FINE TUNE CONFIG
+scripts/fine_tune/configs/*
+!scripts/fine_tune/configs/example_fine_tune_EAE.yaml
+!scripts/fine_tune/configs/example_fine_tune_ED.yaml
+!scripts/fine_tune/configs/example_fine_tune_ED_OE.yaml
+
 # Data
 data/RAMS/*
 !data/RAMS/README.md
@@ -42,6 +48,8 @@ scripts/scratch/*
 # Config for development
 scripts/configs/*
 !scripts/configs/examples/*
+
+wandb/
 
 ### ~~~~ FROM PYTHON TEMPLATE ~~~~ ###
 

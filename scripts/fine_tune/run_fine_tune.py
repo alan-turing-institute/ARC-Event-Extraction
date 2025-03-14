@@ -33,7 +33,7 @@ def main(config_loc: str):
         name=f"fine_tune_{config['adapter_loc']}",
         config={
             "job_type": "Fine Tuning",
-            **config.to_dict(),
+            **config,
         },
     )
 

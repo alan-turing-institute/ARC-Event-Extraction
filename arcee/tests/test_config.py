@@ -27,6 +27,7 @@ def test_DataArguments(dummy_experment_config: ExperimentConfig):
     assert dummy_experment_config.data_kwargs.only_events == EXPECTED_ONLY_EVENTS
     assert dummy_experment_config.data_kwargs.gold_path == EXPECTED_GOLD_PATH
 
+
 def test_ModelArguments(dummy_experment_config: ExperimentConfig):
     assert dummy_experment_config.model_kwargs.model_id == EXPECTED_MODEL_ID
     assert dummy_experment_config.model_kwargs.model_type == EXPECTED_MODEL_TYPE

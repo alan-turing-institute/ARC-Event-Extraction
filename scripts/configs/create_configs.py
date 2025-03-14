@@ -2,44 +2,11 @@ from __future__ import annotations
 
 import argparse
 import itertools
+import os
 
 import yaml
 
-MODELS = {
-    # "llama3.1:8b": "llama8b",
-    # "gemma2:27b": "gemma27b",
-    "mistral-small:24b": "mistral24b",
-    # "phi4": "phi4",
-    # "mistral-large:123b": "mistral123b",
-    # "llama3.3:70b": "llama70b",
-}
-LARGE_MODELS = ["mistral-large:123b", "llama3.3:70b"]
-DATASET = "ACE05"
-SPLITS = [1]
-PROMPTS = {
-    "EDPrompter1": "ED1",
-    # "EDPrompter2": "ED2",
-    # "EDPrompter3": "ED3",
-    "EDPrompter4": "ED4",
-    "EAEPrompter1": "EAE1",
-    # "EAEPrompter2": "EAE2",
-    # "EAEPrompter3": "EAE3",
-    # "EAEPrompter4": "EAE4",
-    # "EAEPrompter5": "EAE5",
-    "EAEPrompter6": "EAE6",
-}
-PROMPTS_RANDOM_EXAMPLES = ["EDPrompter3", "EAEPrompter3", "EAEPrompter4"]
-PROMPTS_SIMILAR_EXAMPLES = ["EDPrompter4", "EAEPrompter5", "EAEPrompter6"]
-SENTENCE_EMBEDDINGS = {
-    # "all-mpnet-base-v2": "mpnetbase",
-    "intfloat/multilingual-e5-small": "e5small",
-    # "intfloat/e5-small-v2": "e5smallv2",
-}
-# NUM_EXAMPLES = [3, 5, 10]
-NUM_EXAMPLES = [10]
-SEED = 42
-CONFIG_FOLDER = "ollamaOutputFormat"
-OUTPUT_FORMAT = {"null": "unstructured", "json": "json", "json_schema": "schema"}
+MAIN_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def load_settings(file_path: str) -> dict:
@@ -88,6 +55,9 @@ def main():
     CONFIG_FOLDER = settings["config_folder"]
     OUTPUT_FORMAT = settings["output_format"]
 
+    os.makedirs(f"scripts/configs/{CONFIG_FOLDER}", exist_ok=True)
+    os.makedirs(f"scripts/slurm/{CONFIG_FOLDER}", exist_ok=True)
+
     large_model_filenames = []
     small_model_filenames = []
     for model, split, prompt, output_format in itertools.product(
@@ -116,7 +86,7 @@ def main():
                     "num_ctx": num_ctx,
                     "temperature": 0,
                 },
-                "output_format": output_format if output_format != "null" else None,
+                "output_format": output_format if output_format else None,
             },
         }
 
@@ -183,15 +153,17 @@ def main():
                 filename,
             )
 
-    filename = f"scripts/slurm/{CONFIG_FOLDER}/small_models.txt"
-    with open(filename, "w") as file:
-        for name in small_model_filenames:
-            file.write(f"{name}\n")
+    if len(small_model_filenames) > 0:
+        filename = f"scripts/slurm/{CONFIG_FOLDER}/small_models.txt"
+        with open(filename, "w") as file:
+            for name in small_model_filenames:
+                file.write(f"{name}\n")
 
-    filename = f"scripts/slurm/{CONFIG_FOLDER}/large_models.txt"
-    with open(filename, "w") as file:
-        for name in large_model_filenames:
-            file.write(f"{name}\n")
+    if len(large_model_filenames) > 0:
+        filename = f"scripts/slurm/{CONFIG_FOLDER}/large_models.txt"
+        with open(filename, "w") as file:
+            for name in large_model_filenames:
+                file.write(f"{name}\n")
 
 
 if __name__ == "__main__":

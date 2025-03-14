@@ -36,7 +36,9 @@ def main(config_loc: str):
     # Load the model
     model_loc = os.path.join(main_dir, config["model_loc"])
     tokenizer = AutoTokenizer.from_pretrained(model_loc)
-    model = AutoModelForCausalLM.from_pretrained(model_loc, quant_config=bnb_config)
+    model = AutoModelForCausalLM.from_pretrained(
+        model_loc, quantization_config=bnb_config
+    )
 
     # Load the dataset
     train_data = os.path.join(main_dir, config["train_data"])

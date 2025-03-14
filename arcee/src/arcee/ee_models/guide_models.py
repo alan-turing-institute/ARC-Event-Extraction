@@ -178,7 +178,7 @@ class BaseGuideModel(EEBaseModel):
 
         base_model = AutoModelForCausalLM.from_pretrained(
             os.path.join(models_dir, model_id),
-            quant_config=bnb_config,
+            quantization_config=bnb_config,
         )
 
         # Load Model

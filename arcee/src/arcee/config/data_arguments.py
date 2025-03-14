@@ -20,7 +20,7 @@ class DataArguments(BaseConfig):
         self,
         data_path: str,
         schema_path: str,
-        gold_path: str,
+        gold_path: str = "", # Only needed if saving to wandb
         only_events: bool = False,
         shuffle: bool | None = None,
     ) -> None:

@@ -25,6 +25,7 @@ def main(config: ExperimentConfig, wandb_job_name: str) -> None:
     # Initialise evaluator
     evaluator = Evaluator(
         output_path=config.output_path,
+        wandb_run=run,
         **config.data_kwargs.to_dict(),
         **config.model_kwargs.to_dict(),
         **config.prompt_kwargs.to_dict(),

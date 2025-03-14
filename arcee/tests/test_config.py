@@ -4,7 +4,8 @@ from arcee.config.experiment import ExperimentConfig
 
 EXPECTED_DATA_PATH = "data/RAMS/output/splits/split1/test.jsonlines"
 EXPECTED_SCHEMA_PATH = "data/RAMS/patterns/pattern.json"
-EXPECTED_ONLY_EVENTS = False
+EXPECTED_GOLD_PATH = "data/RAMS/gold/gold_label_args.jsonl"
+EXPECTED_ONLY_EVENTS = True
 EXPECTED_SHUFFLE = None
 EXPECTED_MODEL_ID = "meta-llama/Llama-3.2-1B-Instruct"
 EXPECTED_MODEL_TYPE = "hf"
@@ -23,6 +24,8 @@ def test_DataArguments(dummy_experment_config: ExperimentConfig):
     assert dummy_experment_config.data_kwargs.data_path == EXPECTED_DATA_PATH
     assert dummy_experment_config.data_kwargs.schema_path == EXPECTED_SCHEMA_PATH
     assert dummy_experment_config.data_kwargs.shuffle is EXPECTED_SHUFFLE
+    assert dummy_experment_config.data_kwargs.only_events == EXPECTED_ONLY_EVENTS
+    assert dummy_experment_config.data_kwargs.gold_path == EXPECTED_GOLD_PATH
 
 
 def test_ModelArguments(dummy_experment_config: ExperimentConfig):
@@ -43,6 +46,7 @@ def test_model_dump(dummy_experment_config: ExperimentConfig):
             "data_path": EXPECTED_DATA_PATH,
             "schema_path": EXPECTED_SCHEMA_PATH,
             "only_events": EXPECTED_ONLY_EVENTS,
+            "gold_path": EXPECTED_GOLD_PATH,
             "shuffle": EXPECTED_SHUFFLE,
         },
         "model_kwargs": {

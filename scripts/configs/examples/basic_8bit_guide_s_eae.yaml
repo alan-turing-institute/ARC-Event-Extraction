@@ -1,0 +1,15 @@
+experiment: basic_8bit_guide_s_eae
+model_kwargs:
+  model_id: Llama-3.2-3B-Instruct
+  model_type: guide_schema
+  batch_size: 2
+  model_init_kwargs:
+    quantised: true
+    quant_config:
+      load_in_8bit: true
+    max_tokens: 50
+data_kwargs:
+  data_path: data/ACE05/output/split_dev/dev.jsonlines
+  schema_path: data/ACE05/schema/pattern.json
+prompt_kwargs:
+  prompt_cls: EAEPrompter2

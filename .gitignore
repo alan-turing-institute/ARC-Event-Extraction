@@ -51,6 +51,8 @@ scripts/configs/*
 !scripts/configs/inference_settings/
 !scripts/configs/inference_settings/*
 
+scripts/slurm/*
+
 wandb/
 
 ### ~~~~ FROM PYTHON TEMPLATE ~~~~ ###

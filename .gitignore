@@ -48,6 +48,7 @@ scripts/scratch/*
 # Config for development
 scripts/configs/*
 !scripts/configs/examples/*
+!scripts/configs/inference_settings/*
 
 wandb/
 

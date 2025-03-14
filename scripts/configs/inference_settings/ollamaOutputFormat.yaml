@@ -1,0 +1,37 @@
+models:
+  llama3.1:8b: llama8b
+  gemma3:27b: gemma27b
+  mistral-small:24b: mistral24b
+  phi4: phi4
+  # mistral-large:123b: mistral123b
+  # llama3.3:70b: llama70b  
+dataset: ACE05
+splits:
+  1
+prompts:
+  EDPrompter1: ED1
+  EDPrompter4: ED4
+  EAEPrompter1: EAE1
+  EADPrompter6: EAE6
+num_examples: 5
+seed: 42
+sentence_embeddings:
+  intfloat/multilingual-e5-small: e5small
+config_folder: ollamaOutputFormat
+output_format:
+  null: unstructured
+  json: json
+  json_schema: schema
+
+# These configs provide definitions of models and prompts - can probably stay the same between files
+large_models:
+  mistral-large:123b: mistral123b
+  llama3.3:70b: llama70b  
+prompts_random_examples:
+  EDPrompter3
+  EAEPrompter3
+  EAEPrompter4
+prompts_similar_examples:
+  EDPrompter4
+  EAEPrompter5
+  EAEPrompter6

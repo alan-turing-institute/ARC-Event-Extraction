@@ -1,0 +1,39 @@
+models:
+  Llama-3.2-3B-Instruct: llama3b
+model_type: guide
+batch_size: 2
+model_init_kwargs:
+  quantised: true
+  max_tokens: 50
+  adaptor: adaptor_name
+dataset: ACE05
+splits:
+  - 1
+prompts:
+  EDPrompter1: ED1
+  EDPrompter4: ED4
+  EAEPrompter1: EAE1
+  EADPrompter6: EAE6
+num_examples:
+  - 5
+seed: 42
+sentence_embeddings:
+  intfloat/multilingual-e5-small: e5small
+config_folder: guideExampleInference
+output_format:
+  null: f
+  json: j
+  json_schema: s
+
+# These configs provide definitions of models and prompts - can probably stay the same between files
+large_models:
+  mistral-large:123b: mistral123b
+  llama3.3:70b: llama70b
+prompts_random_examples:
+  - EDPrompter3
+  - EAEPrompter3
+  - EAEPrompter4
+prompts_similar_examples:
+  - EDPrompter4
+  - EAEPrompter5
+  - EAEPrompter6

@@ -43,6 +43,9 @@ def main():
     settings = load_settings(args.settings_file)
 
     MODELS = settings["models"]
+    MODEL_TYPE = settings["model_type"]
+    BATCH_SIZE = settings["batch_size"]
+    MODEL_INIT_KWARGS = settings["model_init_kwargs"]
     LARGE_MODELS = settings["large_models"]
     DATASET = settings["dataset"]
     SPLITS = settings["splits"]
@@ -71,24 +74,38 @@ def main():
             f"{DATASET}_split{split}_{model_short_name}_{prompt_short_name}_"
             f"{output_format_short_name}"
         )
+        if MODEL_TYPE == "guide":
+            if output_format == "json":
+                model_type = "guide_json"
+            elif output_format == "json_schema":
+                model_type = "guide_schema"
+            else:
+                model_type = "guide_free"
+        else:
+            model_type = MODEL_TYPE
 
         # DEFINE MODEL KWARGS
         model_short_name = MODELS[model]
-        num_ctx = 16384
-        if model == "gemma3:27b":
-            num_ctx = 8192
         model_kwargs = {
             "model_id": model,
-            "model_type": "ollama",
-            "batch_size": 1,
-            "model_init_kwargs": {
-                "options": {
-                    "num_ctx": num_ctx,
-                    "temperature": 0,
-                },
-                "output_format": output_format if output_format else None,
-            },
+            "model_type": model_type,
+            "batch_size": BATCH_SIZE,
+            "model_init_kwargs": {},
         }
+
+        # Set model init kwargs for ollama models
+        if MODEL_TYPE == "ollama":
+            num_ctx = 16384
+            if model == "gemma3:27b":
+                num_ctx = 8192
+            model_kwargs["model_init_kwargs"]["output_format"] = output_format
+            model_kwargs["model_init_kwargs"]["options"] = {
+                "num_ctx": num_ctx,
+                "temperature": 0,
+            }
+        # And for guidance models
+        elif MODEL_TYPE == "guide":
+            model_kwargs["model_init_kwargs"] = MODEL_INIT_KWARGS
 
         # DEFINE DATA KWARGS
         data_path = f"data/{DATASET}/output/split{split}/test.jsonlines"

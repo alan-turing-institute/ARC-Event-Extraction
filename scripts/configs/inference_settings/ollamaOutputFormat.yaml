@@ -5,6 +5,9 @@ models:
   # phi4: phi4
   # mistral-large:123b: mistral123b
   # llama3.3:70b: llama70b
+model_type: ollama
+batch_size: 2
+model_init_kwargs:
 dataset: ACE05
 splits:
   - 1
@@ -20,9 +23,9 @@ sentence_embeddings:
   intfloat/multilingual-e5-small: e5small
 config_folder: ollamaOutputFormat
 output_format:
-  null: unstructured
-  json: json
-  json_schema: schema
+  null: f
+  json: j
+  json_schema: s
 
 # These configs provide definitions of models and prompts - can probably stay the same between files
 large_models:

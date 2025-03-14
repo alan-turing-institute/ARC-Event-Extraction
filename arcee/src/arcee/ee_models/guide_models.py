@@ -165,10 +165,10 @@ class BaseGuideModel(EEBaseModel):
         )
 
 
-class GuideJSONModel(BaseGuideModel):
+class GuideFreeModel(BaseGuideModel):
     """
-    This uses the a Hugging Face model and a Guidence package to contrain a model so
-    it gives JSON in a schema.
+    This uses the a Hugging Face model and a Guidence package but does not constrain
+    the model.
 
     Attributes:
         model: An instance of a `transformers.AutoModelForCausalLM`. Should be an
@@ -207,9 +207,168 @@ class GuideJSONModel(BaseGuideModel):
         Args:
             input (list[tuple]): A list of tuples where each tuple requires extraction.
                 - prompt (dict[str, str]): The chat prompt to use.
-                - schema (str | dict): The schema to use or 'json'
+                - schema (str | dict): The schema to use or 'json' (ignored).
                 - ids (dict): The ids to use.
-                - sentence (str): The sentence to extract events from.
+                - sentence (str): The sentence to extract events from (ignored).
+
+        Returns:
+            list: A list of dictionaries where each dictionary contains the extracted
+                events in the schema. If the output cannot be parsed as JSON then the
+                output is a dictionary with a key 'JSON_ERROR' and the value is the
+                output.
+        """
+        responses = []
+        for chat, _, ids, _ in input:
+            lm = self.model.copy()
+            with gi.user():
+                lm += chat["content"]
+            with gi.assistant():
+                lm += "```json\n"
+                lm += gi.gen(name="output", stop="\n```", max_tokens=self.max_tokens)
+                lm += "\n```"
+
+            try:
+                output = json.loads(lm["output"])
+            except json.JSONDecodeError:
+                output = {"JSON_ERROR": lm["output"]}
+
+            response = {**ids, "output": output}
+            responses.append(response)
+
+        return responses
+
+
+class GuideJSONModel(BaseGuideModel):
+    """
+    This uses the a Hugging Face model and a Guidence package to contrain a model so
+    it gives a valid JSON.
+
+    Attributes:
+        model: An instance of a `transformers.AutoModelForCausalLM`. Should be an
+            instruction-tuned model whose tokenizer has a chat template.
+        tokenizer: An instance of a `transfomers.AutoTokenizer`, corresponding to the
+            model. Should contain a chat template.
+        device: A string denoting what device to place the model on, defaults to `cpu`.
+            Pass `device_map="auto"` to init to automatically place on any available
+            GPU.
+        options: Currently ignored, kept in to match base class signature.
+        whitespace_flexible: If whitespace is allowed in the JSON.
+    """
+
+    def __init__(
+        self,
+        model_id: str,
+        adapter_id: str | None = None,
+        chat_template: str = "llama3",
+        max_tokens: int = 500,
+        options: dict | None = None,
+        whitespace_flexible: bool = True,
+    ) -> None:
+        super().__init__(
+            model_id=model_id,
+            adapter_id=adapter_id,
+            chat_template=chat_template,
+            options=options,
+        )
+        self.max_tokens = max_tokens
+        self.whitespace_flexible = whitespace_flexible
+
+    def predict(
+        self, input: list[tuple[dict[str, str], str | dict, dict, str]]
+    ) -> list[dict]:
+        """
+        This method takes a list of inputs and returns a list of outputs. Each input
+        is a event or passage to run the event extraction model on. The output is a
+        list of events extracted from the input.
+
+        Args:
+            input (list[tuple]): A list of tuples where each tuple requires extraction.
+                - prompt (dict[str, str]): The chat prompt to use.
+                - schema (str | dict): The schema to use or 'json' (ignored).
+                - ids (dict): The ids to use.
+                - sentence (str): The sentence to extract events from  (ignored).
+
+        Returns:
+            list: A list of dictionaries where each dictionary contains the extracted
+                events in the schema. If the output cannot be parsed as JSON then the
+                output is a dictionary with a key 'JSON_ERROR' and the value is the
+                output.
+        """
+        responses = []
+        for chat, _, ids, _ in input:
+            lm = self.model.copy()
+            with gi.user():
+                lm += chat["content"]
+            with gi.assistant():
+                lm += "```json\n"
+                lm += gi.json(
+                    name="output",
+                    schema=True,
+                    max_tokens=self.max_tokens,
+                    whitespace_flexible=self.whitespace_flexible,
+                )
+                lm += "\n```"
+
+            try:
+                output = json.loads(lm["output"])
+            except json.JSONDecodeError:
+                output = {"JSON_ERROR": lm["output"]}
+
+            response = {**ids, "output": output}
+            responses.append(response)
+
+        return responses
+
+
+class GuideSchemaModel(BaseGuideModel):
+    """
+    This uses the a Hugging Face model and a Guidence package to contrain a model so
+    it gives JSON in a schema.
+
+    Attributes:
+        model: An instance of a `transformers.AutoModelForCausalLM`. Should be an
+            instruction-tuned model whose tokenizer has a chat template.
+        tokenizer: An instance of a `transfomers.AutoTokenizer`, corresponding to the
+            model. Should contain a chat template.
+        device: A string denoting what device to place the model on, defaults to `cpu`.
+            Pass `device_map="auto"` to init to automatically place on any available
+            GPU.
+        options: Currently ignored, kept in to match base class signature.
+        whitespace_flexible: If whitespace is allowed in the JSON.
+    """
+
+    def __init__(
+        self,
+        model_id: str,
+        adapter_id: str | None = None,
+        chat_template: str = "llama3",
+        max_tokens: int = 500,
+        options: dict | None = None,
+        whitespace_flexible: bool = True,
+    ) -> None:
+        super().__init__(
+            model_id=model_id,
+            adapter_id=adapter_id,
+            chat_template=chat_template,
+            options=options,
+        )
+        self.max_tokens = max_tokens
+        self.whitespace_flexible = whitespace_flexible
+
+    def predict(
+        self, input: list[tuple[dict[str, str], str | dict, dict, str]]
+    ) -> list[dict]:
+        """
+        This method takes a list of inputs and returns a list of outputs. Each input
+        is a event or passage to run the event extraction model on. The output is a
+        list of events extracted from the input.
+
+        Args:
+            input (list[tuple]): A list of tuples where each tuple requires extraction.
+                - prompt (dict[str, str]): The chat prompt to use.
+                - schema (str | dict): The schema to use or 'json' (ignored).
+                - ids (dict): The ids to use.
+                - sentence (str): The sentence to extract events from (ignored).
 
         Returns:
             list: A list of dictionaries where each dictionary contains the extracted
@@ -219,19 +378,19 @@ class GuideJSONModel(BaseGuideModel):
         """
         responses = []
         for chat, schema, ids, _ in input:
-            if schema == "json":
-                striped_schema = None
-            else:
-                striped_schema = remove_unimplemented_keys(schema)
+            striped_schema = remove_unimplemented_keys(schema)
             lm = self.model.copy()
             with gi.user():
                 lm += chat["content"]
             with gi.assistant():
-                lm += "```json\n\n"
+                lm += "```json\n"
                 lm += gi.json(
-                    name="output", schema=striped_schema, max_tokens=self.max_tokens
+                    name="output",
+                    schema=striped_schema,
+                    max_tokens=self.max_tokens,
+                    whitespace_flexible=self.whitespace_flexible,
                 )
-                lm += "\n\n```"
+                lm += "\n```"
 
             try:
                 output = json.loads(lm["output"])

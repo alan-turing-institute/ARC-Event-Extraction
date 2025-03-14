@@ -1,4 +1,4 @@
-experiment_name: bask_test_eae5
+experiment: bask_test_eae5
 model_kwargs:
   model_id: gemma2:27b
   model_type: ollama

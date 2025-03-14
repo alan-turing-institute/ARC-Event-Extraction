@@ -42,7 +42,7 @@ class EEPrompt(ABC):
         self._input_text: str = ""
         # This will be set to 'json' by default, but can be overridden by child classes
         # that define a specific JSON schema
-        self._json_schema: str | dict = "json"
+        self._json_schema: dict = {}
         # This will be set to False by default, and can be set to True if the class
         # is generating prompts for event argument extraction
         self._eae: bool = False
@@ -146,22 +146,22 @@ class EEPrompt(ABC):
         """
 
     @abstractmethod
-    def _construct_prompt(self) -> tuple[str, str | dict, dict]:
+    def _construct_prompt(self) -> tuple[str, dict, dict]:
         """
         Abstract method for constructing the prompt.
 
         Returns:
-            tuple[str, str | dict, dict]: A tuple containing:
+            tuple[str, dict, dict]: A tuple containing:
 
             - str: The prompt to be used in the task.
-            - str | dict: The output format, either 'json' or a JSON schema.
+            - dict: The output format as a JSON schema.
             - dict: A dictionary of IDs to be attached to the LLM's response that
                     identify the record.
         """
 
     def get_prompt(
         self, data: dict[str, str | int | list]
-    ) -> tuple[str, str | dict, dict, str]:
+    ) -> tuple[str, dict, dict, str]:
         """
         Returns a prompt for a given data record.
 
@@ -173,7 +173,7 @@ class EEPrompt(ABC):
             tuple[str, str | dict, dict]: A tuple containing:
 
             - str: The prompt to be used in the task.
-            - str | dict: The output format, either 'json' or a JSON schema.
+            - dict: The output format as a JSON schema.
             - dict: A dictionary of IDs to be attached to the LLM's response
             that identify the record.
             - str: The input text
@@ -200,6 +200,8 @@ class EDPrompt(EEPrompt, ABC):
         # Concatenate event type definitions into a single string, with a line break
         # between each definition
         self._event_type_defs = self._get_event_types_defs()
+        # Define the JSON schema for the output
+        self._json_schema = get_ed_json_schema(self._schema)
 
     def _get_system_content(self) -> str:
         """
@@ -250,17 +252,15 @@ class EDPrompt(EEPrompt, ABC):
             raise TypeError(err_msg)
         return {"wnd_id": self._input_data["wnd_id"]}
 
-    def _construct_prompt(
-        self,
-    ) -> tuple[str, str | dict, dict]:
+    def _construct_prompt(self) -> tuple[str, dict, dict]:
         """
         Constructs a prompt for event trigger detection.
 
         Returns:
-            tuple[str, str | dict, dict]: A tuple containing:
+            tuple[str, dict, dict]: A tuple containing:
 
             - str: The prompt to be used in the task.
-            - str | dict: The output format, either 'json' or a JSON schema.
+            - dict: The output format as a JSON schema.
             - dict: A dictionary of IDs to be attached to the LLM's response
               that identify the record.
         """
@@ -283,6 +283,56 @@ class EDPrompt(EEPrompt, ABC):
                 "JSON objects with exactly one key-value pair. The valid keys are "
                 "the event types and the values are the trigger words from the input "
                 "text."
+            ),
+            self._json_schema,
+            self._get_ids(),
+        )
+
+
+class EDPromptWithExampleSchema(EDPrompt, ABC):
+    def __init__(self, schema: dict, **kwargs: Any) -> None:
+        super().__init__(schema, **kwargs)
+        # To be correct JSON schema, the keys & values have to be in double quotes
+        self._example_schema = (
+            '[{"EventTypeA": "trigger1"}, {"EventTypeB": "trigger words2"}, '
+            '{"EventTypeA": "trigger words3"}]'
+        )
+
+    def _construct_prompt(self) -> tuple[str, dict, dict]:
+        """
+        Constructs a prompt for event trigger detection.
+
+        Returns:
+            tuple[str, dict, dict]: A tuple containing:
+
+            - str: The prompt to be used in the task.
+            - dict: The output format as a JSON schema.
+            - dict: A dictionary of IDs to be attached to the LLM's response
+              that identify the record.
+        """
+        # Return the constructed prompt
+        return (
+            (
+                self._get_system_content()
+                + "You will be give some text and have to determine if any event types "
+                "appear in the text. "
+                "Not all event types will appear, there may be some "
+                "that appear multiple times and there may be no event types "
+                "in the text.\n"
+                "If you identify one or more event type, then what is the trigger "
+                "word or words in the input text?"
+                + "\nFormat the output strictly as JSON. The output is an array of "
+                "JSON objects with exactly one key-value pair. The valid keys are "
+                "the event types and the values are the trigger words from the input "
+                "text. An example of the schema is:\n"
+                + self._example_schema
+                + "\n\n"
+                + "These are the possible event types you can chose from:\n"
+                + self._event_type_defs
+                + "\nNow process this input text:\n```"
+                + self._input_text
+                + "```\n"
+                + "Response (JSON): "
             ),
             self._json_schema,
             self._get_ids(),
@@ -488,15 +538,18 @@ class EAEPrompt(EEPrompt, ABC):
         # Get additional details for the prompt
         self._arg_roles = get_arg_roles(self._schema, self._event_type)
 
-    def _construct_prompt(self) -> tuple[str, str | dict, dict]:
+        # Set for each input data record as it will depend on the event type
+        self._json_schema = pattern_to_json_schema(self._event_type, self._arg_roles)
+
+    def _construct_prompt(self) -> tuple[str, dict, dict]:
         """
         Constructs a prompt for event argument extraction.
 
         Returns:
-            tuple[str, str | dict, str]: A tuple containing:
+            tuple[str, dict, dict]: A tuple containing:
 
             - str: The constructed prompt.
-            - str | dict: The output format, either 'json' or a JSON schema.
+            - dict: The output format as a JSON schema.
             - dict: A dictionary of IDs to be attached to the LLM's response
               that identify the record.
         """
@@ -520,6 +573,55 @@ class EAEPrompt(EEPrompt, ABC):
                 "role has a corresponding key. "
                 "If an argument is not explicitly mentioned, return `null` for "
                 "that role.\n"
+            ),
+            self._json_schema,
+            self._get_ids(),
+        )
+
+
+class EAEPromptWithExampleSchema(EAEPrompt, ABC):
+    def __init__(self, schema: dict, **kwargs: Any) -> None:
+        super().__init__(schema, **kwargs)
+        # To be correct JSON schema, the keys & values have to be in double quotes
+        self._example_schema = (
+            '{"role1": "arg1", "role2": null, "role3": null, "role4": "arg4"}'
+        )
+
+    def _construct_prompt(self) -> tuple[str, dict, dict]:
+        """
+        Constructs a prompt for event argument extraction using an example of the
+        required schema.
+
+        Returns:
+            tuple[str, dict, dict]: A tuple containing:
+
+            - str: The prompt to be used in the task.
+            - dict: The output format as a JSON schema.
+            - dict: A dictionary of IDs to be attached to the LLM's response
+              that identify the record.
+        """
+        self._set_vars_for_prompt()
+
+        return (
+            (
+                self._get_system_content()
+                + "An event type of "
+                + self._event_type
+                + " has been detected in the input "
+                "text. The trigger word is identified with a <trigger> tag.\n"
+                "Input text:\n```" + self._tagged_text + "```\n"
+                "What are the words in the input text that represent the following "
+                "argument roles? \n"
+                + "\n".join(self._arg_roles)
+                + "\n"
+                + "There will be at most one argument for each role "
+                "and there may be no arguments for a given role. "
+                + "\nFormat the output strictly as JSON, ensuring each argument "
+                "role has a corresponding key. "
+                "If an argument is not explicitly mentioned, return `null` for "
+                "that role. An example of the required schema is:\n"
+                + self._example_schema
+                + "\n"
             ),
             self._json_schema,
             self._get_ids(),
@@ -740,9 +842,7 @@ class EDPromptWithExamples(EEPromptWithExamples, EDPrompt, ABC):
 
         return "\n".join(output)
 
-    def _construct_prompt(
-        self,
-    ) -> tuple[str, str | dict, dict]:
+    def _construct_prompt(self) -> tuple[str, dict, dict]:
         """
         Constructs a prompt for event trigger detection.
 
@@ -751,10 +851,10 @@ class EDPromptWithExamples(EEPromptWithExamples, EDPrompt, ABC):
         also defines the expected output format using a JSON schema.
 
         Returns:
-            tuple[str, str | dict, dict]: A tuple containing:
+            tuple[str, dict, dict]: A tuple containing:
                 - str: The constructed prompt with event type definitions,
                   examples, and input text.
-                - str | dict: The JSON schema defining the expected output format.
+                - dict: The JSON schema defining the expected output format.
                 - dict: A dictionary containing extracted IDs from the input data.
         """
         # Get example records
@@ -840,7 +940,7 @@ class EAEPromptWithExamples(EEPromptWithExamples, EAEPrompt, ABC):
 
         return "\n".join(output)
 
-    def _construct_prompt(self) -> tuple[str, str | dict, dict]:
+    def _construct_prompt(self) -> tuple[str, dict, dict]:
         """
         Constructs a prompt for event argument extraction.
 
@@ -849,10 +949,10 @@ class EAEPromptWithExamples(EEPromptWithExamples, EAEPrompt, ABC):
         also defines the expected output format using a JSON schema.
 
         Returns:
-            tuple[str, str | dict, dict]: A tuple containing:
+            tuple[str, dict, dict]: A tuple containing:
                 - str: The constructed prompt with event type definitions,
                   examples, and input text.
-                - str | dict: The JSON schema defining the expected output format.
+                - dict: The JSON schema defining the expected output format.
                 - dict: A dictionary containing extracted IDs from the input data.
         """
         self._set_vars_for_prompt()
@@ -877,38 +977,25 @@ class EAEPromptWithExamples(EEPromptWithExamples, EAEPrompt, ABC):
             self._get_ids(),
         )
 
-    def _set_vars_for_prompt(self) -> None:
-        """
-        Sets the variables required for constructing the prompt using the attributes
-        of the class instance. Also sets the JSON schema for the output.
-        """
-        super()._set_vars_for_prompt()
-        # Set for each input data record as it will depend on the event type
-        self._json_schema = pattern_to_json_schema(self._event_type, self._arg_roles)
-
 
 class EDPrompter1(EDPrompt):
     """
     Class to construct prompts for event trigger detection:
     - does NOT use any examples in the prompt
-    - requests JSON output with a description of the schema
     """
 
     def __init__(self, schema: dict, **kwargs: Any) -> None:
         super().__init__(schema, **kwargs)
 
 
-class EDPrompter2(EDPrompt):
+class EDPrompter2(EDPromptWithExampleSchema):
     """
     Class to construct prompts for event trigger detection:
     - does NOT use any examples in the prompt
-    - requests JSON output with a defined JSON schema
     """
 
     def __init__(self, schema: dict, **kwargs: Any) -> None:
         super().__init__(schema, **kwargs)
-        # Define the JSON schema for the output
-        self._json_schema = get_ed_json_schema(self._schema)
 
 
 class EDPrompter3(EEPromptRandomExamples, EDPromptWithExamples):
@@ -916,7 +1003,6 @@ class EDPrompter3(EEPromptRandomExamples, EDPromptWithExamples):
     Class to construct prompts for event trigger detection:
     - uses RANDOM samples in the prompt the prompt, a different selection of examples
         are selected for each record
-    - requests JSON output with a defined JSON schema
     """
 
     def __init__(self, schema: dict, **kwargs: Any) -> None:
@@ -928,7 +1014,6 @@ class EDPrompter4(EEPromptSimilarExamples, EDPromptWithExamples):
     Class to construct prompts for event trigger detection:
     - uses SIMILAR samples in the prompt the prompt
     - similarity is determined using a sentence transformer
-    - requests JSON output with a defined JSON schema
     """
 
     def __init__(self, schema: dict, **kwargs: Any):
@@ -941,32 +1026,22 @@ class EAEPrompter1(EAEPrompt):
     - only takes a SINGLE event trigger
     - predicts multiple argument roles
     - does NOT use examples in the prompt
-    - requests JSON output
     """
 
     def __init__(self, schema: dict, **kwargs: Any) -> None:
         super().__init__(schema)
 
 
-class EAEPrompter2(EAEPrompt):
+class EAEPrompter2(EAEPromptWithExampleSchema):
     """
     Event argument extraction:
     - only takes a SINGLE event trigger
     - predicts multiple argument roles
     - does NOT use examples in the prompt
-    - requests JSON output and gives a specific schema
     """
 
     def __init__(self, schema: dict, **kwargs: Any) -> None:
         super().__init__(schema, **kwargs)
-
-    def _set_vars_for_prompt(self) -> None:
-        """
-        Sets the variables required for constructing the prompt using the attributes
-        of the class instance. Also sets the JSON schema for the output.
-        """
-        super()._set_vars_for_prompt()
-        self._json_schema = pattern_to_json_schema(self._event_type, self._arg_roles)
 
 
 class EAEPrompter3(EAEPromptWithExamples, EEPromptRandomExamples):
@@ -975,7 +1050,6 @@ class EAEPrompter3(EAEPromptWithExamples, EEPromptRandomExamples):
     - only takes a SINGLE event trigger
     - predicts multiple argument roles
     - Uses RANDOM examples in the prompt
-    - requests JSON output with specific schema for event type
     """
 
     def __init__(self, schema: dict, **kwargs: Any) -> None:
@@ -989,7 +1063,6 @@ class EAEPrompter4(EAEPromptWithExamples, EEPromptRandomExamples):
     - only takes a SINGLE event trigger
     - predicts multiple argument roles
     - Uses RANDOM examples in the prompt, but with SAME EVENT TYPE
-    - requests JSON output with specific schema for event type
     """
 
     def __init__(self, schema: dict, **kwargs: Any) -> None:
@@ -1003,7 +1076,6 @@ class EAEPrompter5(EAEPromptWithExamples, EEPromptSimilarExamples):
     - only takes a SINGLE event trigger
     - predicts multiple argument roles
     - Uses SIMILAR examples in the prompt (ANY EVENT TYPE)
-    - requests JSON output with specific schema for event type
     """
 
     def __init__(self, schema: dict, **kwargs: Any):
@@ -1017,7 +1089,6 @@ class EAEPrompter6(EAEPromptWithExamples, EEPromptSimilarExamples):
     - only takes a SINGLE event trigger
     - predicts multiple argument roles
     - Uses SIMILAR examples in the prompt, but with SAME EVENT TYPE
-    - requests JSON output with specific schema for event type
     """
 
     def __init__(self, schema: dict, **kwargs: Any) -> None:

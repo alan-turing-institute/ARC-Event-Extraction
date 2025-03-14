@@ -271,7 +271,7 @@ class TestEDPrompter1:
         """Test get_prompt calls _construct_prompt and returns expected values."""
         prompt, output_format, ids, input_text = self.prompter.get_prompt(DATA)
 
-        assert output_format == "json"
+        assert isinstance(output_format, dict)
         assert "Explosion: An event where something bursts violently." in prompt
         assert "Attack: A violent physical act causing harm or damage." in prompt
         assert "The explosion destroyed the building." in prompt
@@ -299,6 +299,10 @@ class TestEDPrompter2:
         assert "Format the output strictly as JSON" in prompt
         assert ids == {"wnd_id": "wnd1"}
         assert input_text == DATA["text"]
+        assert (
+            '[{"EventTypeA": "trigger1"}, {"EventTypeB": "trigger words2"}, '
+            '{"EventTypeA": "trigger words3"}]' in prompt
+        )
 
 
 ### TESTING EDPrompter3 ###
@@ -431,7 +435,7 @@ class TestEAEPrompter1:
         prompt, output_format, ids, input_text = self.prompter.get_prompt(DATA)
 
         assert isinstance(prompt, str)
-        assert output_format == "json"
+        assert isinstance(output_format, dict)
         assert "Attacker" in prompt
         assert "Victim" in prompt
         assert "Location" in prompt
@@ -488,6 +492,9 @@ class TestEAEPrompter2:
         assert "Format the output strictly as JSON" in prompt
         assert ids == {"evt_id": "ev1"}
         assert input_text == DATA["text"]
+        assert (
+            '{"role1": "arg1", "role2": null, "role3": null, "role4": "arg4"}' in prompt
+        )
 
 
 ### TESTING EAEPrompter3 ###

@@ -4,7 +4,7 @@ models:
   mistral-small:24b: mistral24b
   phi4: phi4
   # mistral-large:123b: mistral123b
-  # llama3.3:70b: llama70b  
+  # llama3.3:70b: llama70b
 dataset: ACE05
 splits:
   1
@@ -26,7 +26,7 @@ output_format:
 # These configs provide definitions of models and prompts - can probably stay the same between files
 large_models:
   mistral-large:123b: mistral123b
-  llama3.3:70b: llama70b  
+  llama3.3:70b: llama70b
 prompts_random_examples:
   EDPrompter3
   EAEPrompter3

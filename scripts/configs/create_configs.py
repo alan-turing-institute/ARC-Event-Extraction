@@ -52,6 +52,7 @@ def main():
     PROMPTS = settings["prompts"]
     PROMPTS_RANDOM_EXAMPLES = settings["prompts_random_examples"]
     PROMPTS_SIMILAR_EXAMPLES = settings["prompts_similar_examples"]
+    PROMPTS_ARG_EXTRACTION = settings["prompts_arg_extraction"]
     SENTENCE_EMBEDDINGS = settings["sentence_embeddings"]
     NUM_EXAMPLES = settings["num_examples"]
     SEED = settings["seed"]
@@ -110,11 +111,16 @@ def main():
         # DEFINE DATA KWARGS
         data_path = f"data/{DATASET}/output/split{split}/test.jsonlines"
         schema_path = f"data/{DATASET}/schema/event_type_short_definitions.json"
+        if prompt in PROMPTS_ARG_EXTRACTION:
+            gold_path = f"data/{DATASET}/gold/gold_label_args.jsonl"
+        else:
+            gold_path = f"data/{DATASET}/gold/gold_label_triggers.jsonl"
         if "EAE" in prompt:
             schema_path = f"data/{DATASET}/schema/pattern.json"
         data_kwargs = {
             "data_path": data_path,
             "schema_path": schema_path,
+            "gold_path": gold_path,
         }
 
         prompt_kwargs = {"prompt_cls": prompt}
@@ -129,6 +135,20 @@ def main():
                 if prompt in PROMPTS_RANDOM_EXAMPLES:
                     exp_name = f"{exp_name_init}_{num_examples}_rand{SEED}"
                     prompt_init_kwargs["seed"] = SEED
+                    prompt_kwargs["prompt_init_kwargs"] = prompt_init_kwargs
+
+                    filename = f"scripts/configs/{CONFIG_FOLDER}/{exp_name}.yaml"
+                    if model in LARGE_MODELS:
+                        large_model_filenames.append(filename)
+                    else:
+                        small_model_filenames.append(filename)
+                    save_yaml(
+                        exp_name,
+                        model_kwargs,
+                        data_kwargs,
+                        prompt_kwargs,
+                        filename,
+                    )
                 elif prompt in PROMPTS_SIMILAR_EXAMPLES:
                     for sentence_embedding in SENTENCE_EMBEDDINGS:
                         sentence_embedding_short_name = SENTENCE_EMBEDDINGS[
@@ -141,20 +161,20 @@ def main():
                         prompt_init_kwargs["sentence_transformer_model"] = (
                             sentence_embedding
                         )
-                prompt_kwargs["prompt_init_kwargs"] = prompt_init_kwargs
+                        prompt_kwargs["prompt_init_kwargs"] = prompt_init_kwargs
 
-                filename = f"scripts/configs/{CONFIG_FOLDER}/{exp_name}.yaml"
-                if model in LARGE_MODELS:
-                    large_model_filenames.append(filename)
-                else:
-                    small_model_filenames.append(filename)
-                save_yaml(
-                    exp_name,
-                    model_kwargs,
-                    data_kwargs,
-                    prompt_kwargs,
-                    filename,
-                )
+                        filename = f"scripts/configs/{CONFIG_FOLDER}/{exp_name}.yaml"
+                        if model in LARGE_MODELS:
+                            large_model_filenames.append(filename)
+                        else:
+                            small_model_filenames.append(filename)
+                        save_yaml(
+                            exp_name,
+                            model_kwargs,
+                            data_kwargs,
+                            prompt_kwargs,
+                            filename,
+                        )
         else:
             exp_name = exp_name_init
             filename = f"scripts/configs/{CONFIG_FOLDER}/{exp_name}.yaml"

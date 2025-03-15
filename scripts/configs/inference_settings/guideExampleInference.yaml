@@ -13,7 +13,7 @@ prompts:
   EDPrompter1: ED1
   EDPrompter4: ED4
   EAEPrompter1: EAE1
-  EADPrompter6: EAE6
+  EAEPrompter6: EAE6
 num_examples:
   - 5
 seed: 42

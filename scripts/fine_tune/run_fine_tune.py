@@ -5,6 +5,7 @@ import os
 
 import wandb
 import yaml
+from arcee.constants import WANDB_ENTITY_NAME, WANDB_PROJECT_NAME
 from arcee.dataset.load_training_eval import load_training_eval_data
 from arcee.ee_models.guide_models import load_quatised_config
 from peft import LoraConfig
@@ -24,6 +25,17 @@ def load_config(config_loc: str) -> dict:
 
 def main(config_loc: str):
     config = load_config(config_loc)
+
+    # Initialise wandb run
+    run = wandb.init(
+        entity=WANDB_ENTITY_NAME,
+        project=WANDB_PROJECT_NAME,
+        name=f"fine_tune_{config['adapter_loc']}",
+        config={
+            "job_type": "Fine Tuning",
+            **config,
+        },
+    )
 
     # Quantised Training
 
@@ -45,7 +57,7 @@ def main(config_loc: str):
     eval_data = os.path.join(main_dir, config["eval_data"])
     schema_path = os.path.join(main_dir, config["schema_path"])
     dataset = load_training_eval_data(
-        train_data, eval_data, config["prompt_cls"], schema_path
+        train_data, eval_data, config["prompt_cls"], schema_path, config["only_events"]
     )
 
     # And the completion only settings
@@ -77,6 +89,8 @@ def main(config_loc: str):
     adapter_loc = os.path.join(main_dir, config["adapter_loc"])
     trainer.model.save_pretrained(adapter_loc)
 
+    run.finish()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -84,4 +98,5 @@ if __name__ == "__main__":
     )
     parser.add_argument("config_loc", type=str, help="Path to the configuration file.")
     args = parser.parse_args()
+
     main(args.config_loc)

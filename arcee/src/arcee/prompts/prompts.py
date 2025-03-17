@@ -1064,6 +1064,81 @@ class EAEPromptWithExamples(EEPromptWithExamples, EAEPrompt, ABC):
         )
 
 
+class EDPromptWithExamplesFilterEventTypes(
+    EDPromptWithExamples, EEPromptSimilarExamples, ABC
+):
+    """
+    An abstract class for event trigger detection with examples, where the examples are
+    used to filter the event types shown in the prompt. It would only make sense to
+    use this with similar examples, as random examples would not be useful for filtering
+    the event types.
+    """
+
+    def __init__(self, schema: dict, **kwargs: Any) -> None:
+        super().__init__(schema, **kwargs)
+
+    def _get_filtered_event_types_defs(self, example_records: list[dict]) -> str:
+        filtered_event_types = set()
+        for record in example_records:
+            for event_mention in record["event_mentions"]:
+                filtered_event_types.add(event_mention["event_type"])
+        # Ensure there are always at least two event types in the list
+        for event_type in self._schema:
+            if len(filtered_event_types) < 2:
+                filtered_event_types.add(event_type)
+            else:
+                break
+
+        return "\n".join([key + self._schema[key] for key in filtered_event_types])
+
+    def _construct_prompt(self) -> tuple[str, dict, dict]:
+        """
+        Constructs a prompt for event trigger detection.
+
+        This function generates a structured prompt for event detection by
+        combining input text, event type definitions, and example texts. It
+        also defines the expected output format using a JSON schema.
+
+        Returns:
+            tuple[str, dict, dict]: A tuple containing:
+                - str: The constructed prompt with event type definitions,
+                  examples, and input text.
+                - dict: The JSON schema defining the expected output format.
+                - dict: A dictionary containing extracted IDs from the input data.
+        """
+        # Get example records
+        example_records = self._get_examples()
+        # Turn the selected examples into the text to use for the prompt.
+        self._examples_for_prompt = self._construct_examples(example_records)
+        # Return the constructed prompt
+        return (
+            (
+                self._get_system_content()
+                + "You will be give some text and have to determine if any event types "
+                "appear in the text. "
+                "Not all event types will appear, there may be some "
+                "that appear multiple times and there may be no event types "
+                "in the text.\n"
+                "If you identify one or more event type, then what is the trigger "
+                "word or words in the input text?"
+                + "\nFormat the output strictly as JSON. The output is an array of "
+                "JSON objects with exactly one key-value pair. The valid keys are "
+                "the event types and the values are the trigger words from the input "
+                "text.\n\n"
+                + "These are the possible event types you can chose from:\n"
+                + self._get_filtered_event_types_defs(example_records)
+                + "\nHere are some examples:\n"
+                + self._examples_for_prompt
+                + "\nNow process this input text:\n```"
+                + self._input_text
+                + "```\n"
+                + "Response (JSON): "
+            ),
+            self._json_schema,
+            self._get_ids(),
+        )
+
+
 class EDPrompter1(EDPrompt):
     """
     Class to construct prompts for event trigger detection:

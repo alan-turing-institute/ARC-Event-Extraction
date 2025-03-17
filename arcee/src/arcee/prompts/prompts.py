@@ -658,6 +658,31 @@ class EEPromptWithExamples(EEPrompt, ABC):
         # otherwise will load all records
         self._example_data = load_data(example_data_path, record_per_event=self._eae)
 
+    def _mask_record(self, record: dict) -> str:
+        """
+        Masks the entities in the input text
+
+        Args:
+            record (dict): The input record with event and entity mentions
+
+        Returns:
+            str: The text from the entity record with the entities masked
+        """
+        tokens = record["tokens"].copy()
+        entity_mentions = record["entity_mentions"]
+        for entity in entity_mentions:
+            start = entity["start"]
+            end = entity["end"]
+            entity_type = entity["entity_type"]
+            mention_type = entity["mention_type"]
+            mask = entity_type + "_" + mention_type
+            # mask the first token
+            tokens[start] = mask
+            # Set the remaining entity mention tokens as an empty string
+            for i in range(start + 1, end):
+                tokens[i] = ""
+        return " ".join(tokens)
+
     def _get_examples(self) -> list[dict]:
         """
         Method for retrieving examples to be used in the prompt
@@ -696,7 +721,11 @@ class EEPromptWithExamples(EEPrompt, ABC):
             raise ValueError(err_msg)
 
         # Embed the input text
-        target_embedding = self._model.encode(self._input_text)
+        if self._mask_entities:
+            masked_input_text = self._mask_record(self._input_data)
+            target_embedding = self._model.encode(masked_input_text)
+        else:
+            target_embedding = self._model.encode(self._input_text)
 
         # Compute cosine similarity between the target and all text records
         cos_scores = self._model.similarity(target_embedding, example_embeddings)[0]
@@ -775,9 +804,18 @@ class EEPromptSimilarExamples(EEPromptWithExamples, ABC):
         model_name = prompt_args[0]
 
         # Load the model
-        self._model = self._load_model(model_name)
+        self._model: SentenceTransformer = self._load_model(model_name)
 
         # Embed the example text for use later
+        self._set_example_embeddings()
+
+    def _set_example_embeddings(self) -> None:
+        """
+        Method to set the embeddings for the example text
+
+        Args:
+            example_text (list[str]): A list of the text records
+        """
         example_text = [record["text"] for record in self._example_data]
         self._example_embeddings = self._model.encode(example_text)
 
@@ -804,6 +842,25 @@ class EEPromptSimilarExamples(EEPromptWithExamples, ABC):
         except Exception as e:
             err_msg = f"Invalid sentence transformer model name: {model_name}"
             raise ValueError(err_msg) from e
+
+
+class EEPromptSimilarMaskedExamples(EEPromptSimilarExamples, ABC):
+    """
+    Abstract class that defines the functionality for selected examples based on
+    similarity to the input text. This class could be inherited by classes for both
+    event trigger detection and event argument extraction.
+    """
+
+    def __init__(self, schema: dict, **kwargs: Any) -> None:
+        super().__init__(schema, **kwargs)
+        self._mask_entities = True
+
+    def _set_example_embeddings(self) -> None:
+        """
+        Method to set the embeddings for the example text
+        """
+        example_text = [self._mask_record(record) for record in self._example_data]
+        self._example_embeddings = self._model.encode(example_text)
 
 
 class EEPromptRandomSimilarExamples(

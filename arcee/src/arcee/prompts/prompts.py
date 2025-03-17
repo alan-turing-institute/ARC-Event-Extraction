@@ -805,6 +805,28 @@ class EEPromptSimilarExamples(EEPromptWithExamples, ABC):
             raise ValueError(err_msg) from e
 
 
+class EEPromptRandomSimilarExamples(
+    EEPromptSimilarExamples, EEPromptRandomExamples, ABC
+):
+    """
+    Abstract class that defines the functionality for including both random and
+    similar examples in a prompt. In this case, the argument that sets the number of
+    examples for both the random and similar examples.
+    This class could be inherited by classes for both event trigger detection and event
+    argument extraction.
+    TODO: Allow a different number of random and similar examples to be selected,
+    e.g., `num_random_examples` and `num_similar_examples`.
+    """
+
+    def __init__(self, schema: dict, **kwargs: Any) -> None:
+        EEPromptSimilarExamples.__init__(self, schema, **kwargs)
+        # Need to run the random examples init second as it will set the random
+        # selection to True
+        EEPromptRandomExamples.__init__(self, schema, **kwargs)
+        # Ensure similar selection will occur as well as random
+        self._similar_selection = True
+
+
 class EDPromptWithExamples(EEPromptWithExamples, EDPrompt, ABC):
     """
     An abstract class for event trigger detection with examples. This class will define
@@ -1019,6 +1041,17 @@ class EDPrompter4(EEPromptSimilarExamples, EDPromptWithExamples):
     """
     Class to construct prompts for event trigger detection:
     - uses SIMILAR samples in the prompt the prompt
+    - similarity is determined using a sentence transformer
+    """
+
+    def __init__(self, schema: dict, **kwargs: Any):
+        super().__init__(schema, **kwargs)
+
+
+class EDPrompter5(EEPromptRandomSimilarExamples, EDPromptWithExamples):
+    """
+    Class to construct prompts for event trigger detection:
+    - uses both RANDOM and SIMILAR samples in the prompt
     - similarity is determined using a sentence transformer
     """
 

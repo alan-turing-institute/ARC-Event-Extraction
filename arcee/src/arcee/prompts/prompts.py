@@ -643,6 +643,7 @@ class EEPromptWithExamples(EEPrompt, ABC):
         self._rng: np.random.Generator | None = None
         self._model: SentenceTransformer | None = None
         self._random_selection: bool = False
+        self._similar_selection: bool = False
         self._same_event_type: bool = False
         self._examples_for_prompt: str = ""
         self._event_type = ""
@@ -673,15 +674,21 @@ class EEPromptWithExamples(EEPrompt, ABC):
         if self._same_event_type:
             example_data, example_embeddings = self._filter_examples_by_event_type()
 
+        selected_examples = []
+
         if self._random_selection:
             # Check that self._rng is set to be a random number generator
             if self._rng is None:
                 err_msg = "Random number generator not set."
                 raise ValueError(err_msg)
-            # Return 'num_examples' random examples from the data
-            return list(
+
+            selected_examples = list(
                 self._rng.choice(example_data, self._num_examples, replace=False)
             )
+
+            if not self._similar_selection:
+                return selected_examples
+
         # Selecting based on model similarity
         if self._model is None:
             err_msg = "Sentence transformer model not set."
@@ -696,7 +703,6 @@ class EEPromptWithExamples(EEPrompt, ABC):
         # Get the indices of the top `num_examples` most similar records
         top_results = torch.topk(cos_scores, k=self._num_examples)
 
-        selected_examples = []
         for _, idx in zip(top_results[0], top_results[1], strict=False):
             selected_examples.append(example_data[idx])
 

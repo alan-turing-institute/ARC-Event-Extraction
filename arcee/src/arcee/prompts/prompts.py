@@ -877,10 +877,8 @@ class EEPromptRandomSimilarExamples(
     """
 
     def __init__(self, schema: dict, **kwargs: Any) -> None:
-        EEPromptSimilarExamples.__init__(self, schema, **kwargs)
-        # Need to run the random examples init second as it will set the random
-        # selection to True
-        EEPromptRandomExamples.__init__(self, schema, **kwargs)
+        super().__init__(schema, **kwargs)
+        self._random_selection = True
         # Ensure similar selection will occur as well as random
         self._similar_selection = True
 

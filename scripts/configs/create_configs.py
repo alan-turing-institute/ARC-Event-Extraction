@@ -141,6 +141,33 @@ def main():
                     prompt_init_kwargs["seed"] = SEED
                     prompt_kwargs["prompt_init_kwargs"] = prompt_init_kwargs
 
+                    if prompt in PROMPTS_SIMILAR_EXAMPLES:
+                        # Can be both random and similar examples
+                        for sentence_embedding in SENTENCE_EMBEDDINGS:
+                            sentence_embedding_short_name = SENTENCE_EMBEDDINGS[
+                                sentence_embedding
+                            ]
+                            exp_name = f"{exp_name}_{sentence_embedding_short_name}"
+                            prompt_init_kwargs["sentence_transformer_model"] = (
+                                sentence_embedding
+                            )
+                            prompt_kwargs["prompt_init_kwargs"] = prompt_init_kwargs
+
+                            filename = (
+                                f"scripts/configs/{CONFIG_FOLDER}/{exp_name}.yaml"
+                            )
+                            if model in LARGE_MODELS:
+                                large_model_filenames.append(filename)
+                            else:
+                                small_model_filenames.append(filename)
+                            save_yaml(
+                                exp_name,
+                                model_kwargs,
+                                data_kwargs,
+                                prompt_kwargs,
+                                filename,
+                            )
+
                     filename = f"scripts/configs/{CONFIG_FOLDER}/{exp_name}.yaml"
                     if model in LARGE_MODELS:
                         large_model_filenames.append(filename)

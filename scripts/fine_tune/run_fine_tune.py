@@ -57,7 +57,7 @@ def main(config_loc: str):
     eval_data = os.path.join(main_dir, config["eval_data"])
     schema_path = os.path.join(main_dir, config["schema_path"])
     dataset = load_training_eval_data(
-        train_data, eval_data, config["prompt_cls"], schema_path
+        train_data, eval_data, config["prompt_cls"], schema_path, config["only_events"]
     )
 
     # And the completion only settings

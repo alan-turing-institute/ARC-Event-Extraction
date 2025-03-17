@@ -647,6 +647,7 @@ class EEPromptWithExamples(EEPrompt, ABC):
         self._same_event_type: bool = False
         self._examples_for_prompt: str = ""
         self._event_type = ""
+        self._mask_entities = False
 
         # Check required keys exist and the values have expected types.
         required_keys = {"example_data_path": str, "num_examples": int}

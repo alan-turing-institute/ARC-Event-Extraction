@@ -1117,6 +1117,18 @@ class EDPrompter5(EEPromptRandomSimilarExamples, EDPromptWithExamples):
         super().__init__(schema, **kwargs)
 
 
+class EDPrompter6(EEPromptSimilarMaskedExamples, EDPromptWithExamples):
+    """
+    Class to construct prompts for event trigger detection:
+    - uses SIMILAR samples in the prompt the prompt
+    - similarity is determined using a sentence transformer
+    - entities are masked in the text records before doing a similarity comparison
+    """
+
+    def __init__(self, schema: dict, **kwargs: Any):
+        super().__init__(schema, **kwargs)
+
+
 class EAEPrompter1(EAEPrompt):
     """
     Event argument extraction:
@@ -1173,6 +1185,7 @@ class EAEPrompter5(EAEPromptWithExamples, EEPromptSimilarExamples):
     - only takes a SINGLE event trigger
     - predicts multiple argument roles
     - Uses SIMILAR examples in the prompt (ANY EVENT TYPE)
+    - similarity is determined using a sentence transformer
     """
 
     def __init__(self, schema: dict, **kwargs: Any):
@@ -1186,6 +1199,7 @@ class EAEPrompter6(EAEPromptWithExamples, EEPromptSimilarExamples):
     - only takes a SINGLE event trigger
     - predicts multiple argument roles
     - Uses SIMILAR examples in the prompt, but with SAME EVENT TYPE
+    - similarity is determined using a sentence transformer
     """
 
     def __init__(self, schema: dict, **kwargs: Any) -> None:
@@ -1199,6 +1213,20 @@ class EAEPrompter7(EEPromptRandomSimilarExamples, EAEPromptWithExamples):
     - only takes a SINGLE event trigger
     - predicts multiple argument roles
     - Uses RANDOM and SIMILAR examples in the prompt, no constraint on EVENT TYPE
+    - similarity is determined using a sentence transformer
+    """
+
+    def __init__(self, schema: dict, **kwargs: Any) -> None:
+        super().__init__(schema, **kwargs)
+
+
+class EAEPrompter8(EEPromptSimilarMaskedExamples, EAEPromptWithExamples):
+    """
+    Event argument extraction:
+    - only takes a SINGLE event trigger
+    - predicts multiple argument roles
+    - similarity is determined using a sentence transformer
+    - entities are masked in the text records before doing a similarity comparison
     """
 
     def __init__(self, schema: dict, **kwargs: Any) -> None:

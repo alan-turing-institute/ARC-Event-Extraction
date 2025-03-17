@@ -1204,6 +1204,31 @@ class EDPrompter6(EEPromptSimilarMaskedExamples, EDPromptWithExamples):
         super().__init__(schema, **kwargs)
 
 
+class EDPrompter7(EDPromptWithExamplesFilterEventTypes):
+    """
+    Class to construct prompts for event trigger detection:
+    - uses SIMILAR samples in the prompt the prompt
+    - similarity is determined using a sentence transformer
+    - filters the event types shown in the prompt based on the examples
+    """
+
+    def __init__(self, schema: dict, **kwargs: Any):
+        super().__init__(schema, **kwargs)
+
+
+class EDPrompter8(EDPromptWithExamplesFilterEventTypes, EEPromptSimilarMaskedExamples):
+    """
+    Class to construct prompts for event trigger detection:
+    - uses SIMILAR samples in the prompt the prompt
+    - similarity is determined using a sentence transformer
+    - filters the event types shown in the prompt based on the examples
+    - entities are masked in the text records before doing a similarity comparison
+    """
+
+    def __init__(self, schema: dict, **kwargs: Any):
+        super().__init__(schema, **kwargs)
+
+
 class EAEPrompter1(EAEPrompt):
     """
     Event argument extraction:

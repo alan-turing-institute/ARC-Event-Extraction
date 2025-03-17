@@ -43,6 +43,7 @@ def main():
     settings = load_settings(args.settings_file)
 
     MODELS = settings["models"]
+    ADAPTERS = settings.get("adapters", [""])
     MODEL_TYPE = settings["model_type"]
     BATCH_SIZE = settings["batch_size"]
     MODEL_INIT_KWARGS = settings["model_init_kwargs"]
@@ -64,8 +65,8 @@ def main():
 
     large_model_filenames = []
     small_model_filenames = []
-    for model, split, prompt, output_format in itertools.product(
-        MODELS, SPLITS, PROMPTS, OUTPUT_FORMAT
+    for model, adapter, split, prompt, output_format in itertools.product(
+        MODELS, ADAPTERS, SPLITS, PROMPTS, OUTPUT_FORMAT
     ):
         model_short_name = MODELS[model]
         prompt_short_name = PROMPTS[prompt]
@@ -107,6 +108,9 @@ def main():
         # And for guidance models
         elif MODEL_TYPE == "guide":
             model_kwargs["model_init_kwargs"] = MODEL_INIT_KWARGS
+            model_kwargs["model_init_kwargs"]["adapter_id"] = adapter
+            # Update exp name to include apater short name
+            exp_name_init = f"{exp_name_init}_{ADAPTERS[adapter]}"
 
         # DEFINE DATA KWARGS
         data_path = f"data/{DATASET}/output/split{split}/test.jsonlines"

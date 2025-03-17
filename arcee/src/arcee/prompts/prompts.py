@@ -1133,3 +1133,15 @@ class EAEPrompter6(EAEPromptWithExamples, EEPromptSimilarExamples):
     def __init__(self, schema: dict, **kwargs: Any) -> None:
         super().__init__(schema, **kwargs)
         self._same_event_type = True
+
+
+class EAEPrompter7(EEPromptRandomSimilarExamples, EAEPromptWithExamples):
+    """
+    Event argument extraction:
+    - only takes a SINGLE event trigger
+    - predicts multiple argument roles
+    - Uses RANDOM and SIMILAR examples in the prompt, no constraint on EVENT TYPE
+    """
+
+    def __init__(self, schema: dict, **kwargs: Any) -> None:
+        super().__init__(schema, **kwargs)

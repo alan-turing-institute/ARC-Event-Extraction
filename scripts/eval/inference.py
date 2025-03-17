@@ -15,6 +15,7 @@ def main(config: ExperimentConfig, wandb_job_name: str) -> None:
         entity=WANDB_ENTITY_NAME,
         project=WANDB_PROJECT_NAME,
         name=wandb_job_name,
+        job_type="inference",
         config={
             "job_type": "inference",
             **config.to_dict(),
@@ -24,6 +25,7 @@ def main(config: ExperimentConfig, wandb_job_name: str) -> None:
     # Initialise evaluator
     evaluator = Evaluator(
         output_path=config.output_path,
+        wandb_run=run,
         **config.data_kwargs.to_dict(),
         **config.model_kwargs.to_dict(),
         **config.prompt_kwargs.to_dict(),

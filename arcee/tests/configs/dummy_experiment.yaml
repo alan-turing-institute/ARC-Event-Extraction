@@ -9,6 +9,8 @@ model_kwargs:
 data_kwargs:
   data_path: data/RAMS/output/splits/split1/test.jsonlines
   schema_path: data/RAMS/patterns/pattern.json
+  gold_path: data/RAMS/gold/gold_label_args.jsonl
+  only_events: True
 prompt_kwargs:
   prompt_cls: DummyEAEPrompter
 output_path: outputs/dummy_experiment.jsonl

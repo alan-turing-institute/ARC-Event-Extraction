@@ -20,12 +20,14 @@ class DataArguments(BaseConfig):
         self,
         data_path: str,
         schema_path: str,
+        gold_path: str = "",  # Only needed if saving to wandb
         only_events: bool = False,
         shuffle: bool | None = None,
     ) -> None:
         super().__init__()
         self.data_path = data_path
         self.schema_path = schema_path
+        self.gold_path = gold_path
         self.only_events = only_events
         self.shuffle = shuffle
 
@@ -38,6 +40,7 @@ class DataArguments(BaseConfig):
         return {
             "data_path": self.data_path,
             "schema_path": self.schema_path,
+            "gold_path": self.gold_path,
             "only_events": self.only_events,
             "shuffle": self.shuffle,
         }

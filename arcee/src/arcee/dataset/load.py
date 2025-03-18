@@ -10,8 +10,7 @@ def load_data(dataset_file_path: str, record_per_event: bool = False) -> list[An
     This function loads a dataset from the specified location
     The dataset is expected to be in JSON format
 
-    Parameters
-    ----------
+    Args:
     dataset_file_path: str
         The file path where the json files are stored for the data, this should
         include the file name and extension,
@@ -20,8 +19,7 @@ def load_data(dataset_file_path: str, record_per_event: bool = False) -> list[An
         If set to True, then it will load the records so that there is one event
         type per record (in order to do argument extraction per event type)
 
-    Returns
-    -------
+    Returns:
     list[Any]
         A list of dictionaries, with each dictionary representing a record in
         the dataset
@@ -48,15 +46,13 @@ def load_json(pattern_file_path: str) -> dict:
     This function loads a json file from the specified location
     The file is expected to be in JSON format
 
-    Parameters
-    ----------
+    Args:
     pattern_file_path: str
         The file path where the pattern file is stored for the dataset, this should
         include the file name and extension, expected to be JSON format
         e.g. "data/RAMS/patterns/pattern.json"
 
-    Returns
-    -------
+    Returns:
     dict
         A dictionary containing the schema of event types and argument roles.
     """

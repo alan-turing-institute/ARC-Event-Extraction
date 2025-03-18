@@ -10,6 +10,13 @@ class EEDataset(Dataset):
     """
     Dataset class used for iterating over event extraction data while applying a valid
     prompt. Inherits from torch Dataset to enable use of the torch DataLoader
+
+    Attributes:
+        data (list[dict]): A list of dictionaries where each dictionary contains one
+            piece of event extraction data, loaded by
+            `arcee.dataset.load.load_dataset`
+        prompt_constuctor (EEPrompt): An instance of a class inheriting from
+            `arcee.prompts.prompts.EEPrompt`
     """
 
     def __init__(

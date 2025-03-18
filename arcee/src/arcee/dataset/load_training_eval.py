@@ -8,6 +8,28 @@ import arcee.prompts.prompts as prompts
 from arcee.dataset.schemas import data_to_argument_schema, data_to_ed_schema
 
 
+def expand_record(record: dict) -> list[dict]:
+    """
+    Takes a record from the dataset and expands it so that it returns one record for
+    each event type
+
+    Args:
+        record (dict): The record to expand
+
+    Returns:
+        list[dict]: A list of the expanded records
+    """
+    num_mentions = record.get("event_mentions", 1)
+    if num_mentions > 1:
+        expanded_records = []
+        for mention in range(num_mentions):
+            new_record = record.copy()
+            new_record["event_mentions"] = [new_record["event_mentions"][mention]]
+            expanded_records.append(new_record)
+        return expanded_records
+    return [record]
+
+
 def load_training_eval_data(
     training_data_path: str,
     eval_data_path: str,
@@ -56,6 +78,11 @@ def load_training_eval_data(
         # If doing argument extraction, then we only want to keep records that have
         # events. If doing event extraction, this might sometimes be wanted.
         dataset = dataset.filter(lambda x: len(x["event_mentions"]) > 0)
+        if arg_extraction:
+            dataset = {
+                split: dataset[split].map(expand_record, batched=False)
+                for split in dataset
+            }
 
     formatted_dataset: Dataset = dataset.map(
         format_chat_message,

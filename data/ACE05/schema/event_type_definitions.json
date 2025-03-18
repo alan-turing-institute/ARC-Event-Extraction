@@ -10,7 +10,7 @@
     "Business:Start-Org": " : A START-ORG Event occurs whenever a new ORGANIZATION is created.",
     "Business:Merge-Org": " : A MERGE-ORG Event occurs whenever two or more ORGANIZATION Entities come together to form a new ORGANIZATION Entity",
     "Business:Declare-Bankruptcy": " : A DECLARE-BANKRUPTCY Event will occur whenever an Entity officially requests legal protection from debt collection due to an extremely negative balance sheet.",
-    "Business: End-Org": " : An END-ORG Event occurs whenever an ORGANIZATION ceases to exist",
+    "Business:End-Org": " : An END-ORG Event occurs whenever an ORGANIZATION ceases to exist",
     "Conflict:Attack": " : An ATTACK Event is defined as a violent physical act causing harm or damage. ATTACK Events include any such Event not covered by the INJURE or DIE subtypes",
     "Conflict:Demonstrate": " : A DEMONSRATE Event occurs whenever a large number of people come together in a public area to protest or demand some sort of official action.",
     "Contact:Meet": " : A MEET Event occurs whenever two or more Entities come together at a single location and interact with one another face-to-face.",

@@ -755,9 +755,11 @@ class EEPromptWithExamples(EEPrompt, ABC):
         self._rng: np.random.Generator | None = None
         self._model: SentenceTransformer | None = None
         self._random_selection: bool = False
+        self._similar_selection: bool = False
         self._same_event_type: bool = False
         self._examples_for_prompt: str = ""
         self._event_type = ""
+        self._mask_entities = False
 
         # Check required keys exist and the values have expected types.
         required_keys = {"example_data_path": str, "num_examples": int}
@@ -767,6 +769,30 @@ class EEPromptWithExamples(EEPrompt, ABC):
         # Load data for examples, if doing EAE will load one record per event type,
         # otherwise will load all records
         self._example_data = load_data(example_data_path, record_per_event=self._eae)
+
+    def _mask_record(self, record: dict) -> str:
+        """
+        Masks the entities in the input text
+
+        Args:
+            record (dict): The input record with event and entity mentions
+
+        Returns:
+            str: The text from the entity record with the entities masked
+        """
+        tokens = record["tokens"].copy()
+        entity_mentions = record["entity_mentions"]
+        for entity in entity_mentions:
+            start = entity["start"]
+            end = entity["end"]
+            entity_type = entity["entity_type"]
+            mask = entity_type
+            # mask the first token
+            tokens[start] = mask
+            # Set the remaining entity mention tokens as an empty string
+            for i in range(start + 1, end):
+                tokens[i] = ""
+        return " ".join(tokens)
 
     def _get_examples(self) -> list[dict]:
         """
@@ -785,22 +811,32 @@ class EEPromptWithExamples(EEPrompt, ABC):
         if self._same_event_type:
             example_data, example_embeddings = self._filter_examples_by_event_type()
 
+        selected_examples = []
+
         if self._random_selection:
             # Check that self._rng is set to be a random number generator
             if self._rng is None:
                 err_msg = "Random number generator not set."
                 raise ValueError(err_msg)
-            # Return 'num_examples' random examples from the data
-            return list(
+
+            selected_examples = list(
                 self._rng.choice(example_data, self._num_examples, replace=False)
             )
+
+            if not self._similar_selection:
+                return selected_examples
+
         # Selecting based on model similarity
         if self._model is None:
             err_msg = "Sentence transformer model not set."
             raise ValueError(err_msg)
 
         # Embed the input text
-        target_embedding = self._model.encode(self._input_text)
+        if self._mask_entities:
+            masked_input_text = self._mask_record(self._input_data)
+            target_embedding = self._model.encode(masked_input_text)
+        else:
+            target_embedding = self._model.encode(self._input_text)
 
         # Compute cosine similarity between the target and all text records
         cos_scores = self._model.similarity(target_embedding, example_embeddings)[0]
@@ -808,7 +844,6 @@ class EEPromptWithExamples(EEPrompt, ABC):
         # Get the indices of the top `num_examples` most similar records
         top_results = torch.topk(cos_scores, k=self._num_examples)
 
-        selected_examples = []
         for _, idx in zip(top_results[0], top_results[1], strict=False):
             selected_examples.append(example_data[idx])
 
@@ -928,9 +963,18 @@ class EEPromptSimilarExamples(EEPromptWithExamples, ABC):
         model_name = prompt_args[0]
 
         # Load the model
-        self._model = self._load_model(model_name)
+        self._model: SentenceTransformer = self._load_model(model_name)
 
         # Embed the example text for use later
+        self._set_example_embeddings()
+
+    def _set_example_embeddings(self) -> None:
+        """
+        Method to set the embeddings for the example text
+
+        Args:
+            example_text (list[str]): A list of the text records
+        """
         example_text = [record["text"] for record in self._example_data]
         self._example_embeddings = self._model.encode(example_text)
 
@@ -957,6 +1001,45 @@ class EEPromptSimilarExamples(EEPromptWithExamples, ABC):
         except Exception as e:
             err_msg = f"Invalid sentence transformer model name: {model_name}"
             raise ValueError(err_msg) from e
+
+
+class EEPromptSimilarMaskedExamples(EEPromptSimilarExamples, ABC):
+    """
+    Abstract class that defines the functionality for selected examples based on
+    similarity to the input text. This class could be inherited by classes for both
+    event trigger detection and event argument extraction.
+    """
+
+    def __init__(self, schema: dict, **kwargs: Any) -> None:
+        super().__init__(schema, **kwargs)
+        self._mask_entities = True
+
+    def _set_example_embeddings(self) -> None:
+        """
+        Method to set the embeddings for the example text
+        """
+        example_text = [self._mask_record(record) for record in self._example_data]
+        self._example_embeddings = self._model.encode(example_text)
+
+
+class EEPromptRandomSimilarExamples(
+    EEPromptSimilarExamples, EEPromptRandomExamples, ABC
+):
+    """
+    Abstract class that defines the functionality for including both random and
+    similar examples in a prompt. In this case, the argument that sets the number of
+    examples for both the random and similar examples.
+    This class could be inherited by classes for both event trigger detection and event
+    argument extraction.
+    TODO: Allow a different number of random and similar examples to be selected,
+    e.g., `num_random_examples` and `num_similar_examples`.
+    """
+
+    def __init__(self, schema: dict, **kwargs: Any) -> None:
+        super().__init__(schema, **kwargs)
+        self._random_selection = True
+        # Ensure similar selection will occur as well as random
+        self._similar_selection = True
 
 
 class EDPromptWithExamples(EEPromptWithExamples, EDPrompt, ABC):
@@ -1180,6 +1263,81 @@ class EAEPromptWithExamples(EEPromptWithExamples, EAEPrompt, ABC):
         )
 
 
+class EDPromptWithExamplesFilterEventTypes(
+    EDPromptWithExamples, EEPromptSimilarExamples, ABC
+):
+    """
+    An abstract class for event trigger detection with examples, where the examples are
+    used to filter the event types shown in the prompt. It would only make sense to
+    use this with similar examples, as random examples would not be useful for filtering
+    the event types.
+    """
+
+    def __init__(self, schema: dict, **kwargs: Any) -> None:
+        super().__init__(schema, **kwargs)
+
+    def _get_filtered_event_types_defs(self, example_records: list[dict]) -> str:
+        filtered_event_types = set()
+        for record in example_records:
+            for event_mention in record["event_mentions"]:
+                filtered_event_types.add(event_mention["event_type"])
+        # Ensure there are always at least two event types in the list
+        for event_type in self._schema:
+            if len(filtered_event_types) < 2:
+                filtered_event_types.add(event_type)
+            else:
+                break
+
+        return "\n".join([key + self._schema[key] for key in filtered_event_types])
+
+    def _construct_prompt(self) -> tuple[str, dict, dict]:
+        """
+        Constructs a prompt for event trigger detection.
+
+        This function generates a structured prompt for event detection by
+        combining input text, event type definitions, and example texts. It
+        also defines the expected output format using a JSON schema.
+
+        Returns:
+            tuple[str, dict, dict]: A tuple containing:
+                - str: The constructed prompt with event type definitions,
+                  examples, and input text.
+                - dict: The JSON schema defining the expected output format.
+                - dict: A dictionary containing extracted IDs from the input data.
+        """
+        # Get example records
+        example_records = self._get_examples()
+        # Turn the selected examples into the text to use for the prompt.
+        self._examples_for_prompt = self._construct_examples(example_records)
+        # Return the constructed prompt
+        return (
+            (
+                self._get_system_content()
+                + "You will be give some text and have to determine if any event types "
+                "appear in the text. "
+                "Not all event types will appear, there may be some "
+                "that appear multiple times and there may be no event types "
+                "in the text.\n"
+                "If you identify one or more event type, then what is the trigger "
+                "word or words in the input text?"
+                + "\nFormat the output strictly as JSON. The output is an array of "
+                "JSON objects with exactly one key-value pair. The valid keys are "
+                "the event types and the values are the trigger words from the input "
+                "text.\n\n"
+                + "These are the possible event types you can chose from:\n"
+                + self._get_filtered_event_types_defs(example_records)
+                + "\nHere are some examples:\n"
+                + self._examples_for_prompt
+                + "\nNow process this input text:\n```"
+                + self._input_text
+                + "```\n"
+                + "Response (JSON): "
+            ),
+            self._json_schema,
+            self._get_ids(),
+        )
+
+
 class EDPrompter1(EDPrompt):
     """
     Class to construct prompts for event trigger detection:
@@ -1216,6 +1374,54 @@ class EDPrompter4(EEPromptSimilarExamples, EDPromptWithExamples):
     Class to construct prompts for event trigger detection:
     - uses SIMILAR samples in the prompt the prompt
     - similarity is determined using a sentence transformer
+    """
+
+    def __init__(self, schema: dict, **kwargs: Any):
+        super().__init__(schema, **kwargs)
+
+
+class EDPrompter5(EEPromptRandomSimilarExamples, EDPromptWithExamples):
+    """
+    Class to construct prompts for event trigger detection:
+    - uses both RANDOM and SIMILAR samples in the prompt
+    - similarity is determined using a sentence transformer
+    """
+
+    def __init__(self, schema: dict, **kwargs: Any):
+        super().__init__(schema, **kwargs)
+
+
+class EDPrompter6(EEPromptSimilarMaskedExamples, EDPromptWithExamples):
+    """
+    Class to construct prompts for event trigger detection:
+    - uses SIMILAR samples in the prompt the prompt
+    - similarity is determined using a sentence transformer
+    - entities are masked in the text records before doing a similarity comparison
+    """
+
+    def __init__(self, schema: dict, **kwargs: Any):
+        super().__init__(schema, **kwargs)
+
+
+class EDPrompter7(EDPromptWithExamplesFilterEventTypes):
+    """
+    Class to construct prompts for event trigger detection:
+    - uses SIMILAR samples in the prompt the prompt
+    - similarity is determined using a sentence transformer
+    - filters the event types shown in the prompt based on the examples
+    """
+
+    def __init__(self, schema: dict, **kwargs: Any):
+        super().__init__(schema, **kwargs)
+
+
+class EDPrompter8(EDPromptWithExamplesFilterEventTypes, EEPromptSimilarMaskedExamples):
+    """
+    Class to construct prompts for event trigger detection:
+    - uses SIMILAR samples in the prompt the prompt
+    - similarity is determined using a sentence transformer
+    - filters the event types shown in the prompt based on the examples
+    - entities are masked in the text records before doing a similarity comparison
     """
 
     def __init__(self, schema: dict, **kwargs: Any):
@@ -1278,6 +1484,7 @@ class EAEPrompter5(EAEPromptWithExamples, EEPromptSimilarExamples):
     - only takes a SINGLE event trigger
     - predicts multiple argument roles
     - Uses SIMILAR examples in the prompt (ANY EVENT TYPE)
+    - similarity is determined using a sentence transformer
     """
 
     def __init__(self, schema: dict, **kwargs: Any):
@@ -1291,8 +1498,35 @@ class EAEPrompter6(EAEPromptWithExamples, EEPromptSimilarExamples):
     - only takes a SINGLE event trigger
     - predicts multiple argument roles
     - Uses SIMILAR examples in the prompt, but with SAME EVENT TYPE
+    - similarity is determined using a sentence transformer
     """
 
     def __init__(self, schema: dict, **kwargs: Any) -> None:
         super().__init__(schema, **kwargs)
         self._same_event_type = True
+
+
+class EAEPrompter7(EEPromptRandomSimilarExamples, EAEPromptWithExamples):
+    """
+    Event argument extraction:
+    - only takes a SINGLE event trigger
+    - predicts multiple argument roles
+    - Uses RANDOM and SIMILAR examples in the prompt, no constraint on EVENT TYPE
+    - similarity is determined using a sentence transformer
+    """
+
+    def __init__(self, schema: dict, **kwargs: Any) -> None:
+        super().__init__(schema, **kwargs)
+
+
+class EAEPrompter8(EEPromptSimilarMaskedExamples, EAEPromptWithExamples):
+    """
+    Event argument extraction:
+    - only takes a SINGLE event trigger
+    - predicts multiple argument roles
+    - similarity is determined using a sentence transformer
+    - entities are masked in the text records before doing a similarity comparison
+    """
+
+    def __init__(self, schema: dict, **kwargs: Any) -> None:
+        super().__init__(schema, **kwargs)

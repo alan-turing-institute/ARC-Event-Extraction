@@ -10,7 +10,7 @@
     "Business:Start-Org": " : whenever a new organization is created.",
     "Business:Merge-Org": " : whenever two or more organization Entities come together to form a new organization",
     "Business:Declare-Bankruptcy": " : whenever an Entity officially requests legal protection from debt collection due to an extremely negative balance sheet.",
-    "Business: End-Org": " : whenever an organization ceases to exist",
+    "Business:End-Org": " : whenever an organization ceases to exist",
     "Conflict:Attack": " : a violent physical act causing harm or damage.",
     "Conflict:Demonstrate": " : whenever a large number of people come together in a public area to protest or demand some sort of official action.",
     "Contact:Meet": " : whenever two or more Entities come together at a single location and interact with one another face-to-face.",

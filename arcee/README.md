@@ -64,6 +64,18 @@ A class for constructing prompts for event trigger detection. This class uses ra
 #### `EDPrompter4`
 A class for constructing prompts for event trigger detection. This class uses similar examples in the prompt (the number determined by an input argument and the similarity determined by a sentence transformer using cosine similarity).
 
+#### `EDPrompter5`
+A class for constructing prompts for event trigger detection. This class uses both random and similar examples in the prompt (the number determined by an input argument and the similarity determined by a sentence transformer using cosine similarity). The random examples are displayed first in the prompt and there are the same number of random and similar examples in the prompt.
+
+#### `EDPrompter6`
+A class for constructing prompts for event trigger detection. This class uses similar examples in the prompt (the number determined by an input argument and the similarity determined by a sentence transformer using cosine similarity). The named entities in the input text and example text are masked before comparing for similarity.
+
+#### `EDPrompter7`
+A class for constructing prompts for event trigger detection. This class uses similar examples in the prompt (the number determined by an input argument and the similarity determined by a sentence transformer using cosine similarity). The most similar examples are used to filter the possible event types shown in the prompt, so that the prompt only contains those event types common to the similar examples - if there are fewer than two event types then additional event types are added to the prompt.
+
+#### `EDPrompter8`
+A class for constructing prompts for event trigger detection. This class uses similar examples in the prompt (the number determined by an input argument and the similarity determined by a sentence transformer using cosine similarity). As with `EDPrompter7`, this prompt also filters by event type but the similar examples are selected by masking the named entities.
+
 ### Prompt classes for event argument extraction
 
 #### `EAEPrompter1`
@@ -85,6 +97,12 @@ A class for constructing prompts for event argument extraction. This class uses 
 
 #### `EAEPrompter6`
 A class for constructing prompts for event argument extraction. This class uses random examples in the prompt (the number determined by an input argument and the similarity determined by a sentence transformer using cosine similarity). The similar examples are chosen from the examples with the same event type as the input record; if there are not enough examples with the same event type to choose from, then examples will be selected as the most similar, regardless of event type (as per `EAEPrompter5`).
+
+#### `EAEPrompter7`
+A class for constructing prompts for event argument extraction. This class uses both random and similar examples in the prompt (the number determined by an input argument and the similarity determined by a sentence transformer using cosine similarity). The random examples are displayed first in the prompt and there are the same number of random and similar examples in the prompt.
+
+#### `EAEPrompter8`
+A class for constructing prompts for event argument extraction. This class uses similar examples in the prompt (the number determined by an input argument and the similarity determined by a sentence transformer using cosine similarity). The named entities in the input text and example text are masked before comparing for similarity.
 
 ## EE Models
 The only class that has been created to date is:

@@ -674,8 +674,7 @@ class EEPromptWithExamples(EEPrompt, ABC):
             start = entity["start"]
             end = entity["end"]
             entity_type = entity["entity_type"]
-            mention_type = entity["mention_type"]
-            mask = entity_type + "_" + mention_type
+            mask = entity_type
             # mask the first token
             tokens[start] = mask
             # Set the remaining entity mention tokens as an empty string

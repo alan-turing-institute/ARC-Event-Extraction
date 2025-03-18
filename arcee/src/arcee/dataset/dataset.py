@@ -6,19 +6,17 @@ from arcee.dataset.load import load_data
 from arcee.prompts.prompts import EEPrompt
 
 
-# Please ignore docstrings for now - I'm ripping this off selective forgetting
 class EEDataset(Dataset):
     """
     Dataset class used for iterating over event extraction data while applying a valid
     prompt. Inherits from torch Dataset to enable use of the torch DataLoader
 
     Attributes:
-        data: A list of dictionaries where each dictionary contains one piece of event
-            extraction data, loaded by `arcee.dataset.load.load_dataset`
-        prompt_constructor: An instance of a class inheriting from
+        data (list[dict]): A list of dictionaries where each dictionary contains one
+            piece of event extraction data, loaded by
+            `arcee.dataset.load.load_dataset`
+        prompt_constuctor (EEPrompt): An instance of a class inheriting from
             `arcee.prompts.prompts.EEPrompt`
-        event_schema: A dict describing an event schema, loaded by
-            `arcee.dataset.load.load_scehma`
     """
 
     def __init__(
@@ -26,6 +24,16 @@ class EEDataset(Dataset):
         data: list[dict],
         prompt_constuctor: EEPrompt,
     ):
+        """
+        Constructor for the EEDataset class
+
+        Args:
+            data (list[dict]): A list of dictionaries where each dictionary contains one
+                piece of event extraction data, loaded by
+                `arcee.dataset.load.load_dataset`
+            prompt_constuctor (EEPrompt): An instance of a class inheriting from
+            `arcee.prompts.prompts.EEPrompt`
+        """
         super().__init__()
         self.data = data
         self.prompt_constuctor = prompt_constuctor

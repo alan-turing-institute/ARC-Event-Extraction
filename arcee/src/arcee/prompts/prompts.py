@@ -22,6 +22,13 @@ class EEPrompt(ABC):
     """
     Abstract class for prompt construction. This will define common functionality
     that child prompt classes will inherit.
+
+    Attributes:
+        _schema (dict): The event schema to be used for the data
+        _input_data (dict[str, str | int | list]): The input data record
+        _input_text (str): The input text record
+        _json_schema (dict): The JSON schema for the output
+        _eae (bool): Whether the prompt is for event argument extraction
     """
 
     def __init__(self, schema: dict, **kwargs: Any) -> None:
@@ -192,9 +199,26 @@ class EDPrompt(EEPrompt, ABC):
     """
     Abstract class for event detection prompt construction. This will define common
     functionality that child prompt classes for event detection will inherit.
+
+    Inherits attributes from the `EEPrompt`:
+        _schema (dict): The event schema to be used for the data
+        _input_data (dict[str, str | int | list]): The input data record
+        _input_text (str): The input text record
+        _json_schema (dict): The JSON schema for the output
+        _eae (bool): Whether the prompt is for event argument extraction
+
+    Attributes:
+        _event_type_defs (str): The event type definitions
     """
 
     def __init__(self, schema: dict, **kwargs: Any) -> None:
+        """
+        Initialises the EDPrompt class and sets the attributes that may be required
+
+        Args:
+            schema (dict): The event schema to be used for the data
+            **kwargs: Additional keyword arguments
+        """
         super().__init__(schema, **kwargs)
         # For event detection the schema is the list of events with definitions
         # Concatenate event type definitions into a single string, with a line break
@@ -290,7 +314,31 @@ class EDPrompt(EEPrompt, ABC):
 
 
 class EDPromptWithExampleSchema(EDPrompt, ABC):
+    """
+    Abstract class for event detection prompt construction with an example schema. This
+    will define common functionality that child prompt classes will inherit.
+
+    Inherits attributes from the `EDPrompt`:
+        _schema (dict): The event schema to be used for the data
+        _input_data (dict[str, str | int | list]): The input data record
+        _input_text (str): The input text record
+        _json_schema (dict): The JSON schema for the output
+        _eae (bool): Whether the prompt is for event argument extraction
+        _event_type_defs (str): The event type definitions
+
+    Attributes:
+        _example_schema (str): An example of the JSON schema for the output
+    """
+
     def __init__(self, schema: dict, **kwargs: Any) -> None:
+        """
+        Initialises the EDPromptWithExampleSchema class and sets the attributes that may
+        be required.
+
+        Args:
+            schema (dict): The event schema to be used for the data
+            **kwargs: Additional keyword arguments
+        """
         super().__init__(schema, **kwargs)
         # To be correct JSON schema, the keys & values have to be in double quotes
         self._example_schema = (
@@ -343,9 +391,28 @@ class EAEPrompt(EEPrompt, ABC):
     """
     Abstract class for event argument extraction prompt construction. This will define
     common functionality that child prompt classes will inherit.
+
+    Inherits attributes from the `EEPrompt`:
+        _schema (dict): The event schema to be used for the data
+        _input_data (dict[str, str | int | list]): The input data record
+        _input_text (str): The input text record
+        _json_schema (dict): The JSON schema for the output
+        _eae (bool): Whether the prompt is for event argument extraction
+
+    Attributes:
+        _tagged_text (str): The input text with trigger tags
+        _arg_roles (list[str]): The argument roles for the event type
+        _event_type (str): The event type
     """
 
     def __init__(self, schema: dict, **kwargs: Any) -> None:
+        """
+        Initialises the EAEPrompt class and sets the attributes that may be required.
+
+        Args:
+            schema (dict): The event schema to be used for the data
+            **kwargs: Additional keyword arguments
+        """
         super().__init__(schema, **kwargs)
         self._eae = True
         # Some attributes specific to argument extraction
@@ -580,6 +647,25 @@ class EAEPrompt(EEPrompt, ABC):
 
 
 class EAEPromptWithExampleSchema(EAEPrompt, ABC):
+    """
+    Abstract class for event argument extraction prompt construction with an example
+    schema. This will define common functionality that child prompt classes will
+    inherit.
+
+    Inherits attributes from the `EAEPrompt`:
+        _schema (dict): The event schema to be used for the data
+        _input_data (dict[str, str | int | list]): The input data record
+        _input_text (str): The input text record
+        _json_schema (dict): The JSON schema for the output
+        _eae (bool): Whether the prompt is for event argument extraction
+        _tagged_text (str): The input text with trigger tags
+        _arg_roles (list[str]): The argument roles for the event type
+        _event_type (str): The event type
+
+    Attributes:
+        _example_schema (str): An example of the JSON schema for the output
+    """
+
     def __init__(self, schema: dict, **kwargs: Any) -> None:
         super().__init__(schema, **kwargs)
         # To be correct JSON schema, the keys & values have to be in double quotes
@@ -633,9 +719,35 @@ class EEPromptWithExamples(EEPrompt, ABC):
     Abstract class for creating a prompt with examples in it. This class will define
     the common functionality that child classes will inherit, which could be classes
     for both event trigger detection and event argument extraction.
+
+    Inherits attributes from the `EEPrompt`:
+        _schema (dict): The event schema to be used for the data
+        _input_data (dict[str, str | int | list]): The input data record
+        _input_text (str): The input text record
+        _json_schema (dict): The JSON schema for the output
+        _eae (bool): Whether the prompt is for event argument extraction
+
+    Attributes:
+        _example_data (list): The data for the examples
+        _example_embeddings (list): The embeddings for the examples
+        _rng (np.random.Generator | None): The random number generator
+        _model (SentenceTransformer | None): The sentence transformer model
+        _random_selection (bool): Whether examples are selected randomly
+        _same_event_type (bool): Whether examples are filtered by event type
+        _examples_for_prompt (str): The examples to be used in the prompt
+        _num_examples (int): The number of examples to use
+        _event_type (str): The event type of the input data record
     """
 
     def __init__(self, schema: dict, **kwargs: Any) -> None:
+        """
+        Initialises the EEPromptWithExamples class and sets the attributes that may be
+        required when constructing a prompt.
+
+        Args:
+            schema (dict): The event schema to be used for the data
+            **kwargs: Additional keyword arguments
+        """
         super().__init__(schema, **kwargs)
 
         # Define the attributes that may be used when constructing a prompt
@@ -737,9 +849,33 @@ class EEPromptRandomExamples(EEPromptWithExamples, ABC):
     Abstract class that defines the functionality for selecting random examples to
     use in the prompt. This class could be inherited by classes for both event trigger
     detection and event argument extraction.
+
+    Inherits attributes from the `EEPromptWithExamples`:
+        _schema (dict): The event schema to be used for the data
+        _input_data (dict[str, str | int | list]): The input data record
+        _input_text (str): The input text record
+        _json_schema (dict): The JSON schema for the output
+        _eae (bool): Whether the prompt is for event argument extraction
+        _example_data (list): The data for the examples
+        _example_embeddings (list): The embeddings for the examples
+        _rng (np.random.Generator | None): The random number generator
+        _model (SentenceTransformer | None): The sentence transformer model
+        _random_selection (bool): Whether examples are selected randomly
+        _same_event_type (bool): Whether examples are filtered by event type
+        _examples_for_prompt (str): The examples to be used in the prompt
+        _num_examples (int): The number of examples to use
+        _event_type (str): The event type of the input data record
     """
 
     def __init__(self, schema: dict, **kwargs: Any) -> None:
+        """
+        Initialises the EEPromptRandomExamples class and sets the attributes that may be
+        required when constructing a prompt.
+
+        Args:
+            schema (dict): The event schema to be used for the data
+            **kwargs: Additional keyword arguments
+        """
         super().__init__(schema, **kwargs)
         # Ensure random selection will occur:
         self._random_selection = True
@@ -756,9 +892,33 @@ class EEPromptSimilarExamples(EEPromptWithExamples, ABC):
     Abstract class that defines the functionality for selected examples based on
     similarity to the input text. This class could be inherited by classes for both
     event trigger detection and event argument extraction.
+
+    Inherits attributes from the `EEPromptWithExamples`:
+        _schema (dict): The event schema to be used for the data
+        _input_data (dict[str, str | int | list]): The input data record
+        _input_text (str): The input text record
+        _json_schema (dict): The JSON schema for the output
+        _eae (bool): Whether the prompt is for event argument extraction
+        _example_data (list): The data for the examples
+        _example_embeddings (list): The embeddings for the examples
+        _rng (np.random.Generator | None): The random number generator
+        _model (SentenceTransformer | None): The sentence transformer model
+        _random_selection (bool): Whether examples are selected randomly
+        _same_event_type (bool): Whether examples are filtered by event type
+        _examples_for_prompt (str): The examples to be used in the prompt
+        _num_examples (int): The number of examples to use
+        _event_type (str): The event type of the input data record
     """
 
     def __init__(self, schema: dict, **kwargs: Any) -> None:
+        """
+        Initialises the EEPromptSimilarExamples class and sets the attributes that may
+        be required when constructing a prompt.
+
+        Args:
+            schema (dict): The event schema to be used for the data
+            **kwargs: Additional keyword arguments
+        """
         super().__init__(schema, **kwargs)
         # Selecting based on similarity, so set random selection to False
         self._random_selection = False
@@ -803,9 +963,33 @@ class EDPromptWithExamples(EEPromptWithExamples, EDPrompt, ABC):
     """
     An abstract class for event trigger detection with examples. This class will define
     the common functionality that child classes will inherit.
+
+    Inherits attributes from the `EEPromptWithExamples` and `EDPrompt`:
+        _schema (dict): The event schema to be used for the data
+        _input_data (dict[str, str | int | list]): The input data record
+        _input_text (str): The input text record
+        _json_schema (dict): The JSON schema for the output
+        _eae (bool): Whether the prompt is for event argument extraction
+        _example_data (list): The data for the examples
+        _example_embeddings (list): The embeddings for the examples
+        _rng (np.random.Generator | None): The random number generator
+        _model (SentenceTransformer | None): The sentence transformer model
+        _random_selection (bool): Whether examples are selected randomly
+        _same_event_type (bool): Whether examples are filtered by event type
+        _examples_for_prompt (str): The examples to be used in the prompt
+        _num_examples (int): The number of examples to use
+        _event_type (str): The event type of the input data record
     """
 
     def __init__(self, schema: dict, **kwargs: Any) -> None:
+        """
+        Initialises the EDPromptWithExamples class and sets the attributes that may be
+        required when constructing a prompt.
+
+        Args:
+            schema (dict): The event schema to be used for the data
+            **kwargs: Additional keyword arguments
+        """
         super().__init__(schema, **kwargs)
         # Never filter by same event type for event trigger detection
         self._same_event_type = False
@@ -894,6 +1078,24 @@ class EAEPromptWithExamples(EEPromptWithExamples, EAEPrompt, ABC):
     """
     Abstract class for event argument extraction with examples. This class will define
     the common functionality that child classes will inherit.
+
+    Inherits attributes from the `EEPromptWithExamples` and `EAEPrompt`:
+        _schema (dict): The event schema to be used for the data
+        _input_data (dict[str, str | int | list]): The input data record
+        _input_text (str): The input text record
+        _json_schema (dict): The JSON schema for the output
+        _eae (bool): Whether the prompt is for event argument extraction
+        _example_data (list): The data for the examples
+        _example_embeddings (list): The embeddings for the examples
+        _rng (np.random.Generator | None): The random number generator
+        _model (SentenceTransformer | None): The sentence transformer model
+        _random_selection (bool): Whether examples are selected randomly
+        _same_event_type (bool): Whether examples are filtered by event type
+        _examples_for_prompt (str): The examples to be used in the prompt
+        _num_examples (int): The number of examples to use
+        _event_type (str): The event type of the input data record
+        _tagged_text (str): The input text with trigger tags
+        _arg_roles (list[str]): The argument roles for the event type
     """
 
     def __init__(self, schema: dict, **kwargs: Any) -> None:

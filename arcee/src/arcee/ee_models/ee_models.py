@@ -26,23 +26,20 @@ class EEBaseModel(ABC):
         event argument extraction (EAE) or end-to-end (E2E) will be determined
         by the logic held in the prompt.
 
-        Parameters
-        ----------
-        input: list[tuple[str, str | dict, dict, str]]
-            A list of tuples. Each tuple will contain:
-            - dict[str,str]: The prompt stored in a dict to be used in the task.
-            - str | dict: The output format, either 'json' or a JSON schema.
-            - dict: A dictionary of IDs to be attached to the LLM's response
-            that identify the record.
-            - str: The input text
+        Args:
+            input: list[tuple[str, str | dict, dict, str]]
+                A list of tuples. Each tuple will contain:
+                - dict[str,str]: The prompt stored in a dict to be used in the task.
+                - str | dict: The output format, either 'json' or a JSON schema.
+                - dict: A dictionary of IDs to be attached to the LLM's response
+                that identify the record.
+                - str: The input text
 
-        Returns
-        -------
-        list[dict[str, str | list | dict]]
-            A list of dictionaries, with the record IDs and the output from the model
-            If the output is not in JSON format, then it will be logged with a key of
-            'JSON_ERROR' and the value of the response.
-
+        Returns:
+            list[dict[str, str | list | dict]]
+                A list of dictionaries, with the record IDs and the output from the
+                model. If the output is not in JSON format, then it will be logged with
+                a key of 'JSON_ERROR' and the value of the response.
         """
 
 

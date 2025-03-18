@@ -13,10 +13,16 @@ from arcee.prompts.prompts import (
     EAEPrompter4,
     EAEPrompter5,
     EAEPrompter6,
+    EAEPrompter7,
+    EAEPrompter8,
     EDPrompter1,
     EDPrompter2,
     EDPrompter3,
     EDPrompter4,
+    EDPrompter5,
+    EDPrompter6,
+    EDPrompter7,
+    EDPrompter8,
 )
 
 DATA = {
@@ -27,11 +33,21 @@ DATA = {
     "event_mentions": [
         {"id": "ev1", "trigger": {"start": 1, "end": 2}, "event_type": "Explosion"}
     ],
+    "entity_mentions": [
+        {
+            "text": "building",
+            "start": 4,
+            "end": 5,
+            "entity_type": "BUILD",
+            "mention_type": "NAM",
+        }
+    ],
 }
 
 ED_SCHEMA = {
     "Explosion": ": An event where something bursts violently.",
     "Attack": ": A violent physical act causing harm or damage.",
+    "Fire": ": An event where something burns.",
 }
 JSON_SCHEMA = {
     "type": "array",
@@ -71,6 +87,7 @@ EXAMPLE_RECORDS = [
                 "arguments": [{"role": "Victim", "text": "car"}],
             }
         ],
+        "entity_mentions": [],
     },
     {
         "doc_id": "doc2",
@@ -83,6 +100,15 @@ EXAMPLE_RECORDS = [
                 "trigger": {"text": "fire", "start": 1, "end": 2},
                 "event_type": "Fire",
                 "arguments": [{"role": "Location", "text": "warehouse"}],
+            }
+        ],
+        "entity_mentions": [
+            {
+                "text": "warehouse",
+                "start": 6,
+                "end": 7,
+                "entity_type": "BUILD",
+                "mention_type": "NAM",
             }
         ],
     },
@@ -99,6 +125,7 @@ EXAMPLE_RECORDS = [
                 "arguments": [{"role": "Location", "text": None}],
             }
         ],
+        "entity_mentions": [],
     },
     {
         "doc_id": "doc4",
@@ -111,6 +138,15 @@ EXAMPLE_RECORDS = [
                 "trigger": {"text": "earthquake", "start": 1, "end": 2},
                 "event_type": "Earthquake",
                 "arguments": [{"role": "Location", "text": "city"}],
+            }
+        ],
+        "entity_mentions": [
+            {
+                "text": "city",
+                "start": 4,
+                "end": 5,
+                "entity_type": "GPE",
+                "mention_type": "NAM",
             }
         ],
     },
@@ -127,6 +163,7 @@ EXAMPLE_RECORDS = [
                 "arguments": [{"role": "Location", "text": None}],
             }
         ],
+        "entity_mentions": [],
     },
 ]
 
@@ -169,6 +206,15 @@ EXAMPLE_RECORDS_SAME_TYPE = [
                 "arguments": [{}],
             }
         ],
+        "entity_mentions": [
+            {
+                "text": "TV",
+                "start": 8,
+                "end": 9,
+                "entity_type": "MEDIA",
+                "mention_type": "NAM",
+            }
+        ],
     },
     {
         "doc_id": "doc3",
@@ -193,6 +239,15 @@ EXAMPLE_RECORDS_SAME_TYPE = [
                 "trigger": {"text": "explosion", "start": 9, "end": 10},
                 "event_type": "Explosion",
                 "arguments": [{"role": "Location", "text": "ocean"}],
+            }
+        ],
+        "entity_mentions": [
+            {
+                "text": "ocean",
+                "start": 5,
+                "end": 6,
+                "entity_type": "LOC",
+                "mention_type": "NAM",
             }
         ],
     },
@@ -229,6 +284,15 @@ EXAMPLE_RECORDS_SAME_TYPE = [
                 "event_type": "Explosion",
                 "arguments": [{"role": "Location", "text": "city"}],
             },
+        ],
+        "entity_mentions": [
+            {
+                "text": "city",
+                "start": 11,
+                "end": 12,
+                "entity_type": "GPE",
+                "mention_type": "NAM",
+            }
         ],
     },
 ]
@@ -272,8 +336,8 @@ class TestEDPrompter1:
         prompt, output_format, ids, input_text = self.prompter.get_prompt(DATA)
 
         assert isinstance(output_format, dict)
-        assert "Explosion: An event where something bursts violently." in prompt
-        assert "Attack: A violent physical act causing harm or damage." in prompt
+        for event_type in ED_SCHEMA:
+            assert event_type + ED_SCHEMA[event_type] in prompt
         assert "The explosion destroyed the building." in prompt
         assert "Format the output strictly as JSON" in prompt
         assert ids == {"wnd_id": "wnd1"}
@@ -293,8 +357,8 @@ class TestEDPrompter2:
         assert isinstance(prompt, str)
         assert isinstance(output_format, dict)
         assert output_format == JSON_SCHEMA
-        assert "Explosion: An event where something bursts violently." in prompt
-        assert "Attack: A violent physical act causing harm or damage." in prompt
+        for event_type in ED_SCHEMA:
+            assert event_type + ED_SCHEMA[event_type] in prompt
         assert "The explosion destroyed the building." in prompt
         assert "Format the output strictly as JSON" in prompt
         assert ids == {"wnd_id": "wnd1"}
@@ -326,8 +390,8 @@ class TestEDPrompter3:
         assert isinstance(prompt, str)
         assert isinstance(output_format, dict)
         assert output_format == JSON_SCHEMA
-        assert "Explosion: An event where something bursts violently." in prompt
-        assert "Attack: A violent physical act causing harm or damage." in prompt
+        for event_type in ED_SCHEMA:
+            assert event_type + ED_SCHEMA[event_type] in prompt
         assert "The explosion destroyed the building." in prompt
         assert "### Example 1" in prompt
         assert "### Example 2" in prompt
@@ -385,8 +449,8 @@ class TestEDPrompter4:
         assert isinstance(prompt, str)
         assert isinstance(output_format, dict)
         assert output_format == JSON_SCHEMA
-        assert "Explosion: An event where something bursts violently." in prompt
-        assert "Attack: A violent physical act causing harm or damage." in prompt
+        for event_type in ED_SCHEMA:
+            assert event_type + ED_SCHEMA[event_type] in prompt
         assert "The explosion destroyed the building." in prompt
         assert "### Example 1" in prompt
         assert "### Example 2" in prompt
@@ -408,8 +472,8 @@ class TestEDPrompter4:
         assert isinstance(prompt, str)
         assert isinstance(output_format, dict)
         assert output_format == JSON_SCHEMA
-        assert "Explosion: An event where something bursts violently." in prompt
-        assert "Attack: A violent physical act causing harm or damage." in prompt
+        for event_type in ED_SCHEMA:
+            assert event_type + ED_SCHEMA[event_type] in prompt
         assert "The explosion destroyed the building." in prompt
         assert "### Example 1" in prompt
         assert "### Example 2" in prompt
@@ -419,6 +483,186 @@ class TestEDPrompter4:
         assert EXAMPLE_RECORDS_SAME_TYPE[1]["text"] not in prompt
         assert EXAMPLE_RECORDS_SAME_TYPE[2]["text"] in prompt
         assert EXAMPLE_RECORDS_SAME_TYPE[3]["text"] not in prompt
+        assert "Format the output strictly as JSON" in prompt
+        assert ids == {"wnd_id": "wnd1"}
+        assert input_text == DATA["text"]
+
+
+class TestEDPrompter5:
+    def setup_method(self):
+        """Setup an instance of EDPrompter5 for testing."""
+        with tempfile.NamedTemporaryFile(
+            delete=False, mode="w", suffix=".json"
+        ) as temp_file:
+            for record in EXAMPLE_RECORDS:
+                temp_file.write(json.dumps(record) + "\n")
+            temp_file_path = temp_file.name
+
+        kwargs = {
+            "example_data_path": temp_file_path,
+            "num_examples": 2,
+            "sentence_transformer_model": (
+                "sentence-transformers-testing/stsb-bert-tiny-safetensors"
+            ),
+            "seed": 42,
+        }
+        self.prompter = EDPrompter5(ED_SCHEMA, **kwargs)
+
+    def test_get_prompt(self):
+        """Test get_prompt for EDPrompter5 works correctly."""
+        prompt, output_format, ids, input_text = self.prompter.get_prompt(DATA)
+
+        assert isinstance(prompt, str)
+        assert isinstance(output_format, dict)
+        assert output_format == JSON_SCHEMA
+        for event_type in ED_SCHEMA:
+            assert event_type + ED_SCHEMA[event_type] in prompt
+        assert "### Example 1" in prompt
+        assert "### Example 2" in prompt
+        # num_examples is 2, but in this case it is two random and two similar - so
+        # there should be four examples altogether
+        assert "### Example 3" in prompt
+        assert "### Example 4" in prompt
+        assert "### Example 5" not in prompt
+        assert EXAMPLE_RECORDS[0]["text"] in prompt
+        assert EXAMPLE_RECORDS[3]["text"] in prompt
+        assert EXAMPLE_RECORDS[1]["text"] in prompt
+        assert EXAMPLE_RECORDS[2]["text"] not in prompt
+        assert EXAMPLE_RECORDS[4]["text"] not in prompt
+        assert "Format the output strictly as JSON" in prompt
+        assert ids == {"wnd_id": "wnd1"}
+        assert input_text == DATA["text"]
+
+
+class TestEDPrompter6:
+    def setup_method(self):
+        """Setup an instance of EDPrompter6 for testing."""
+        with tempfile.NamedTemporaryFile(
+            delete=False, mode="w", suffix=".json"
+        ) as temp_file:
+            for record in EXAMPLE_RECORDS:
+                temp_file.write(json.dumps(record) + "\n")
+            temp_file_path = temp_file.name
+
+        kwargs = {
+            "example_data_path": temp_file_path,
+            "num_examples": 2,
+            "sentence_transformer_model": (
+                "sentence-transformers-testing/stsb-bert-tiny-safetensors"
+            ),
+        }
+        self.prompter = EDPrompter6(ED_SCHEMA, **kwargs)
+
+    def test_get_prompt(self):
+        """Test get_prompt for EDPrompter6 works correctly."""
+        prompt, output_format, ids, input_text = self.prompter.get_prompt(DATA)
+
+        assert isinstance(prompt, str)
+        assert isinstance(output_format, dict)
+        assert output_format == JSON_SCHEMA
+        for event_type in ED_SCHEMA:
+            assert event_type + ED_SCHEMA[event_type] in prompt
+        assert "### Example 1" in prompt
+        assert "### Example 2" in prompt
+        assert "### Example 3" not in prompt
+        assert "### Example 4" not in prompt
+        assert EXAMPLE_RECORDS[0]["text"] in prompt
+        assert EXAMPLE_RECORDS[1]["text"] in prompt
+        assert EXAMPLE_RECORDS[2]["text"] not in prompt
+        assert EXAMPLE_RECORDS[3]["text"] not in prompt
+        assert EXAMPLE_RECORDS[4]["text"] not in prompt
+        assert "Format the output strictly as JSON" in prompt
+        assert ids == {"wnd_id": "wnd1"}
+        assert input_text == DATA["text"]
+
+
+class TestEDPrompter7:
+    def setup_method(self):
+        """Setup an instance of EDPrompter7 for testing."""
+        with tempfile.NamedTemporaryFile(
+            delete=False, mode="w", suffix=".json"
+        ) as temp_file:
+            for record in EXAMPLE_RECORDS:
+                temp_file.write(json.dumps(record) + "\n")
+            temp_file_path = temp_file.name
+
+        kwargs = {
+            "example_data_path": temp_file_path,
+            "num_examples": 2,
+            "sentence_transformer_model": (
+                "sentence-transformers-testing/stsb-bert-tiny-safetensors"
+            ),
+        }
+        self.prompter = EDPrompter7(ED_SCHEMA, **kwargs)
+
+    def test_get_prompt(self):
+        """Test get_prompt for EDPrompter7 works correctly."""
+        prompt, output_format, ids, input_text = self.prompter.get_prompt(DATA)
+
+        assert isinstance(prompt, str)
+        assert isinstance(output_format, dict)
+        assert output_format == JSON_SCHEMA
+        # Need to test event types not in examples aren't in prompt
+        for event_type in ED_SCHEMA:
+            if event_type == "Attack":
+                assert event_type + ED_SCHEMA[event_type] not in prompt
+            else:
+                assert event_type + ED_SCHEMA[event_type] in prompt
+        assert "### Example 1" in prompt
+        assert "### Example 2" in prompt
+        assert "### Example 3" not in prompt
+        assert "### Example 4" not in prompt
+        assert EXAMPLE_RECORDS[0]["text"] in prompt
+        assert EXAMPLE_RECORDS[1]["text"] in prompt
+        assert EXAMPLE_RECORDS[2]["text"] not in prompt
+        assert EXAMPLE_RECORDS[3]["text"] not in prompt
+        assert EXAMPLE_RECORDS[4]["text"] not in prompt
+        assert "Format the output strictly as JSON" in prompt
+        assert ids == {"wnd_id": "wnd1"}
+        assert input_text == DATA["text"]
+
+
+class TestEDPrompter8:
+    def setup_method(self):
+        """Setup an instance of EDPrompter8 for testing."""
+        with tempfile.NamedTemporaryFile(
+            delete=False, mode="w", suffix=".json"
+        ) as temp_file:
+            for record in EXAMPLE_RECORDS:
+                temp_file.write(json.dumps(record) + "\n")
+            temp_file_path = temp_file.name
+
+        kwargs = {
+            "example_data_path": temp_file_path,
+            "num_examples": 2,
+            "sentence_transformer_model": (
+                "sentence-transformers-testing/stsb-bert-tiny-safetensors"
+            ),
+        }
+        self.prompter = EDPrompter8(ED_SCHEMA, **kwargs)
+
+    def test_get_prompt(self):
+        """Test get_prompt for EDPrompter8 works correctly."""
+        prompt, output_format, ids, input_text = self.prompter.get_prompt(DATA)
+
+        assert isinstance(prompt, str)
+        assert isinstance(output_format, dict)
+        assert output_format == JSON_SCHEMA
+        # Need to test event types not in examples aren't in prompt
+        for event_type in ED_SCHEMA:
+            if event_type == "Attack":
+                assert event_type + ED_SCHEMA[event_type] not in prompt
+            else:
+                assert event_type + ED_SCHEMA[event_type] in prompt
+        assert "### Example 1" in prompt
+        assert "### Example 2" in prompt
+        assert "### Example 3" not in prompt
+        assert "### Example 4" not in prompt
+        assert EXAMPLE_RECORDS[0]["text"] in prompt
+        assert EXAMPLE_RECORDS[1]["text"] in prompt
+        assert EXAMPLE_RECORDS[2]["text"] not in prompt
+        assert EXAMPLE_RECORDS[3]["text"] not in prompt
+        assert EXAMPLE_RECORDS[4]["text"] not in prompt
         assert "Format the output strictly as JSON" in prompt
         assert ids == {"wnd_id": "wnd1"}
         assert input_text == DATA["text"]

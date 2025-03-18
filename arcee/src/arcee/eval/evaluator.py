@@ -53,26 +53,29 @@ class Evaluator:
         model_init_kwargs: dict,
         prompt_init_kwargs: dict,
     ):
-        """TODO: to be filled in
+        """
+        Class to evaluate an event extraction model.
 
         Args:
-            model_id (str): _description_
-            model_type (str): _description_
-            output_path (str): _description_
-            data_path (str): _description_
-            only_events (bool): _description_
-            prompt_cls (str): _description_
-            schema_path (str): _description_
-            gold_path (str):
-                The path to the gold labelled data
-            batch_size (int): _description_
-            shuffle (bool | None): _description_
-            model_init_kwargs (dict): _description_
-            prompt_init_kwargs (dict): _description_
+            model_id (str): A string ID for the model, e.g., "Llama3.1:8b"
+            model_type (str): Must match one of the keys in MODEL_CLS_MAP, i.e., "hf",
+                "ollama", "guide_free", "guide_json", "guide_schema"
+            output_path (str): The path to save the model output
+            data_path (str): The path to the data to evaluate
+            only_events (bool): Is True if evaluation is only to be carried out on
+                records with events
+            prompt_cls (str): The name of the prompt class to use
+            schema_path (str): The path to the data schema
+            gold_path (str): The path to the gold labelled data
+            batch_size (int): The batch size to use for evaluation
+            shuffle (bool | None): Is True if the data should be shuffled
+            model_init_kwargs (dict): Model initialisation kwargs
+            prompt_init_kwargs (dict): Prompt initialisation kwargs
 
         Raises:
-            FileExistsError: _description_
-            ValueError: _description_
+            FileExistsError: Thrown if the output file already exists (to avoid
+                overwriting)
+            ValueError: Thrown if the model type is not in MODEL_CLS_MAP
         """
         self.wandb_run = wandb_run
 
@@ -84,7 +87,6 @@ class Evaluator:
         self.output_path = output_path
 
         # Store model ID
-        # TODO: handle trained models stored locally differently? stored on wandb?
         self.model_id = model_id
 
         # Instantiate model

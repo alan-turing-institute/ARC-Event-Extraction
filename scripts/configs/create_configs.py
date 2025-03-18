@@ -108,9 +108,10 @@ def main():
         # And for guidance models
         elif MODEL_TYPE == "guide":
             model_kwargs["model_init_kwargs"] = MODEL_INIT_KWARGS
-            model_kwargs["model_init_kwargs"]["adapter_id"] = adapter
-            # Update exp name to include apater short name
-            exp_name_init = f"{exp_name_init}_{ADAPTERS[adapter]}"
+            if adapter:
+                model_kwargs["model_init_kwargs"]["adapter_id"] = adapter
+                # Update exp name to include apater short name
+                exp_name_init = f"{exp_name_init}_{ADAPTERS[adapter]}"
 
         # DEFINE DATA KWARGS
         data_path = f"data/{DATASET}/output/split{split}/test.jsonlines"
@@ -151,6 +152,9 @@ def main():
                             prompt_init_kwargs["sentence_transformer_model"] = (
                                 sentence_embedding
                             )
+                            # If using both random and similar examples, split the
+                            # number of examples by two
+                            prompt_init_kwargs["num_examples"] = num_examples // 2
                             prompt_kwargs["prompt_init_kwargs"] = prompt_init_kwargs
 
                             filename = (

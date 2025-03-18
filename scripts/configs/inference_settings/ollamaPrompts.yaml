@@ -1,5 +1,6 @@
 models:
-  mistral-small:24b: mistral24b
+  # mistral-small:24b: mistral24b
+  gemma2:27b: gemma27b
 model_type: ollama
 batch_size: 8
 model_init_kwargs:
@@ -11,22 +12,29 @@ prompts:
   EDPrompter2: ED2
   EDPrompter3: ED3
   EDPrompter4: ED4
+  EDPrompter5: ED5
+  EDPrompter6: ED6
+  EDPrompter7: ED7
+  EDPrompter8: ED8
   EAEPrompter1: EAE1
   EAEPrompter2: EAE2
   EAEPrompter3: EAE3
   EAEPrompter4: EAE4
   EAEPrompter5: EAE5
   EAEPrompter6: EAE6
+  EAEPrompter7: EAE7
+  EAEPrompter8: EAE8
 num_examples:
-  - 3
-  - 5
+  - 2
+  - 4
+  - 8
   - 10
-  - 15
+  - 16
   - 20
 seed: 42
 sentence_embeddings:
   intfloat/multilingual-e5-small: e5small
-config_folder: ollamaPrompts
+config_folder: ollamaPromptsTest
 output_format:
   json_schema: s
 
@@ -36,12 +44,20 @@ large_models:
   llama3.3:70b: llama70b
 prompts_random_examples:
   - EDPrompter3
+  - EDPrompter5
   - EAEPrompter3
   - EAEPrompter4
+  - EAEPrompter7
 prompts_similar_examples:
   - EDPrompter4
+  - EDPrompter5
+  - EDPrompter6
+  - EDPrompter7
+  - EDPrompter8
   - EAEPrompter5
   - EAEPrompter6
+  - EAEPrompter7
+  - EAEPrompter8
 prompts_arg_extraction:
   - EAEPrompter1
   - EAEPrompter2
@@ -49,3 +65,5 @@ prompts_arg_extraction:
   - EAEPrompter4
   - EAEPrompter5
   - EAEPrompter6
+  - EAEPrompter7
+  - EAEPrompter8

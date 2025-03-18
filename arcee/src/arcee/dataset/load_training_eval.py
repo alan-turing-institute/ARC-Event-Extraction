@@ -2,32 +2,11 @@ from __future__ import annotations
 
 import json
 
-from datasets import Dataset, load_dataset
+from datasets import Dataset, DatasetDict
 
 import arcee.prompts.prompts as prompts
+from arcee.dataset.load import load_data
 from arcee.dataset.schemas import data_to_argument_schema, data_to_ed_schema
-
-
-def expand_record(record: dict) -> list[dict]:
-    """
-    Takes a record from the dataset and expands it so that it returns one record for
-    each event type
-
-    Args:
-        record (dict): The record to expand
-
-    Returns:
-        list[dict]: A list of the expanded records
-    """
-    num_mentions = record.get("event_mentions", 1)
-    if num_mentions > 1:
-        expanded_records = []
-        for mention in range(num_mentions):
-            new_record = record.copy()
-            new_record["event_mentions"] = [new_record["event_mentions"][mention]]
-            expanded_records.append(new_record)
-        return expanded_records
-    return [record]
 
 
 def load_training_eval_data(
@@ -62,27 +41,25 @@ def load_training_eval_data(
     Dataset
         A dataset object with the formatted training and evaluation data
     """
-    dataset = load_dataset(
-        "json", data_files={"train": training_data_path, "eval": eval_data_path}
-    )
-    # if arg_extraction:
-    #     dataset = dataset.filter(lambda x: len(x["event_mentions"]) > 0)
     with open(schema_path) as file:
         schema = json.load(file)
-    # TODO: Update so that it can take more kwargs for the prompt constructor,
-    # e.g., to construct examples for a prompt.
+
     prompt_constructor = getattr(prompts, prompt_cls)(schema)
     arg_extraction = prompt_constructor.get_is_arg_extraction()
+
+    train_dataset = load_data(training_data_path, arg_extraction)
+    eval_dataset = load_data(eval_data_path, arg_extraction)
+    dataset = DatasetDict(
+        {
+            "train": Dataset.from_list(train_dataset),
+            "eval": Dataset.from_list(eval_dataset),
+        }
+    )
 
     if only_events or arg_extraction:
         # If doing argument extraction, then we only want to keep records that have
         # events. If doing event extraction, this might sometimes be wanted.
         dataset = dataset.filter(lambda x: len(x["event_mentions"]) > 0)
-        if arg_extraction:
-            dataset = {
-                split: dataset[split].map(expand_record, batched=False)
-                for split in dataset
-            }
 
     formatted_dataset: Dataset = dataset.map(
         format_chat_message,

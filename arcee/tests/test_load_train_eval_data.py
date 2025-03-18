@@ -116,8 +116,8 @@ def fake_data_files(tmp_path, test_event_records):
     Creates two temporary JSON files (train.json, eval.json) containing
     the test_event_records. Returns their paths.
     """
-    train_path = tmp_path / "train.json"
-    eval_path = tmp_path / "eval.json"
+    train_path = tmp_path / "train.jsonlines"
+    eval_path = tmp_path / "eval.jsonlines"
 
     with open(train_path, "w", encoding="utf-8") as f:
         json.dump(test_event_records, f, indent=2)

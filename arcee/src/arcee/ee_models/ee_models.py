@@ -401,7 +401,10 @@ class EEOpenAIModel(EEBaseModel):
             # If not constrained to json or a json schema then the repsponse may
             # start with the string "```json" and end with "```" - these need to be
             # removed before it can be loaded as JSON
-            formatted_response = response.replace("```json", "").replace("```", "")
+            if response:
+                formatted_response = response.replace("```json", "").replace("```", "")
+            else:
+                formatted_response = "No response"
             # Append the response to the output dict
             try:
                 output = json.loads(formatted_response)

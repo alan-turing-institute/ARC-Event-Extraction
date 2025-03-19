@@ -1,0 +1,32 @@
+model_loc: models/Mistral-Small-24B-Instruct-2501
+adapter_loc: models/mistral24b/try_A4b-r8-Mistral-24B-Instruct
+train_data: data/ACE05/output/split_dev/train.jsonlines
+eval_data: data/ACE05/output/split_dev/dev.jsonlines
+prompt_cls: EAEPrompter1
+schema_path: data/ACE05/schema/pattern.json
+model_type: mistral
+quantised: true
+quant_config:
+  load_in_4bit: true
+stf_config:
+  num_train_epochs: 1
+  per_device_train_batch_size: 1
+  report_to: "wandb"
+  log_level: "info"
+  logging_steps: 60
+  do_eval: true
+  eval_strategy: steps
+  output_dir: models/cp_output
+  learning_rate: 5.0e-6
+  weight_decay: 0.1
+peft_config:
+  r: 8
+  lora_alpha: 8
+  lora_dropout: 0.1
+  use_rslora: true
+  bias: none
+  task_type: CAUSAL_LM
+  target_modules:
+    - "k_proj"
+    - "v_proj"
+    - "up_proj"

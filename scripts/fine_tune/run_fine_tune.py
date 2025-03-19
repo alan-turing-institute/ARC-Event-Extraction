@@ -64,10 +64,23 @@ def main(config_loc: str):
         config.get("only_events"),
     )
 
-    # And the completion only settings
-    responce_template = "<|start_header_id|>assistant<|end_header_id|>"
-    collator = DataCollatorForCompletionOnlyLM(responce_template, tokenizer=tokenizer)
-    tokenizer.pad_token = "<|finetune_right_pad_id|>"
+    model_type = config.get("model_type")
+
+    if not model_type or model_type == "llama":
+        responce_template = "<|start_header_id|>assistant<|end_header_id|>"
+        collator = DataCollatorForCompletionOnlyLM(
+            responce_template, tokenizer=tokenizer
+        )
+        tokenizer.pad_token = "<|finetune_right_pad_id|>"
+    elif model_type == "mistral":
+        responce_template = "[/INST]"
+        collator = DataCollatorForCompletionOnlyLM(
+            responce_template, tokenizer=tokenizer
+        )
+        tokenizer.pad_token = "<pad>"
+    else:
+        msg = "model_type must be either llama or mistral"
+        raise ValueError(msg)
 
     # Config Settings
     output_loc = config["stf_config"].get("output_dir")

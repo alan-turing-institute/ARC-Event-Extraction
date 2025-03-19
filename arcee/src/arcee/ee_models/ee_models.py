@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import json
+import os
 from abc import ABC, abstractmethod
 
 import ollama
+from openai import AzureOpenAI, BadRequestError
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
@@ -306,3 +308,106 @@ class EEHFModel(EEBaseModel):
 
         # Decode
         return self.tokenizer.batch_decode(gen_tokens, skip_special_tokens=True)
+
+
+class EEOpenAIModel(EEBaseModel):
+    """
+    Wrapper class for performing event extraction using OpenAI's GPT models.
+
+    """
+
+    def __init__(
+        self,
+        model_id: str,
+        temperature: float = 0.2,
+        top_p: float = 0.1,
+        seed: int = 42,
+        output_format: str = "json",
+    ) -> None:
+        super().__init__()
+        self.model_name = model_id
+        self.temperature = temperature
+        self.top_p = top_p
+        self.seed = seed
+        self.output_format = output_format
+
+        self._client = AzureOpenAI(
+            api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+            api_version="2024-10-21",
+            azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+        )
+
+    def _get_response(self, messages: list[dict[str, str]]) -> str:
+        """
+        Get the response from the OpenAI model.
+
+        Args:
+        messages : list[dict[Any, Any]])
+            The list of messages to send to the model. They are in the format
+            {"role": "user", "content": "message"}.
+
+        Returns:
+            str | None: This is the response from the model. It will only include the
+                content of the message. Should be in JSON format if the "json" format
+                is set.
+        """
+        if self.output_format == "json":
+            response_format = {"type": "json_object"}
+        else:
+            response_format = {}
+        try:
+            completion = self._client.chat.completions.create(
+                model=self.model_name,
+                messages=messages,
+                temperature=self.temperature,
+                top_p=self.top_p,
+                seed=self.seed,
+                response_format=response_format,
+            )
+
+            return completion.choices[0].message.content
+        except BadRequestError:
+            return "Error: Bad Request"
+
+    def predict(
+        self, input: list[tuple[dict[str, str], str | dict, dict, str]]
+    ) -> list[dict]:
+        """
+        This method makes predictions using an OpenAI model, a given prompt and
+        a dataset
+
+        Args:
+        input: list[tuple[str, str | dict, dict, str]]
+            A list of tuples. Each tuple will contain:
+            - dict[str,str]: The prompt stored in a dict to be used in the task.
+            - str | dict: The output format, either 'json' or a JSON schema.
+            - dict: A dictionary of IDs to be attached to the LLM's response
+            that identify the record.
+            - str: The input text
+
+        Returns:
+        list[dict[str, str | list | dict]]
+            A list of dictionaries, with the record IDs and the output from the model
+            If the output is not in JSON format, then it will be logged with a key of
+            'JSON_ERROR' and the value of the response.
+
+        """
+        outputs = []
+        for record in input:
+            messages = [record[0]]
+            # Create an output dictionary that consists of the record IDs
+            ids = record[2]
+            response = self._get_response(messages)
+            # If not constrained to json or a json schema then the repsponse may
+            # start with the string "```json" and end with "```" - these need to be
+            # removed before it can be loaded as JSON
+            formatted_response = response.replace("```json", "").replace("```", "")
+            # Append the response to the output dict
+            try:
+                output = json.loads(formatted_response)
+            except json.JSONDecodeError:
+                output = {"JSON_ERROR": formatted_response}
+
+            outputs.append({**ids, "output": output})
+
+        return outputs

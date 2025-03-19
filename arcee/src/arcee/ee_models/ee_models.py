@@ -131,13 +131,16 @@ class EEOllamaModel(EEBaseModel):
                 content of the message. Should be in JSON format if the "json" format
                 is set.
         """
-        return self.ollama_client.chat(
-            self.model,
-            messages=messages,
-            format=response_format,
-            options=self.options,
-            keep_alive=self.keep_alive,
-        )["message"]["content"]
+        try:
+            return self.ollama_client.chat(
+                self.model,
+                messages=messages,
+                format=response_format,
+                options=self.options,
+                keep_alive=self.keep_alive,
+            )["message"]["content"]
+        except Exception:
+            return "Error: Bad Request"
 
     def predict(
         self, input: list[tuple[dict[str, str], str | dict, dict, str]]

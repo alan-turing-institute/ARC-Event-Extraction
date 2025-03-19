@@ -23,6 +23,7 @@ scripts/fine_tune/configs/*
 !scripts/fine_tune/configs/example_fine_tune_EAE.yaml
 !scripts/fine_tune/configs/example_fine_tune_ED.yaml
 !scripts/fine_tune/configs/example_fine_tune_ED_OE.yaml
+!scripts/fine_tune/configs/example_mistral_tune_EAE_4bit.yaml
 
 # Data
 data/RAMS/*

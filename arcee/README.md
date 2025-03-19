@@ -105,7 +105,19 @@ A class for constructing prompts for event argument extraction. This class uses 
 A class for constructing prompts for event argument extraction. This class uses similar examples in the prompt (the number determined by an input argument and the similarity determined by a sentence transformer using cosine similarity). The named entities in the input text and example text are masked before comparing for similarity.
 
 ## EE Models
-The only class that has been created to date is:
-- `EEOllamaModel` - a wrapper class for Ollama Models
+There are different frameworks that can be used to run LLMs: Ollama, HuggingFace and Azure OpenAI. Additionally, there is the option to use the guidance library (TODO: link?) with models that are implemented with HuggingFace.
 
+The following classes have been implemented:
+#### `EEOllamaModel`
+A wrapper class for Ollama Models
 If Ollama models are to be used, then [Ollama](https://ollama.com/) must be installed.
+
+#### `EEHFModel`
+A wrapper class for using Huggingface transformers.
+
+#### `EEOpenAIModel`
+A wrapper class for the Azure OpenAI models. To use these models, the following environment variables must be set:
+```
+export AZURE_OPENAI_API_KEY="REPLACE_WITH_YOUR_KEY_VALUE_HERE"
+export AZURE_OPENAI_ENDPOINT="REPLACE_WITH_YOUR_ENDPOINT_HERE"
+```

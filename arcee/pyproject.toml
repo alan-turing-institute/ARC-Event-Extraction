@@ -17,6 +17,7 @@ dependencies = [
     "guidance@git+https://github.com/guidance-ai/guidance#315b388357f776b9e16093063fd6a4a59b8dd392",
     "sentence-transformers",
     "datasets",
+    "openai",
 ]
 
 [build-system]

@@ -11,7 +11,7 @@ from wandb.sdk.wandb_run import Run
 import arcee.prompts.prompts as prompts
 from arcee.dataset.dataset import EEDataset
 from arcee.dataset.load import load_json
-from arcee.ee_models.ee_models import EEHFModel, EEOllamaModel
+from arcee.ee_models.ee_models import EEHFModel, EEOllamaModel, EEOpenAIModel
 from arcee.ee_models.guide_models import (
     GuideFreeModel,
     GuideJSONModel,
@@ -29,6 +29,7 @@ MODEL_CLS_MAP = {
     "guide_free": GuideFreeModel,
     "guide_json": GuideJSONModel,
     "guide_schema": GuideSchemaModel,
+    "openai": EEOpenAIModel,
 }
 
 

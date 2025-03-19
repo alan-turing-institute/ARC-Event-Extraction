@@ -99,8 +99,29 @@ class Llama3ChatTemplate(gi.chat.ChatTemplate):
         return "<|eot_id|>"
 
 
+class MistralChatTemplate(gi.chat.ChatTemplate):
+    def get_role_start(self, role_name: str) -> str:
+        if role_name == "user":
+            return " [INST] "
+        if role_name == "assistant":
+            return " "
+        if role_name == "system":
+            return " [SYSTEM_PROMPT] "
+        raise gi.chat.UnsupportedRoleException(role_name, self)
+
+    def get_role_end(self, role_name: str | None = None) -> str:
+        if role_name == "user":
+            return " [/INST]"
+        if role_name == "assistant":
+            return "</s>"
+        if role_name == "system":
+            return " [/SYSTEM_PROMPT]"
+        raise gi.chat.UnsupportedRoleException(role_name, self)
+
+
 CHAT_TEMPLATES = {
     "llama3": Llama3ChatTemplate,
+    "mistral": MistralChatTemplate,
 }
 
 

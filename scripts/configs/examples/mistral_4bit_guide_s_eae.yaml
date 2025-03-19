@@ -1,0 +1,15 @@
+experiment: mistral_4bit_guide_s_eae
+model_kwargs:
+  model_id: Mistral-Small-24B-Instruct-2501
+  model_type: guide_schema
+  batch_size: 2
+  model_init_kwargs:
+    chat_template: mistral
+    quantised: true
+    max_tokens: 50
+data_kwargs:
+  data_path: data/ACE05/output/split_dev/dev.jsonlines
+  schema_path: data/ACE05/schema/pattern.json
+  gold_path: data/ACE05/gold/gold_label_args.jsonl
+prompt_kwargs:
+  prompt_cls: EAEPrompter2

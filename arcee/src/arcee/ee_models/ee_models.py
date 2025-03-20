@@ -325,9 +325,14 @@ class EEOpenAIModel(EEBaseModel):
         temperature: float = 0.2,
         top_p: float = 0.1,
         seed: int = 42,
-        output_format: str = "json",
+        output_format: str = "json_schema",
     ) -> None:
         super().__init__()
+        # Checks that the output format is either None, 'json' or 'json_schema'
+        if output_format and output_format not in ["json", "json_schema"]:
+            err_msg = "output_format must be one of '', 'json', or 'json_schema'."
+            raise ValueError(err_msg)
+
         self.model_name = model_id
         self.temperature = temperature
         self.top_p = top_p
@@ -340,7 +345,9 @@ class EEOpenAIModel(EEBaseModel):
             azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
         )
 
-    def _get_response(self, messages: list[dict[str, str]]) -> str:
+    def _get_response(
+        self, messages: list[dict[str, str]], response_format: str | dict | None
+    ) -> str:
         """
         Get the response from the OpenAI model.
 
@@ -348,16 +355,17 @@ class EEOpenAIModel(EEBaseModel):
         messages : list[dict[Any, Any]])
             The list of messages to send to the model. They are in the format
             {"role": "user", "content": "message"}.
+        response_format : str
+            If an empty string then natural language is returned
+            Expected 'json' if JSON format is to be used
+            If a dictionary, then this is the JSON schema to be used
 
         Returns:
             str | None: This is the response from the model. It will only include the
                 content of the message. Should be in JSON format if the "json" format
                 is set.
         """
-        if self.output_format == "json":
-            response_format = {"type": "json_object"}
-        else:
-            response_format = {}
+
         try:
             completion = self._client.chat.completions.create(
                 model=self.model_name,
@@ -398,9 +406,25 @@ class EEOpenAIModel(EEBaseModel):
         outputs = []
         for record in input:
             messages = [record[0]]
+            output_format: dict[str, object] | None
+            if self.output_format == "json":
+                output_format = {"type": "json_object"}
+            elif self.output_format == "json_schema" and isinstance(record[1], dict):
+                updated_schema = record[1].copy() if record[1] is dict else {}
+                updated_schema["additionalProperties"] = False
+                output_format = {
+                    "type": "json_schema",
+                    "json_schema": {
+                        "strict": True,
+                        "name": "output",
+                        "schema": updated_schema,
+                    },
+                }
+            else:
+                output_format = None
             # Create an output dictionary that consists of the record IDs
             ids = record[2]
-            response = self._get_response(messages)
+            response = self._get_response(messages, output_format)
             # If not constrained to json or a json schema then the repsponse may
             # start with the string "```json" and end with "```" - these need to be
             # removed before it can be loaded as JSON

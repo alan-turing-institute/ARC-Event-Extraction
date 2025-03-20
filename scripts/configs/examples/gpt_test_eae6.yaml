@@ -3,6 +3,8 @@ model_kwargs:
   model_id: gpt-4o-mini
   model_type: openai
   batch_size: 1
+  model_init_kwargs:
+    output_format: null
 data_kwargs:
   data_path: data/ACE05/output/split_dev/dev.jsonlines
   schema_path: data/ACE05/schema/pattern.json

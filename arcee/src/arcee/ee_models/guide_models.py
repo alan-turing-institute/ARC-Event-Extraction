@@ -467,3 +467,93 @@ class GuideSchemaModel(BaseGuideModel):
             responses.append(response)
 
         return responses
+
+
+class GuideOneEventModel(BaseGuideModel):
+    """
+    This uses the a Hugging Face model and a Guidence package to contrain a model so
+    it gives JSON in a schema.
+
+    Attributes:
+        model: An instance of a `transformers.AutoModelForCausalLM`. Should be an
+            instruction-tuned model whose tokenizer has a chat template.
+        tokenizer: An instance of a `transfomers.AutoTokenizer`, corresponding to the
+            model. Should contain a chat template.
+        device: A string denoting what device to place the model on, defaults to `cpu`.
+            Pass `device_map="auto"` to init to automatically place on any available
+            GPU.
+        options: Currently ignored, kept in to match base class signature.
+        whitespace_flexible: If whitespace is allowed in the JSON.
+    """
+
+    def __init__(
+        self,
+        model_id: str,
+        adapter_id: str | None = None,
+        chat_template: str = "llama3",
+        quantised: bool = False,
+        quant_config: dict | None = None,
+        options: dict | None = None,
+        max_tokens: int = 500,
+        whitespace_flexible: bool = True,
+    ) -> None:
+        super().__init__(
+            model_id=model_id,
+            adapter_id=adapter_id,
+            chat_template=chat_template,
+            quantised=quantised,
+            quant_config=quant_config,
+            options=options,
+        )
+        self.max_tokens = max_tokens
+        self.whitespace_flexible = whitespace_flexible
+
+    def predict(
+        self, input: list[tuple[dict[str, str], str | dict, dict, str]]
+    ) -> list[dict]:
+        """
+        This method takes a list of inputs and returns a list of outputs. Each input
+        is a event or passage to run the event extraction model on. The output is a
+        list of events extracted from the input.
+
+        Args:
+            input (list[tuple]): A list of tuples where each tuple requires extraction.
+                - prompt (dict[str, str]): The chat prompt to use.
+                - schema (str | dict): The schema to use or 'json' (ignored).
+                - ids (dict): The ids to use.
+                - sentence (str): The sentence to extract events from (ignored).
+
+        Returns:
+            list: A list of dictionaries where each dictionary contains the extracted
+                events in the schema. If the output cannot be parsed as JSON then the
+                output is a dictionary with a key 'JSON_ERROR' and the value is the
+                output.
+        """
+        responses = []
+        for chat, schema, ids, sentence in input:
+            if isinstance(schema, str):
+                msg = "Schema should be a dictionary not a string."
+                raise ValueError(msg)
+            key_list = list(schema["items"]["properties"].keys())
+            lm = self.model.copy()
+            with gi.user():
+                lm += chat["content"]
+            with gi.assistant():
+                lm += "```json\n["
+                lm += gi.select(["]\n", "\n  {\n"], name="if_output")
+                if lm["if_output"] == "\n  {\n":
+                    lm += '   "' + gi.select(key_list, name="key")
+                    lm += '": "' + gi.substring(sentence, name="value") + '"'
+                    lm += "\n  }\n"
+                lm += "```"
+
+            output: list[dict] | dict = []
+            try:
+                output = [] if lm["if_output"] == "]\n" else [{lm["key"]: lm["value"]}]
+            except json.JSONDecodeError:
+                output = {"JSON_ERROR": lm["output"]}
+
+            response = {**ids, "output": output}
+            responses.append(response)
+
+        return responses

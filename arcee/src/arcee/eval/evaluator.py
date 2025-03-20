@@ -15,6 +15,7 @@ from arcee.ee_models.ee_models import EEHFModel, EEOllamaModel, EEOpenAIModel
 from arcee.ee_models.guide_models import (
     GuideFreeModel,
     GuideJSONModel,
+    GuideOneEventModel,
     GuideSchemaModel,
 )
 from arcee.stats.gold_compare import (
@@ -29,6 +30,7 @@ MODEL_CLS_MAP = {
     "guide_free": GuideFreeModel,
     "guide_json": GuideJSONModel,
     "guide_schema": GuideSchemaModel,
+    "guide_one": GuideOneEventModel,
     "openai": EEOpenAIModel,
 }
 

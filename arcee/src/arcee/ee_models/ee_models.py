@@ -410,7 +410,7 @@ class EEOpenAIModel(EEBaseModel):
             if self.output_format == "json":
                 output_format = {"type": "json_object"}
             elif self.output_format == "json_schema" and isinstance(record[1], dict):
-                updated_schema = record[1].copy() if record[1] is dict else {}
+                updated_schema = record[1].copy()
                 updated_schema["additionalProperties"] = False
                 output_format = {
                     "type": "json_schema",

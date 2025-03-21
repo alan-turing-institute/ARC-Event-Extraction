@@ -386,6 +386,7 @@ class EEOpenAIModel(EEBaseModel):
         """
         This method makes predictions using an OpenAI model, a given prompt and
         a dataset
+        TODO: JSON and JSON schema output formats are not yet implemented for ED models
 
         Args:
         input: list[tuple[str, str | dict, dict, str]]

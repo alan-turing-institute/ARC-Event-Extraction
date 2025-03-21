@@ -1,0 +1,17 @@
+experiment: gpt_test_ed4
+model_kwargs:
+  model_id: gpt-4o-mini
+  model_type: openai
+  batch_size: 1
+  model_init_kwargs:
+    output_format: null
+data_kwargs:
+  data_path: data/ACE05/output/split_dev/dev.jsonlines
+  schema_path: data/ACE05/schema/event_type_short_definitions.json
+  gold_path: data/ACE05/gold/gold_label_args.jsonl
+prompt_kwargs:
+  prompt_cls: EDPrompter4
+  prompt_init_kwargs:
+    example_data_path: data/ACE05/output/split_dev/train.jsonlines
+    num_examples: 3
+    sentence_transformer_model: intfloat/multilingual-e5-small

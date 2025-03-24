@@ -2,11 +2,38 @@ from __future__ import annotations
 
 import json
 
+import numpy as np
 from datasets import Dataset, DatasetDict
 
 import arcee.prompts.prompts as prompts
 from arcee.dataset.load import load_data
 from arcee.dataset.schemas import data_to_argument_schema, data_to_ed_schema
+
+
+def sample_and_shuffle_null_events(
+    dataset: Dataset, split: str, rng: np.random.default_rng, null_event_ratio: float
+) -> Dataset:
+    positive_events = dataset.filter(lambda x: len(x["event_mentions"]) > 0)
+    num_positive = len(positive_events[split])
+
+    if null_event_ratio > 0:
+        null_events = dataset.filter(lambda x: len(x["event_mentions"]) == 0)
+        num_null_samples = int(num_positive * null_event_ratio)
+
+        if num_null_samples > 0 and len(null_events[split]) > 0:
+            sampled_indices = rng.choice(
+                len(null_events[split]),
+                size=min(num_null_samples, len(null_events[split])),
+                replace=False,
+            )
+            sampled_null_events = null_events[split].select(sampled_indices)
+            combined_records = positive_events[split].to_list() + sampled_null_events.to_list()
+            shuffled_indices = rng.permutation(len(combined_records))
+            return Dataset.from_list([combined_records[i] for i in shuffled_indices])
+        shuffled_indices = rng.permutation(len(positive_events[split]))
+        return Dataset.from_list([positive_events[split][i] for i in shuffled_indices])
+    shuffled_indices = rng.permutation(len(positive_events[split]))
+    return Dataset.from_list([positive_events[split][i] for i in shuffled_indices])
 
 
 def load_training_eval_data(
@@ -15,6 +42,8 @@ def load_training_eval_data(
     prompt_cls: str,
     schema_path: str,
     only_events: bool = False,
+    null_event_ratio: float = 1.0,
+    null_event_seed: int = 42,
 ) -> Dataset:
     """
     This function loads the training and evaluation data from the specified locations
@@ -36,6 +65,13 @@ def load_training_eval_data(
     only_events: bool
         If set to True, then it will load the records so that there is one event type
         per record (might be wanted for training event detection models)
+    null_event_ratio: float
+        The ratio of null events to include in the dataset, this is expected to be
+        between 0 and 1 and will only be considered if only_events is set to True. The
+        ratio is the fraction of null events, with respect to the number of positive
+        events to include in the dataset.
+    null_event_seed: int
+        The seed to use for sampling the null events
 
     Returns:
     Dataset
@@ -56,10 +92,17 @@ def load_training_eval_data(
         }
     )
 
-    if only_events or arg_extraction:
-        # If doing argument extraction, then we only want to keep records that have
-        # events. If doing event extraction, this might sometimes be wanted.
-        dataset = dataset.filter(lambda x: len(x["event_mentions"]) > 0)
+    if only_events:
+        # If doing event detection, this might sometimes be wanted as there may be
+        # an imbalanced dataset.
+        rng = np.random.default_rng(null_event_seed)
+
+        dataset["train"] = sample_and_shuffle_null_events(
+            dataset, "train", rng, null_event_ratio
+        )
+        dataset["eval"] = sample_and_shuffle_null_events(
+            dataset, "eval", rng, null_event_ratio
+        )
 
     formatted_dataset: Dataset = dataset.map(
         format_chat_message,

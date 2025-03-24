@@ -27,7 +27,9 @@ def sample_and_shuffle_null_events(
                 replace=False,
             )
             sampled_null_events = null_events[split].select(sampled_indices)
-            combined_records = positive_events[split].to_list() + sampled_null_events.to_list()
+            combined_records = (
+                positive_events[split].to_list() + sampled_null_events.to_list()
+            )
             shuffled_indices = rng.permutation(len(combined_records))
             return Dataset.from_list([combined_records[i] for i in shuffled_indices])
         shuffled_indices = rng.permutation(len(positive_events[split]))

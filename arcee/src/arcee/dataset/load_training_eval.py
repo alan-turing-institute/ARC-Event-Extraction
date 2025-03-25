@@ -44,7 +44,7 @@ def load_training_eval_data(
     prompt_cls: str,
     schema_path: str,
     only_events: bool = False,
-    null_event_ratio: float = 1.0,
+    null_event_ratio: float = 0,
     null_event_seed: int = 42,
 ) -> Dataset:
     """

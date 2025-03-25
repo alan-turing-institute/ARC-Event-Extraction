@@ -98,13 +98,13 @@ def load_training_eval_data(
         # If doing event detection, this might sometimes be wanted as there may be
         # an imbalanced dataset.
         rng = np.random.default_rng(null_event_seed)
-
-        dataset["train"] = sample_and_shuffle_null_events(
-            dataset, "train", rng, null_event_ratio
-        )
-        dataset["eval"] = sample_and_shuffle_null_events(
-            dataset, "eval", rng, null_event_ratio
-        )
+        if null_event_ratio > 0:
+            dataset["train"] = sample_and_shuffle_null_events(
+                dataset, "train", rng, null_event_ratio
+            )
+            dataset["eval"] = sample_and_shuffle_null_events(
+                dataset, "eval", rng, null_event_ratio
+            )
 
     formatted_dataset: Dataset = dataset.map(
         format_chat_message,

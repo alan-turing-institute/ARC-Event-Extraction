@@ -3,12 +3,14 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import numpy as np
 import pytest
-from datasets import DatasetDict
+from datasets import Dataset, DatasetDict
 
 from arcee.dataset.load_training_eval import (
     format_chat_message,
     load_training_eval_data,
+    sample_and_shuffle_null_events,
 )
 from arcee.prompts.prompts import EAEPrompter1, EDPrompter1
 
@@ -191,3 +193,54 @@ def test_load_training_eval_data(
                 assert isinstance(
                     parsed, list
                 ), "Expected a JSON array from the prompt."
+
+
+def test_sample_and_shuffle_null_events():
+    # Create a mock dataset with event mentions
+    data = {
+        "train": Dataset.from_list(
+            [
+                {"event_mentions": ["event1"]},
+                {"event_mentions": ["event2"]},
+                {"event_mentions": []},
+                {"event_mentions": []},
+                {"event_mentions": ["event3"]},
+                {"event_mentions": []},
+            ]
+        ),
+        "eval": Dataset.from_list(
+            [
+                {"event_mentions": ["eventA"]},
+                {"event_mentions": []},
+                {"event_mentions": ["eventB"]},
+                {"event_mentions": []},
+            ]
+        ),
+    }
+    dataset = DatasetDict(data)
+    rng = np.random.default_rng(42)
+    null_event_ratio = 0.5
+
+    # Apply the function to the train split
+    updated_train_dataset = sample_and_shuffle_null_events(
+        dataset, "train", rng, null_event_ratio
+    )
+
+    # Verify that the correct number of null events were sampled
+    num_positive = sum(1 for x in data["train"] if len(x["event_mentions"]) > 0)
+    expected_null_samples = int(num_positive * null_event_ratio)
+    num_null_sampled = sum(
+        1 for x in updated_train_dataset if len(x["event_mentions"]) == 0
+    )
+
+    assert (
+        num_null_sampled == expected_null_samples
+    ), "Incorrect number of null events sampled"
+    assert (
+        len(updated_train_dataset) == num_positive + expected_null_samples
+    ), "Total dataset size mismatch"
+
+    # Ensure the dataset is shuffled
+    original_order = data["train"].to_list()
+    new_order = updated_train_dataset.to_list()
+    assert original_order != new_order, "Dataset was not shuffled"

@@ -62,6 +62,8 @@ def main(config_loc: str):
         config["prompt_cls"],
         schema_path,
         config.get("only_events"),
+        config.get("null_event_ratio", 0),
+        config.get("null_event_seed", 0),
     )
 
     model_type = config.get("model_type")

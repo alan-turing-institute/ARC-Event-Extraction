@@ -21,6 +21,15 @@ def test_load_events_event_detection(event_trigger_jsonl_file):
     assert events["p4"] == [{"Job:Hire": "hired"}]
 
 
+def test_load_events_mistakes_event_detection(event_trigger_mistakes_jsonl_file):
+    events = load_events(event_trigger_mistakes_jsonl_file, "wnd_id")
+    assert events is not None
+    assert len(events) == 3
+    assert events["p2"] == [{"Life:Marry": "married"}, {"Life:Injure": "wounded"}]
+    assert events["p3"] == [{"Movement:Transport": "transported"}]
+    assert "JSON_ERROR" in events["p4"]
+
+
 def test_load_events_argument_extraction(event_arg_jsonl_file):
     events = load_events(event_arg_jsonl_file, "evt_id")
     assert events is not None
@@ -29,6 +38,15 @@ def test_load_events_argument_extraction(event_arg_jsonl_file):
     assert events["e2"] == {"Person": "Bob", "Vehicle": "car"}
     assert events["e3"] == {"Person": "Charlie", "Place": "New York"}
     assert events["e4"] == {"Person": "Dave", "House": None}
+
+
+def test_load_events_mistakes_argument_extraction(event_arg_mistakes_jsonl_file):
+    events = load_events(event_arg_mistakes_jsonl_file, "evt_id")
+    assert events is not None
+    assert len(events) == 3
+    assert events["e1"] == {"Person": "Alice", "Place": "Las Vegas"}
+    assert events["e3"] == {"Person": "Charlie", "Place": "New York"}
+    assert "JSON_ERROR" in events["e4"]
 
 
 def test_compare_events_detection():
@@ -428,3 +446,48 @@ def test_stats_on_argument_detection_with_semi(event_arg_jsonl_file):
     assert overlap_stats["argument_precision"] == 6 / 7
     assert overlap_stats["argument_recall"] == 6 / 7
     assert overlap_stats["argument_f1"] == 2 * (6 / 7) * (6 / 7) / ((6 / 7) + (6 / 7))
+
+
+def test_stats_on_event_detection_not_real(
+    event_trigger_jsonl_file, event_trigger_mistakes_jsonl_file
+):
+    gold_events = load_events(event_trigger_mistakes_jsonl_file, "wnd_id")
+    output_events = load_events(event_trigger_jsonl_file, "wnd_id")
+
+    stats = stats_on_event_detection(
+        gold_events, output_events, semi=False, real_gold=False
+    )
+
+    assert stats["total_passage"] == 2
+    assert stats["correct_passage"] == 2  # Only one passage matches
+    assert stats["passage_accuracy"] == 2 / 2
+    assert stats["total_event"] == 3
+    assert stats["predict_event"] == 3
+    assert stats["correct_all"] == 3  # Three events match exactly
+    assert stats["event_precision"] == 3 / 3
+    assert stats["event_recall"] == 3 / 3
+    assert stats["event_f1"] == 2 * (3 / 3) * (3 / 3) / ((3 / 3) + (3 / 3))
+    assert stats["event_type_precision"] == 3 / 3
+    assert stats["event_type_recall"] == 3 / 3
+    assert stats["event_type_f1"] == 2 * (3 / 3) * (3 / 3) / ((3 / 3) + (3 / 3))
+
+
+def test_stats_on_argument_detection_not_real(
+    event_arg_jsonl_file, event_arg_mistakes_jsonl_file
+):
+    gold_events = load_events(event_arg_mistakes_jsonl_file, "evt_id")
+    output_events = load_events(event_arg_jsonl_file, "evt_id")
+
+    stats = stats_on_argument_detection(
+        gold_events, output_events, semi=False, real_gold=False
+    )
+
+    assert stats["total_event"] == 2
+    assert stats["correct_event"] == 2  # Both events match
+    assert stats["event_accuracy"] == 2 / 2
+    assert stats["total_argument"] == 4
+    assert stats["predict_argument"] == 4
+    assert stats["correct_argument"] == 4  # All arguments match
+    assert stats["argument_precision"] == 4 / 4
+    assert stats["argument_recall"] == 4 / 4
+    assert stats["argument_f1"] == 2 * (4 / 4) * (4 / 4) / ((4 / 4) + (4 / 4))

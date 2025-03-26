@@ -180,7 +180,10 @@ def safe_divide(numerator: int | float, denominator: int | float) -> float:
 
 
 def stats_on_event_detection(
-    golds: dict[str, list], outputs: dict[str, list], semi: bool = False
+    golds: dict[str, list],
+    outputs: dict[str, list],
+    semi: bool = False,
+    real_gold: bool = True,
 ) -> dict[str, int | float]:
     """
     Calculate the statistics on the event detection task.
@@ -198,6 +201,8 @@ def stats_on_event_detection(
             with the key as the key and the 'output' as the value.
         semi (bool, optional): If the partial string match should be used. Defaults to
             False.
+        real_gold (bool, optional): If the gold data is real or generated so can
+            contain mistakes. Defaults to True.
 
     Returns:
         dict[str, int | float]: This is a dict with the following keys:
@@ -223,9 +228,14 @@ def stats_on_event_detection(
     correct_all = 0
 
     for key, output in outputs.items():
-        if key not in golds:
+        if real_gold and key not in golds:
             err_msg = f"Key {key} not found in gold."
             raise ValueError(err_msg)
+
+        if not real_gold and key not in golds:
+            continue  # This checks that the key is in the gold data
+        if not real_gold and "JSON_ERROR" in golds[key]:
+            continue  # This checks that the gold data is a valid JSON
 
         total_passage += 1
         total_event += len(golds[key])
@@ -275,7 +285,10 @@ def stats_on_event_detection(
 
 
 def stats_on_argument_detection(
-    golds: dict[str, dict], outputs: dict[str, dict], semi: bool = False
+    golds: dict[str, dict],
+    outputs: dict[str, dict],
+    semi: bool = False,
+    real_gold: bool = True,
 ) -> dict[str, int | float]:
     """
     Calculate the statistics on the argument detection task.
@@ -289,6 +302,8 @@ def stats_on_argument_detection(
             with the key as the key and the 'output' as the value.
         semi (bool, optional): If the partial string match should be used. Defaults to
             False.
+        real_gold (bool, optional): If the gold data is real or generated so can
+            contain mistakes. Defaults to True.
 
     Returns:
         dict[str, int | float]: This is a dict with the following values:
@@ -309,9 +324,14 @@ def stats_on_argument_detection(
     correct_argument = 0
 
     for key, output in outputs.items():
-        if key not in golds:
+        if real_gold and key not in golds:
             err_msg = f"Key {key} not found in gold."
             raise ValueError(err_msg)
+
+        if not real_gold and key not in golds:
+            continue  # This checks that the key is in the gold data
+        if not real_gold and "JSON_ERROR" in golds[key]:
+            continue  # This checks that the gold data is a valid JSON
 
         total_event += 1
         predict_argument += len([val for val in output.values() if val])

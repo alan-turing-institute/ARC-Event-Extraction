@@ -320,6 +320,22 @@ def event_arg_jsonl_file(tmp_path_factory):
 
 
 @pytest.fixture(scope="module")
+def event_arg_mistakes_jsonl_file(tmp_path_factory):
+    data = [
+        {"evt_id": "e1", "output": {"Person": "Alice", "Place": "Las Vegas"}},
+        {"evt_id": "e3", "output": {"Person": "Charlie", "Place": "New York"}},
+        {"evt_id": "e4", "output": {"JSON_ERROR": "person-dave"}},
+    ]
+    temp_file_path = (
+        tmp_path_factory.mktemp("data") / "event_argument_mistakes_temp_file.jsonl"
+    )
+    with temp_file_path.open(mode="w") as temp_file:
+        for entry in data:
+            temp_file.write(json.dumps(entry) + "\n")
+    return temp_file_path
+
+
+@pytest.fixture(scope="module")
 def event_trigger_jsonl_file(tmp_path_factory):
     data = [
         {"wnd_id": "p1", "output": []},
@@ -334,6 +350,28 @@ def event_trigger_jsonl_file(tmp_path_factory):
         {"wnd_id": "p4", "output": [{"Job:Hire": "hired"}]},
     ]
     temp_file_path = tmp_path_factory.mktemp("data") / "event_trigger_temp_file.jsonl"
+    with temp_file_path.open(mode="w") as temp_file:
+        for entry in data:
+            temp_file.write(json.dumps(entry) + "\n")
+    return temp_file_path
+
+
+@pytest.fixture(scope="module")
+def event_trigger_mistakes_jsonl_file(tmp_path_factory):
+    data = [
+        {
+            "wnd_id": "p2",
+            "output": [
+                {"Life:Marry": "married"},
+                {"Life:Injure": "wounded"},
+            ],
+        },
+        {"wnd_id": "p3", "output": [{"Movement:Transport": "transported"}]},
+        {"wnd_id": "p4", "output": {"JSON_ERROR": '{"hired": "hired'}},
+    ]
+    temp_file_path = (
+        tmp_path_factory.mktemp("data") / "event_trigger_mistakes_temp_file.jsonl"
+    )
     with temp_file_path.open(mode="w") as temp_file:
         for entry in data:
             temp_file.write(json.dumps(entry) + "\n")

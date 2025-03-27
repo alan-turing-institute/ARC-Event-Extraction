@@ -94,7 +94,7 @@ def main():
         msg = "Please provide a dictionary of output paths."
         raise ValueError(msg)
 
-    task = config.get("task")
+    task = config["task"]
 
     if task == "eae":
         func_choice = stats_on_argument_detection
@@ -103,13 +103,10 @@ def main():
         func_choice = stats_on_event_detection
         id_key = "wnd_id"
     else:
-        msg = "Please provide the task either 'eae' or 'ed'."
+        msg = f"The task provided was {task}, but should be one of 'eae' or 'ed'."
         raise ValueError(msg)
 
-    metric = config.get("metric")
-    if metric is None:
-        msg = "Please provide a metric to compare the predictions."
-        raise ValueError(msg)
+    metric = config["metric"]
 
     semi_string = config.get("semi_string", False)
 

@@ -85,7 +85,7 @@ def main():
     args = parse_args()
     config = load_config(args.config)
 
-    mair_dir = os.path.dirname(
+    main_dir = os.path.dirname(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     )
 
@@ -113,8 +113,8 @@ def main():
     compare_df = pd.DataFrame(columns=output_dict.keys())
 
     for (key1, value1), (key2, value2) in tqdm(product(output_dict.items(), repeat=2)):
-        e1 = load_events(os.path.join(mair_dir, value1), id_key)
-        e2 = load_events(os.path.join(mair_dir, value2), id_key)
+        e1 = load_events(os.path.join(main_dir, value1), id_key)
+        e2 = load_events(os.path.join(main_dir, value2), id_key)
 
         compare_df.loc[key1, key2] = func_choice(
             e1, e2, semi=semi_string, real_gold=False

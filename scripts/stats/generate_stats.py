@@ -5,7 +5,6 @@ import os
 from collections.abc import Callable
 from glob import glob
 
-import pandas as pd
 import wandb
 import yaml
 from arcee.constants import WANDB_ENTITY_NAME, WANDB_PROJECT_NAME
@@ -36,15 +35,10 @@ def run_through_files(
     ],
     id_key: str,
     output_folder: str,
-    save_name: str,
-    semi_compare: bool = False,
-    use_wandb: bool = True,
     dataset: str | None = None,
     skip_config: bool = False,
     keep_whitespace: bool = False,
 ) -> None:
-    results_df = pd.DataFrame()
-
     for file in tqdm(sorted(glob(os.path.join(MAIN_DIR, output_folder, "*.jsonl")))):
         outputs = load_events(file, id_key)
         if outputs is None:
@@ -52,21 +46,21 @@ def run_through_files(
 
         file_name = os.path.basename(file)[: -len(".jsonl")]
 
-        # Optionally use weights and biases
-        if use_wandb:
-            run_name = prepare_wandb_name(file_name)
-            run = wandb.init(
-                entity=WANDB_ENTITY_NAME,
-                project=WANDB_PROJECT_NAME,
-                name=run_name,
-                job_type="stats",
-                config={
-                    "file_name": file_name,
-                    "job_type": "stats",  # legacy reasons
-                    "semi_compare": semi_compare,
-                    "dataset": dataset,
-                },
-            )
+        # Use weights and biases
+        run_name = prepare_wandb_name(file_name)
+        run = wandb.init(
+            entity=WANDB_ENTITY_NAME,
+            project=WANDB_PROJECT_NAME,
+            name=run_name,
+            job_type="stats",
+            config={
+                "file_name": file_name,
+                "job_type": "stats",  # legacy reasons
+                "dataset": dataset,
+                "skip_config": skip_config,
+                "keep_whitespace": keep_whitespace,
+            },
+        )
 
         config_vals = {}
         if not skip_config:
@@ -80,30 +74,20 @@ def run_through_files(
 
             layout_config(config_whole, config_vals)
 
-        stats = process_func(
-            golds, outputs, semi=semi_compare, keep_whitespace=keep_whitespace
+        stats_full = process_func(
+            golds, outputs, semi=False, keep_whitespace=keep_whitespace
         )
-        results_df = pd.concat(
-            [
-                results_df,
-                pd.DataFrame(
-                    {
-                        "file_name": [file_name],
-                        **config_vals,
-                        **stats,
-                    }
-                ),
-            ],
-            ignore_index=True,
+        stats_full = {f"full/{key}": value for key, value in stats_full.items()}
+        stats_partial = process_func(
+            golds, outputs, semi=True, keep_whitespace=keep_whitespace
         )
+        stats_partial = {
+            f"partial/{key}": value for key, value in stats_partial.items()
+        }
+        stats = {**stats_full, **stats_partial}
 
-        if use_wandb:
-            run.log(stats)
-            run.finish()
-
-    os.makedirs(os.path.dirname(os.path.join(MAIN_DIR, save_name)), exist_ok=True)
-
-    results_df.to_csv(os.path.join(MAIN_DIR, save_name), index=False)
+        run.log(stats)
+        run.finish()
 
 
 def main():
@@ -112,12 +96,6 @@ def main():
     )
     parser.add_argument(
         "output_folder", type=str, help="Folder containing the output files."
-    )
-    parser.add_argument("save_loc", type=str, help="Location to save the statistics.")
-    parser.add_argument(
-        "--semi_compare",
-        action="store_true",
-        help="Use partial string match for comparison.",
     )
     parser.add_argument(
         "--skip_config",
@@ -135,12 +113,6 @@ def main():
         default="ACE05",
         help="Dataset to use for comparison.",
     )
-    parser.add_argument(
-        "--use_wandb",
-        type=bool,
-        default=False,
-        help="Whether to log stats to weights and biases",
-    )
     args = parser.parse_args()
 
     gold_arg_file = f"data/{args.dataset}/gold/gold_label_args.jsonl"
@@ -154,9 +126,6 @@ def main():
         stats_on_argument_detection,
         "evt_id",
         args.output_folder,
-        args.save_loc + "_eae.csv",
-        semi_compare=args.semi_compare,
-        use_wandb=args.use_wandb,
         dataset=args.dataset,
         skip_config=args.skip_config,
         keep_whitespace=args.keep_whitespace,
@@ -166,9 +135,6 @@ def main():
         stats_on_event_detection,
         "wnd_id",
         args.output_folder,
-        args.save_loc + "_ed.csv",
-        semi_compare=args.semi_compare,
-        use_wandb=args.use_wandb,
         dataset=args.dataset,
         skip_config=args.skip_config,
         keep_whitespace=args.keep_whitespace,

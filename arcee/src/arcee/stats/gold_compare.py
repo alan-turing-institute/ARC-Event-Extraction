@@ -127,7 +127,7 @@ def remove_event_argument_whitespace(
 ) -> dict[str, dict[str, str | None]]:
     """
     This function removes the whitespace from the arguments in the events.
-    This means " bob feeman" and "bob freeman" will both be converted to "bobfeeman"
+    This means " bob freeman" and "bob freeman" will both be converted to "bobfreeman"
     before comparison.
 
     Args:
@@ -140,9 +140,10 @@ def remove_event_argument_whitespace(
 
     whitespace_removed: dict[str, dict[str, str | None]] = {}
     for key, event in events.items():
-        whitespace_removed[key] = {}
-        for arg_type, arg in event.items():
-            whitespace_removed[key][arg_type] = arg.replace(" ", "") if arg else None
+        whitespace_removed[key] = {
+            arg_type: arg.replace(" ", "") if arg else None
+            for arg_type, arg in event.items()
+        }
 
     return whitespace_removed
 
@@ -152,7 +153,7 @@ def remove_event_detection_whitespace(
 ) -> dict[str, dict[str, str] | list[dict[str, str]]]:
     """
     A function to remove the whitespace from the event triggers in the passage.
-    This means " bob feeman" and "bob freeman" will both be converted to "bobfeeman"
+    This means " bob freeman" and "bob freeman" will both be converted to "bobfreeman"
     before comparison.
 
     Args:

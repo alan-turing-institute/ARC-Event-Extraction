@@ -41,10 +41,9 @@ def run_through_files(
     use_wandb: bool = True,
     dataset: str | None = None,
     skip_config: bool = False,
+    keep_whitespace: bool = False,
 ) -> None:
     results_df = pd.DataFrame()
-
-    print(skip_config)
 
     for file in tqdm(sorted(glob(os.path.join(MAIN_DIR, output_folder, "*.jsonl")))):
         outputs = load_events(file, id_key)
@@ -81,7 +80,9 @@ def run_through_files(
 
             layout_config(config_whole, config_vals)
 
-        stats = process_func(golds, outputs, semi=semi_compare)
+        stats = process_func(
+            golds, outputs, semi=semi_compare, keep_whitespace=keep_whitespace
+        )
         results_df = pd.concat(
             [
                 results_df,
@@ -124,6 +125,11 @@ def main():
         help="If to include the config info in the table.",
     )
     parser.add_argument(
+        "--keep_whitespace",
+        action="store_true",
+        help="If to keep the whitespace before comparison.",
+    )
+    parser.add_argument(
         "--dataset",
         type=str,
         default="ACE05",
@@ -153,6 +159,7 @@ def main():
         use_wandb=args.use_wandb,
         dataset=args.dataset,
         skip_config=args.skip_config,
+        keep_whitespace=args.keep_whitespace,
     )
     run_through_files(
         ed_golds,
@@ -164,6 +171,7 @@ def main():
         use_wandb=args.use_wandb,
         dataset=args.dataset,
         skip_config=args.skip_config,
+        keep_whitespace=args.keep_whitespace,
     )
 
 

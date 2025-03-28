@@ -491,3 +491,80 @@ def test_stats_on_argument_detection_not_real(
     assert stats["argument_precision"] == 4 / 4
     assert stats["argument_recall"] == 4 / 4
     assert stats["argument_f1"] == 2 * (4 / 4) * (4 / 4) / ((4 / 4) + (4 / 4))
+
+
+def test_stats_on_event_detection_extra_whitespace(event_trigger_jsonl_file):
+    gold_events = load_events(event_trigger_jsonl_file, "wnd_id")
+
+    output_with_whitespace = {
+        "p1": [],
+        "p2": [{"Life:Marry": " married "}, {"Life:Injure": " wounded "}],
+        "p3": [{"Movement:Transport": " transported "}],
+        "p4": [{"Job:Hire": " hired "}],
+    }
+
+    stats_with_whitespace = stats_on_event_detection(
+        gold_events, output_with_whitespace, keep_whitespace=True
+    )
+
+    assert stats_with_whitespace["total_passage"] == 4
+    assert stats_with_whitespace["correct_passage"] == 1  # Whitespace causes mismatch
+    assert stats_with_whitespace["passage_accuracy"] == 1 / 4
+    assert stats_with_whitespace["total_event"] == 4
+    assert stats_with_whitespace["predict_event"] == 4
+    assert stats_with_whitespace["correct_all"] == 0  # All events mismatch
+    assert stats_with_whitespace["event_precision"] == 0 / 4
+    assert stats_with_whitespace["event_recall"] == 0 / 4
+    assert stats_with_whitespace["event_f1"] == 0.0
+
+    stats_without_whitespace = stats_on_event_detection(
+        gold_events, output_with_whitespace, keep_whitespace=False
+    )
+
+    assert stats_without_whitespace["total_passage"] == 4
+    assert stats_without_whitespace["correct_passage"] == 4  # Whitespace ignored
+    assert stats_without_whitespace["passage_accuracy"] == 4 / 4
+    assert stats_without_whitespace["total_event"] == 4
+    assert stats_without_whitespace["predict_event"] == 4
+    assert stats_without_whitespace["correct_all"] == 4  # All events match
+    assert stats_without_whitespace["event_precision"] == 4 / 4
+    assert stats_without_whitespace["event_recall"] == 4 / 4
+    assert stats_without_whitespace["event_f1"] == 1.0
+
+
+def test_stats_on_argument_detection_extra_whitespace(event_arg_jsonl_file):
+    gold_events = load_events(event_arg_jsonl_file, "evt_id")
+
+    output_with_whitespace = {
+        "e1": {"Person": " Alice ", "Place": "Las   Vegas"},
+        "e2": {"Person": " Bob ", "Vehicle": " car "},
+        "e3": {"Person": " Charlie ", "Place": " NewYork "},
+        "e4": {"Person": " Dave ", "House": None},
+    }
+
+    stats_with_whitespace = stats_on_argument_detection(
+        gold_events, output_with_whitespace, keep_whitespace=True
+    )
+
+    assert stats_with_whitespace["total_event"] == 4
+    assert stats_with_whitespace["correct_event"] == 0  # Whitespace causes mismatch
+    assert stats_with_whitespace["event_accuracy"] == 0 / 4
+    assert stats_with_whitespace["total_argument"] == 7
+    assert stats_with_whitespace["predict_argument"] == 7
+    assert stats_with_whitespace["correct_argument"] == 0  # All arguments mismatch
+    assert stats_with_whitespace["argument_precision"] == 0 / 7
+    assert stats_with_whitespace["argument_recall"] == 0 / 7
+    assert stats_with_whitespace["argument_f1"] == 0.0
+
+    stats_without_whitespace = stats_on_argument_detection(
+        gold_events, output_with_whitespace, keep_whitespace=False
+    )
+
+    assert stats_without_whitespace["total_event"] == 4
+    assert stats_without_whitespace["correct_event"] == 4  # Whitespace ignored
+    assert stats_without_whitespace["event_accuracy"] == 4 / 4
+    assert stats_without_whitespace["total_argument"] == 7
+    assert stats_without_whitespace["predict_argument"] == 7
+    assert stats_without_whitespace["correct_argument"] == 7  # All arguments match
+    assert stats_without_whitespace["argument_precision"] == 7 / 7
+    assert stats_without_whitespace["argument_recall"] == 7 / 7

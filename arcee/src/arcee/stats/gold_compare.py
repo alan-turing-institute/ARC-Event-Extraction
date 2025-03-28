@@ -122,6 +122,65 @@ def semi_compare_events_detection(
     return compare_events_detection(semi_g_events, semi_o_events)
 
 
+def remove_event_argument_whitespace(
+    events: dict[str, dict[str, str | None]],
+) -> dict[str, dict[str, str | None]]:
+    """
+    This function removes the whitespace from the arguments in the events.
+    This means " bob freeman" and "bob freeman" will both be converted to "bobfreeman"
+    before comparison.
+
+    Args:
+        events (dict[str, dict[str, str]]): The events to remove the whitespace from.
+
+    Returns:
+        whitespace_removed (dict[str, dict[str, str]]): The events with the whitespace
+            removed.
+    """
+
+    whitespace_removed: dict[str, dict[str, str | None]] = {}
+    for key, event in events.items():
+        whitespace_removed[key] = {
+            arg_type: arg.replace(" ", "") if arg else None
+            for arg_type, arg in event.items()
+        }
+
+    return whitespace_removed
+
+
+def remove_event_detection_whitespace(
+    passages: dict[str, dict[str, str] | list[dict[str, str]]],
+) -> dict[str, dict[str, str] | list[dict[str, str]]]:
+    """
+    A function to remove the whitespace from the event triggers in the passage.
+    This means " bob freeman" and "bob freeman" will both be converted to "bobfreeman"
+    before comparison.
+
+    Args:
+        passages (dict[str, list[dict[str, str]] | None]): The passage to remove the
+            whitespace from.
+
+    Returns:
+        whitespace_removed (dict[str, list[dict[str, str]] | dict | None ]): The
+            passage with the whitespace removed.
+    """
+    whitespace_removed: dict[str, dict[str, str] | list[dict[str, str]]] = {}
+    for key, passage in passages.items():
+        if isinstance(passage, dict):
+            whitespace_removed[key] = passage
+            continue
+        if isinstance(passage, list):
+            whitespace_removed[key] = [
+                {
+                    evt_type: evt_tig.replace(" ", "")
+                    for evt_type, evt_tig in event.items()
+                }
+                for event in passage
+            ]
+
+    return whitespace_removed
+
+
 def compare_argument_detection(g_args: dict, o_args: dict) -> tuple[int, int]:
     """
     Compare gold arguments with output arguments and return the count of correct events,
@@ -180,10 +239,11 @@ def safe_divide(numerator: int | float, denominator: int | float) -> float:
 
 
 def stats_on_event_detection(
-    golds: dict[str, list],
-    outputs: dict[str, list],
+    golds: dict[str, list | dict],
+    outputs: dict[str, list | dict],
     semi: bool = False,
     real_gold: bool = True,
+    keep_whitespace: bool = False,
 ) -> dict[str, int | float]:
     """
     Calculate the statistics on the event detection task.
@@ -203,6 +263,8 @@ def stats_on_event_detection(
             False.
         real_gold (bool, optional): If the gold data is real or generated so can
             contain mistakes. Defaults to True.
+        keep_whitespace (bool, optional): If the whitespace should be kept in the
+            comparison. Defaults to False.
 
     Returns:
         dict[str, int | float]: This is a dict with the following keys:
@@ -227,6 +289,10 @@ def stats_on_event_detection(
     correct_type = 0
     correct_all = 0
 
+    if not keep_whitespace:
+        golds = remove_event_detection_whitespace(golds)
+        outputs = remove_event_detection_whitespace(outputs)
+
     for key, output in outputs.items():
         if real_gold and key not in golds:
             err_msg = f"Key {key} not found in gold."
@@ -242,14 +308,14 @@ def stats_on_event_detection(
 
         if not isinstance(output, list):
             # Need the type checks as llm can misbehave
-            continue  # type: ignore[unreachable]
+            continue
 
         predict_event += len(output)
 
         this_correct_passage, this_correct_all, this_correct_type = (
-            compare_events_detection(golds[key], output)
+            compare_events_detection(golds[key], output)  # type: ignore[arg-type]
             if not semi
-            else semi_compare_events_detection(golds[key], output)
+            else semi_compare_events_detection(golds[key], output)  # type: ignore[arg-type]
         )
         correct_passage += this_correct_passage
         correct_all += this_correct_all
@@ -289,6 +355,7 @@ def stats_on_argument_detection(
     outputs: dict[str, dict],
     semi: bool = False,
     real_gold: bool = True,
+    keep_whitespace: bool = False,
 ) -> dict[str, int | float]:
     """
     Calculate the statistics on the argument detection task.
@@ -304,6 +371,8 @@ def stats_on_argument_detection(
             False.
         real_gold (bool, optional): If the gold data is real or generated so can
             contain mistakes. Defaults to True.
+        keep_whitespace (bool, optional): If the whitespace should be kept in the
+            comparison. Defaults to False.
 
     Returns:
         dict[str, int | float]: This is a dict with the following values:
@@ -322,6 +391,10 @@ def stats_on_argument_detection(
     total_argument = 0
     predict_argument = 0
     correct_argument = 0
+
+    if not keep_whitespace:
+        golds = remove_event_argument_whitespace(golds)
+        outputs = remove_event_argument_whitespace(outputs)
 
     for key, output in outputs.items():
         if real_gold and key not in golds:

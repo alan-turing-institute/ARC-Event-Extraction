@@ -20,6 +20,8 @@ stats/*
 # STATS CONFIGS
 !stats/compare_configs/model_argument_f1.yaml
 !stats/compare_configs/model_event_f1.yaml
+!stats/sample_configs/model_argument.yaml
+!stats/sample_configs/model_detection.yaml
 
 
 # FINE TUNE CONFIG

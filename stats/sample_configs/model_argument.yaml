@@ -1,0 +1,14 @@
+output_dict:
+  ACE05 Labels: data/ACE05/gold/gold_label_args.jsonl
+  llama70b: outputs/ollamaModels/ACE05_split1_llama70b_EAE6_s_10_e5small.jsonl
+  mistral123b: outputs/ollamaModels/ACE05_split1_mistral123b_EAE6_s_10_e5small.jsonl
+data_location: data/ACE05/output/split1/test.jsonlines
+agree:
+  - llama70b
+  - mistral123b
+disagree:
+  - ACE05 Labels
+  - llama70b
+task: eae
+seed: 42
+max_examples: 10

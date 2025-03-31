@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 
 
 def load_events(file: str, key: str) -> dict[str, dict | list] | None:
@@ -181,6 +182,9 @@ def remove_event_detection_whitespace(
     return whitespace_removed
 
 
+_multi_arg_re = re.compile(r".*_\d$")
+
+
 def compare_argument_detection(g_args: dict, o_args: dict) -> tuple[int, int]:
     """
     Compare gold arguments with output arguments and return the count of correct events,
@@ -194,11 +198,21 @@ def compare_argument_detection(g_args: dict, o_args: dict) -> tuple[int, int]:
         correct_event (int): If the whole event is correct.
         correct_argument (int): The total number of correct arguments.
     """
-    correct_event = 1 if g_args == o_args else 0
-    correct_argument = 0
+    correct_event: int = 1 if g_args == o_args else 0
+    correct_argument: int = 0
+
+    logged_matches: dict[str, str] = {}  # We don't want to tick the same argument twice
 
     for arg_type, arg in g_args.items():
-        if arg and arg_type in o_args:
+        if arg and _multi_arg_re.match(arg_type):
+            for o_arg_type, o_arg in o_args.items():
+                if o_arg == logged_matches.get(arg_type[-2:], None):
+                    continue
+                if arg_type[:-2] == o_arg_type[:-2] and arg == o_arg:
+                    correct_argument += 1
+                    logged_matches[arg_type[-2:]] = o_arg
+                    break
+        elif arg and arg_type in o_args:
             correct_argument += 1 if o_args[arg_type] == arg else 0
 
     return correct_event, correct_argument

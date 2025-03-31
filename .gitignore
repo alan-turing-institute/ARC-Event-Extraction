@@ -17,6 +17,10 @@ outputs/*
 # STATS
 stats/*
 !stats/README.md
+# STATS CONFIGS
+!stats/compare_configs/model_argument_f1.yaml
+!stats/compare_configs/model_event_f1.yaml
+
 
 # FINE TUNE CONFIG
 scripts/fine_tune/configs/*

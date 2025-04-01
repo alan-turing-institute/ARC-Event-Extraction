@@ -206,11 +206,11 @@ def compare_argument_detection(g_args: dict, o_args: dict) -> tuple[int, int]:
     for arg_type, arg in g_args.items():
         if arg and _multi_arg_re.match(arg_type):
             for o_arg_type, o_arg in o_args.items():
-                if o_arg == logged_matches.get(arg_type[-2:], None):
+                if o_arg == logged_matches.get(arg_type[:-2], None):
                     continue
                 if arg_type[:-2] == o_arg_type[:-2] and arg == o_arg:
                     correct_argument += 1
-                    logged_matches[arg_type[-2:]] = o_arg
+                    logged_matches[arg_type[:-2]] = o_arg
                     break
         elif arg and arg_type in o_args:
             correct_argument += 1 if o_args[arg_type] == arg else 0

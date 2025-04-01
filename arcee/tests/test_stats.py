@@ -596,3 +596,8 @@ def test_stats_on_argument_detection_swaped_number():
     assert stats["argument_precision"] == 6 / 7
     assert stats["argument_recall"] == 6 / 6
     assert stats["argument_f1"] == 2 * (6 / 7) * (6 / 6) / ((6 / 7) + (6 / 6))
+
+    rev_stats = stats_on_argument_detection(output_events, gold_events, semi=False)
+
+    assert rev_stats["argument_precision"] == 6 / 6
+    assert rev_stats["argument_recall"] == 6 / 7

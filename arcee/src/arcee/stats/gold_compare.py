@@ -201,18 +201,20 @@ def compare_argument_detection(g_args: dict, o_args: dict) -> tuple[int, int]:
     correct_event: int = 1 if g_args == o_args else 0
     correct_argument: int = 0
 
-    logged_matches: dict[str, str] = {}  # We don't want to tick the same argument twice
+    logged_o_types = []
 
     for arg_type, arg in g_args.items():
-        if arg and _multi_arg_re.match(arg_type):
+        if arg is None:
+            continue
+        if _multi_arg_re.match(arg_type):
             for o_arg_type, o_arg in o_args.items():
-                if o_arg == logged_matches.get(arg_type[:-2], None):
+                if o_arg_type in logged_o_types:
                     continue
                 if arg_type[:-2] == o_arg_type[:-2] and arg == o_arg:
                     correct_argument += 1
-                    logged_matches[arg_type[:-2]] = o_arg
+                    logged_o_types.append(o_arg_type)
                     break
-        elif arg and arg_type in o_args:
+        elif arg_type in o_args:
             correct_argument += 1 if o_args[arg_type] == arg else 0
 
     return correct_event, correct_argument

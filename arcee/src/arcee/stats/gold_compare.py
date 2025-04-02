@@ -138,15 +138,13 @@ def remove_event_argument_whitespace(
         whitespace_removed (dict[str, dict[str, str]]): The events with the whitespace
             removed.
     """
-
-    whitespace_removed: dict[str, dict[str, str | None]] = {}
-    for key, event in events.items():
-        whitespace_removed[key] = {
-            arg_type: arg.replace(" ", "") if arg else None
+    return {
+        key: {
+            arg_type: arg.replace(" ", "") if arg and isinstance(arg, str) else None
             for arg_type, arg in event.items()
         }
-
-    return whitespace_removed
+        for key, event in events.items()
+    }
 
 
 def remove_event_detection_whitespace(

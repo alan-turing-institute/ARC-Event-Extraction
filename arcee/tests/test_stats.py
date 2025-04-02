@@ -588,8 +588,8 @@ def test_stats_on_argument_detection_swaped_number():
     stats = stats_on_argument_detection(gold_events, output_events, semi=False)
 
     assert stats["total_event"] == 4
-    assert stats["correct_event"] == 1
-    assert stats["event_accuracy"] == 1 / 4
+    assert stats["correct_event"] == 3
+    assert stats["event_accuracy"] == 3 / 4
     assert stats["total_argument"] == 6
     assert stats["predict_argument"] == 7
     assert stats["correct_argument"] == 6

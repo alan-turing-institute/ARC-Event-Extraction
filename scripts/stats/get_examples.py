@@ -58,13 +58,9 @@ def main(config_loc: str) -> None:
                 )
                 raise ValueError(msg)
 
-    data_loc = config["data_location"]
-    data_loc = os.path.join(main_dir, data_loc)
-    if not os.path.exists(data_loc):
-        msg = f"The data file at '{data_loc}' does not exist."
-        raise FileNotFoundError(msg)
+    data_loc = os.path.join(main_dir, config["data_location"])
 
-    with open(data_loc) as f:
+    with open(data_loc, "r") as f:
         pulled_data = [json.loads(line) for line in f]
 
     task = config.get("task")

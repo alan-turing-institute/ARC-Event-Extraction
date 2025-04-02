@@ -1,0 +1,146 @@
+"""
+This script calculates the F1 score and its variance for a given set of predictions
+and ground truth labels.
+"""
+
+from __future__ import annotations
+
+import argparse  # Add import for argparse
+import os
+
+import numpy as np
+import pandas as pd
+import yaml
+from arcee.stats.gold_compare import (
+    load_events,
+    stats_on_argument_detection,
+    stats_on_event_detection,
+)
+from tqdm import tqdm
+
+
+def bootstrap_sample(data: dict[str, any], rng: np.random.Generator) -> dict[str, any]:
+    """
+    Generate a bootstrap sample from the given dictionary.
+
+    Args:
+        data (dict[str, any]): The original dictionary to sample from.
+        rng (np.random.Generator): A random number generator.
+
+    Returns:
+        dict[str, any]: A new dictionary sampled with replacement.
+    """
+    keys = list(data.keys())
+    sampled_keys = rng.choice(keys, size=len(keys), replace=True)
+    return {key: data[key] for key in sampled_keys}
+
+
+def main(config_loc: str) -> None:
+    main_dir = os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    )
+
+    with open(config_loc) as f:
+        config = yaml.safe_load(f)
+
+    metric = config.get("metric", None)
+
+    task = config.get("task")
+    if task == "eae":
+        id_key = "evt_id"
+        stats_function = stats_on_argument_detection
+        metric = "argument_f1" if metric is None else metric
+    elif task == "ed":
+        id_key = "wnd_id"
+        stats_function = stats_on_event_detection
+        metric = "event_f1" if metric is None else metric
+    else:
+        msg = f"The task provided was {task}, but should be one of 'eae' or 'ed'."
+        raise ValueError(msg)
+
+    gold_loc = config["gold_location"]
+    gold_loc = os.path.join(main_dir, gold_loc)
+    if not os.path.exists(gold_loc):
+        msg = f"The data file at '{gold_loc}' does not exist."
+        raise FileNotFoundError(msg)
+
+    gold_data = load_events(gold_loc, id_key)  # Load the gold data to compare against
+
+    bootstrap_count = config.get("bootstrap_count", 100)
+    if not isinstance(bootstrap_count, int):
+        msg = f"The 'bootstrap_count' must be an integer was {bootstrap_count}."
+        raise ValueError(msg)
+
+    seed = config.get("seed")
+    if not (seed is None or isinstance(seed, int)):
+        msg = "The 'seed' value in the config must be an integer or None."
+        raise ValueError(msg)
+
+    semi = config.get("semi_string", False)
+
+    exp_dict = config.get("experiments")
+    if not isinstance(exp_dict, dict):
+        msg = "Please provide a dictionary of experiments."
+        raise ValueError(msg)
+    if not all(isinstance(k, str) for k in exp_dict):
+        msg = "The experiment names must be strings."
+        raise ValueError(msg)
+    if not all(isinstance(v, dict) for v in exp_dict.values()):
+        msg = "The experiment values must be dictionaries."
+        raise ValueError(msg)
+    if not all("data_loc" in v for v in exp_dict.values()):
+        msg = "The experiments must contain 'data_loc'."
+        raise ValueError(msg)
+
+    exp_data: dict = {}  # Dictionary to hold experiment data
+    exp_info: dict = {}  # Dictionary to hold experiment metadata
+    for exp_name, exp_vals in exp_dict.items():
+        data_loc = os.path.join(main_dir, exp_vals["data_loc"])
+        if not os.path.exists(data_loc):
+            msg = f"The file for {exp_name} at '{exp_vals['data_loc']}' does not exist."
+            raise FileNotFoundError(msg)
+
+        exp_data[exp_name] = load_events(data_loc, id_key)
+
+        if exp_data[exp_name] is None:
+            msg = (
+                f"The file for {exp_name} at '{exp_vals['data_loc']}' is empty."
+                "Could you have mixed up the event and argument detection files?"
+            )
+            raise ValueError(msg)
+
+        exp_info[exp_name] = exp_vals
+        exp_info[exp_name].pop("data_loc", None)
+
+    rng = np.random.default_rng(seed)
+
+    for e_name, e_data in tqdm(exp_data.items()):
+        exp_info[e_name][metric] = stats_function(gold_data, e_data, semi=semi)[metric]
+
+        # Perform bootstrapping
+        bootstrap_results = []
+        for _ in range(bootstrap_count):
+            sampled_data = bootstrap_sample(e_data, rng)
+            stats = stats_function(gold_data, sampled_data, semi=semi)
+            bootstrap_results.append(stats[metric])
+
+        exp_info[e_name]["bs_mean"] = np.mean(bootstrap_results)
+        exp_info[e_name]["bs_var"] = np.var(bootstrap_results)
+        exp_info[e_name]["bs_std"] = np.std(bootstrap_results)
+
+    # Save Results
+    results_df = pd.DataFrame.from_dict(exp_info, orient="index")
+    print(results_df)
+
+    save_loc = config.get("save_location", None)
+    if save_loc:
+        results_df.to_csv(save_loc, index=True, index_label="experiment")
+        print(f"Results saved to {save_loc}")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="F1 score with standard error.")
+    parser.add_argument("config_loc", type=str, help="Path to the configuration file.")
+    args = parser.parse_args()
+    print(f"Config location: {args.config_loc}")
+    main(args.config_loc)

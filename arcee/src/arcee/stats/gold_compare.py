@@ -172,6 +172,8 @@ def remove_event_detection_whitespace(
             whitespace_removed[key] = [
                 {
                     evt_type: evt_tig.replace(" ", "")
+                    if evt_tig and isinstance(evt_tig, str)
+                    else evt_tig
                     for evt_type, evt_tig in event.items()
                 }
                 for event in passage

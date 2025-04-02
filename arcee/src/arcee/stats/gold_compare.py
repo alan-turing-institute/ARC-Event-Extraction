@@ -140,7 +140,7 @@ def remove_event_argument_whitespace(
     """
     return {
         key: {
-            arg_type: arg.replace(" ", "") if arg and isinstance(arg, str) else None
+            arg_type: arg.replace(" ", "") if arg and isinstance(arg, str) else arg
             for arg_type, arg in event.items()
         }
         for key, event in events.items()

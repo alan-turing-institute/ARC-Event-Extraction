@@ -9,30 +9,18 @@ import yaml
 from arcee.stats.gold_compare import load_events
 
 
-def all_items_equal(lst: list, task: str) -> bool:
-    """
-    Check if all items in a list are equal.
-    """
+def compare_list_items(lst: list, task: str, size: int) -> bool:
     if len(lst) < 1:
         return True
-
     if task == "ed":
         lst = [sorted(x, key=str) for x in lst]
+    return len(set(lst)) == size
 
-    return all(x == lst[0] for x in lst)
+def all_items_equal(lst: list, task: str):
+    return compare_list_items(lst, task, 1)
 
-
-def all_items_unequal(lst: list, task: str) -> bool:
-    """
-    Check if all items in a list are different.
-    """
-    if len(lst) < 1:
-        return True
-
-    if task == "ed":
-        lst = [sorted(x, key=str) for x in lst]
-
-    return all(x != lst[0] for x in lst[1:])
+def all_items_unequal(lst: list, task: str):
+    return compare_list_items(lst, task, len(lst))
 
 
 def main(config_loc: str) -> None:

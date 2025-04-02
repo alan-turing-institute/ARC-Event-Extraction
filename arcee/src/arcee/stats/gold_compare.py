@@ -189,6 +189,11 @@ def compare_argument_detection(g_args: dict, o_args: dict) -> tuple[int, int]:
     """
     Compare gold arguments with output arguments and return the count of correct events,
     correct arguments, and correct argument types for a single event.
+    If there are role types with multiple arguments, e.g., 'Participant', then these
+    will be recorded with keys 'Participant_1', 'Participant_2', etc. If gold labels are
+    for 'Participant_1' = 'Alice' and 'Participant_2' = 'Bob' and the predicted
+    output is 'Participant_1' = 'Bob' and 'Participant_2' = 'Alice', then this will be
+    scored as correct - the suffix does not matter.
 
     Args:
         g_args (dict): Gold standard arguments detection result.
@@ -198,23 +203,40 @@ def compare_argument_detection(g_args: dict, o_args: dict) -> tuple[int, int]:
         correct_event (int): If the whole event is correct.
         correct_argument (int): The total number of correct arguments.
     """
-    correct_event: int = 1 if g_args == o_args else 0
+    correct_event = 1 if (g_args == o_args) else 0
+    # Log how many output arguments are correct
     correct_argument: int = 0
 
+    # A list that stores the argument role type that have been matched for the cases
+    # where there may be multiple arguments for a given role type
     logged_o_types = []
 
+    # Loop through each gold labelled argument type and argument and check if they are
+    # in the output
     for arg_type, arg in g_args.items():
         if arg is None:
             continue
+        # Check if the arg type has multiple arguments (e.g., Participant_1,
+        # Participant_2, etc.)
         if _multi_arg_re.match(arg_type):
+            # Loop through the outputs
             for o_arg_type, o_arg in o_args.items():
+                # If the output argument has already been matched, then skip checking
+                # this argument again
                 if o_arg_type in logged_o_types:
                     continue
+                # If the arg types are the same and the arguments are the same, then
+                # this is a match
                 if arg_type[:-2] == o_arg_type[:-2] and arg == o_arg:
                     correct_argument += 1
-                    logged_o_types.append(o_arg_type)
+                    logged_o_types.append(
+                        o_arg_type
+                    )  # Log that this role type has been
+                    # matched
                     break
         elif arg_type in o_args:
+            # The arg type is not a multi-arg type, so just check if the arg is in the
+            # output
             correct_argument += 1 if o_args[arg_type] == arg else 0
 
     return correct_event, correct_argument

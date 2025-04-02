@@ -568,3 +568,36 @@ def test_stats_on_argument_detection_extra_whitespace(event_arg_jsonl_file):
     assert stats_without_whitespace["correct_argument"] == 7  # All arguments match
     assert stats_without_whitespace["argument_precision"] == 7 / 7
     assert stats_without_whitespace["argument_recall"] == 7 / 7
+
+
+def test_stats_on_argument_detection_swaped_number():
+    gold_events = {
+        "e1": {"Person_1": "Alice", "Person_2": "Bob"},
+        "e2": {"Person_1": "Charlie", "Person_2": "Dave"},
+        "e3": {"Person_1": "Eve", "Person_2": None},
+        "e4": {"Person_1": "Grace", "Person_2": None},
+    }
+
+    output_events = {
+        "e1": {"Person_1": "Alice", "Person_2": "Bob"},
+        "e2": {"Person_1": "Dave", "Person_2": "Charlie"},  # Swapped
+        "e3": {"Person_1": "Eve", "Person_2": "Eve"},  # Two same
+        "e4": {"Person_1": None, "Person_2": "Grace"},  # Swapped None
+    }
+
+    stats = stats_on_argument_detection(gold_events, output_events, semi=False)
+
+    assert stats["total_event"] == 4
+    assert stats["correct_event"] == 3
+    assert stats["event_accuracy"] == 3 / 4
+    assert stats["total_argument"] == 6
+    assert stats["predict_argument"] == 7
+    assert stats["correct_argument"] == 6
+    assert stats["argument_precision"] == 6 / 7
+    assert stats["argument_recall"] == 6 / 6
+    assert stats["argument_f1"] == 2 * (6 / 7) * (6 / 6) / ((6 / 7) + (6 / 6))
+
+    rev_stats = stats_on_argument_detection(output_events, gold_events, semi=False)
+
+    assert rev_stats["argument_precision"] == 6 / 6
+    assert rev_stats["argument_recall"] == 6 / 7

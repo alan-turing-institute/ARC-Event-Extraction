@@ -203,7 +203,6 @@ def compare_argument_detection(g_args: dict, o_args: dict) -> tuple[int, int]:
         correct_event (int): If the whole event is correct.
         correct_argument (int): The total number of correct arguments.
     """
-    correct_event = 1 if (g_args == o_args) else 0
     # Log how many output arguments are correct
     correct_argument: int = 0
 
@@ -238,6 +237,13 @@ def compare_argument_detection(g_args: dict, o_args: dict) -> tuple[int, int]:
             # The arg type is not a multi-arg type, so just check if the arg is in the
             # output
             correct_argument += 1 if o_args[arg_type] == arg else 0
+
+    # A count of how many non-null arguments there are in the gold data
+    count_gold_args = sum(1 for arg in g_args.values() if arg is not None)
+    # A count of how many non-null arguments there are in the output data
+    count_out_args = sum(1 for arg in o_args.values() if arg is not None)
+    # If all the arguments are correct, then the whole event is correct
+    correct_event = 1 if count_gold_args == count_out_args == correct_argument else 0
 
     return correct_event, correct_argument
 

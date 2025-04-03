@@ -1,6 +1,20 @@
 """
 This script calculates the F1 score and its variance for a given set of predictions
 and ground truth labels.
+
+The script uses a YAML configuration file to specify the following parameters:
+- `task`: The task type, either 'eae' (event argument extraction)
+    or 'ed' (event detection).
+- `gold_location`: Path to the gold standard data file.
+- `bootstrap_count`: Number of bootstrap samples to generate (default is 100).
+- `seed`: Random seed for reproducibility (optional).
+- `save_location`: Path to save the results as a CSV file (optional).
+- `semi_string`: Boolean indicating whether to use semi-string matching (optional).
+- `experiments`: A dictionary of experiments, where each key is the experiment name
+    and the value is a dictionary containing:
+  - `data_loc`: Path to the experiment's data file.
+  - Additional metadata fields (e.g., model, prompt, fine-tune status, etc.), which
+    will be included in the output CSV file.
 """
 
 from __future__ import annotations

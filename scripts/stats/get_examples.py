@@ -1,3 +1,25 @@
+"""View Examples
+
+This script is used to compare the outputs of the different event extraction models
+and the human annotated answers. It produces a random list of examples that follow
+given criteria about agreement and disagreement between the models.
+
+The script uses a YAML configuration file to specify the following parameters:
+
+- `output_dict` (dict): A dictionary mapping model names to their output file paths.
+- `data_location` (str): The relative path to the input data file containing event
+    information.
+- `task` (str): The task type, either "eae" (event argument extraction) or
+    "ed" (event detection).
+- `agree` (list): A list of model names whose outputs must agree on the examples.
+    If the list is empty the models do not need to agree.
+- `disagree` (list): A list of model names whose outputs must disagree on the examples.
+    If the list is empty the models do not need to disagree.
+- `seed` (int or None): A seed for random number generation to ensure reproducibility.
+    If None, a random seed will be used, different each time.
+- `max_examples` (int): The maximum number of examples to display that defaults to 10.
+"""
+
 from __future__ import annotations
 
 import argparse  # Add import for argparse
@@ -16,8 +38,10 @@ def compare_list_items(lst: list, task: str, size: int) -> bool:
         lst = [sorted(x, key=str) for x in lst]
     return len(set(lst)) == size
 
+
 def all_items_equal(lst: list, task: str):
     return compare_list_items(lst, task, 1)
+
 
 def all_items_unequal(lst: list, task: str):
     return compare_list_items(lst, task, len(lst))
@@ -60,7 +84,7 @@ def main(config_loc: str) -> None:
 
     data_loc = os.path.join(main_dir, config["data_location"])
 
-    with open(data_loc, "r") as f:
+    with open(data_loc) as f:
         pulled_data = [json.loads(line) for line in f]
 
     task = config.get("task")

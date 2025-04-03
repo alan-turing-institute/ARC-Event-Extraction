@@ -21,13 +21,13 @@ ed_data = pd.read_csv(
 )
 
 model_list = [
-    "llama-8b",
-    "phi-14b",
-    "mistral-24b",
-    "gemma-27b",
-    "llama-70b",
-    "mistral-123b",
-    "gpt-4o",
+    "Llama-8b",
+    "Phi-14b",
+    "Mistral-24b",
+    "Gemma-27b",
+    "Llama-70b",
+    "Mistral-123b",
+    "GPT-4o",
 ]
 
 # Convert Fraction to Percentage

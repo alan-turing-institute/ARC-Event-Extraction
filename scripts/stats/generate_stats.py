@@ -64,6 +64,7 @@ def run_through_files(
             job_type="stats",
             config={
                 "file_name": file_name,
+                "folder": os.path.basename(output_folder),
                 "job_type": "stats",  # legacy reasons
                 "dataset": dataset,
                 "keep_whitespace": keep_whitespace,

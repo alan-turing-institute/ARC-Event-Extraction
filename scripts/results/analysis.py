@@ -8,8 +8,6 @@ import yaml
 from arcee.constants import WANDB_ENTITY_NAME, WANDB_PROJECT_NAME
 from numpy import logical_and
 
-CONSTRAINT_MAP = {"f": "Unconstrained", "j": "JSON", "s": "Schema"}
-
 
 def extract_run_information(run: wandb.apis.public.runs.Run) -> dict[str, str] | None:
     substrings = run.name.split("_")

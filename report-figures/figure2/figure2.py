@@ -104,7 +104,7 @@ ax2.errorbar(
     eae_fine_tuned["argument_f1"],
     yerr=eae_fine_tuned["bs_std"],
     fmt="D",
-    label="Fine-Tuned",
+    label="Fine-tuned",
     color="magenta",
     capsize=8,
 )
@@ -114,7 +114,7 @@ ax2.errorbar(
     eae_in_context["argument_f1"],
     yerr=eae_in_context["bs_std"],
     fmt="o",
-    label="In Context",
+    label="Few shot",
     color="blue",
     capsize=8,
 )
@@ -124,7 +124,7 @@ ax2.errorbar(
     eae_zero_shot["argument_f1"],
     yerr=eae_zero_shot["bs_std"],
     fmt="s",
-    label="Zero Shot",
+    label="Zero shot",
     color="red",
     capsize=8,
 )
@@ -159,7 +159,7 @@ ax1.legend(
 
 # Add subplot labels
 ax1.text(
-    -0.1,
+    -0.08,
     1.0,
     "A",
     transform=ax1.transAxes,
@@ -169,7 +169,7 @@ ax1.text(
     ha="right",
 )
 ax2.text(
-    -0.1,
+    -0.08,
     1.0,
     "B",
     transform=ax2.transAxes,

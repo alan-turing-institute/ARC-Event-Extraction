@@ -112,7 +112,9 @@ def main():
 
     compare_df = pd.DataFrame(columns=output_dict.keys())
 
-    for (key1, value1), (key2, value2) in tqdm(product(output_dict.items(), repeat=2)):
+    for (key1, value1), (key2, value2) in tqdm(
+        product(output_dict.items(), repeat=2), total=len(output_dict) ** 2
+    ):
         e1 = load_events(os.path.join(main_dir, value1), id_key)
         e2 = load_events(os.path.join(main_dir, value2), id_key)
 
@@ -127,6 +129,12 @@ def main():
         list(output_dict.keys()),
         config.get("output_plot_path", "stats/figures/default_figure_name.png"),
     )
+
+    save_loc = config.get("output_csv_path")
+    if save_loc:
+        save_loc = os.path.join(main_dir, save_loc)
+        compare_df.to_csv(save_loc, index=False)
+        print(f"Results saved to {save_loc}")
 
 
 if __name__ == "__main__":

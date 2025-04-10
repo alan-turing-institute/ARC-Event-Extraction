@@ -77,6 +77,13 @@ ax1.errorbar(
     color="red",
     capsize=8,
 )
+ax1.axhline(
+    y=71.3,
+    color="green",
+    linestyle="--",
+    linewidth=2,
+    label="TextEE Best",
+)
 ax1.text(
     0.01,
     0.99,
@@ -87,7 +94,7 @@ ax1.text(
     ha="left",
 )
 ax1.set_ylabel("Event F1")
-ax1.set_ylim(0, 85)
+ax1.set_ylim(0, 87)
 ax1.set_xlim(-0.5, len(model_list) - 0.5)
 ax1.set_xticks(model_list)
 ax1.set_xticklabels(model_list, rotation=45, ha="right")
@@ -128,6 +135,20 @@ ax2.errorbar(
     color="red",
     capsize=8,
 )
+ax2.axhline(
+    y=77.8,
+    color="green",
+    linestyle="--",
+    linewidth=2,
+    label="TextEE Best",
+)
+ax2.axhline(
+    y=29.2,
+    color="#a3b012",
+    linestyle="--",
+    linewidth=2,
+    label="TextEE LLM Best",
+)
 ax2.text(
     0.01,
     0.99,
@@ -137,6 +158,8 @@ ax2.text(
     va="top",
     ha="left",
 )
+ax2.plot([0, 0], [0, 0], "o", color="White", label=" ")  # Dummy plot for legend
+
 ax2.set_ylabel("Argument F1")
 ax2.set_ylim(ax1.get_ylim())
 ax2.set_xlim(ax1.get_xlim())
@@ -148,13 +171,13 @@ ax2.tick_params(axis="y", direction="in", which="both", left=True, right=True)
 
 
 # Add Legend #
-
 handles, labels = ax2.get_legend_handles_labels()
-ax1.legend(
-    handles,
-    labels,
-    loc="upper right",
-    title="Prompt Type",
+leg_order = [3, 4, 5, 2, 0, 1]
+ax2.legend(
+    [handles[i] for i in leg_order],
+    [labels[i] for i in leg_order],
+    loc="lower left",
+    ncol=2,
 )
 
 # Add subplot labels

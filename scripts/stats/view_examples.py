@@ -36,6 +36,9 @@ def compare_list_items(lst: list, task: str, size: int) -> bool:
         return True
     if task == "ed":
         lst = [sorted(x, key=str) for x in lst]
+    elif task == "eae":
+        lst = [str(sorted(x.items())) for x in lst]
+
     return len(set(lst)) == size
 
 

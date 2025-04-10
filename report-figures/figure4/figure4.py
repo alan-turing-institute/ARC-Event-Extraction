@@ -1,5 +1,5 @@
 """
-Figure 3: Effect of In-context Examples
+Figure 4: Fine-tuning for Argument Extraction
 """
 
 from __future__ import annotations

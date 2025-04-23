@@ -38,7 +38,7 @@ ed_data["bs_std"] = ed_data["bs_std"] * 100
 
 # Filter data for in context prompts
 eae_in_context = eae_data[eae_data["prompt"] == "EAE6"]
-ed_in_context = ed_data[ed_data["prompt"] == "ED8"]
+ed_in_context = ed_data[ed_data["prompt"] == "ED4"]
 
 # Filter zero-shot data
 eae_zero_shot = eae_data[(eae_data["prompt"] == "EAE1") & (~eae_data["fine_tune"])]

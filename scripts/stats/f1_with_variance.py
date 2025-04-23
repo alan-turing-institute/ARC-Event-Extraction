@@ -49,6 +49,32 @@ def bootstrap_sample(data: dict[str, any], rng: np.random.Generator) -> dict[str
     return {key: data[key] for key in sampled_keys}
 
 
+def strip_by_events(
+    data: dict[str, any],
+    gold_data: dict[str, any],
+    min_events: int | None = None,
+    max_events: int | None = None,
+) -> None:
+    """
+    Filter the data dictionary based on the number of events in the gold data.
+
+    Args:
+        data (dict[str, any]): The data dictionary to filter.
+        gold_data (dict[str, any]): The gold data dictionary to compare against.
+        min_events (int | None): Minimum number of events to keep (default: None).
+        max_events (int | None): Maximum number of events to keep (default: None).
+
+    Returns:
+        filtered_data (dict[str, any]): The filtered data dictionary.
+    """
+    if min_events is not None:
+        data = {k: v for k, v in data.items() if len(gold_data[k]) >= min_events}
+    if max_events is not None:
+        data = {k: v for k, v in data.items() if len(gold_data[k]) <= max_events}
+
+    return data
+
+
 def main(config_loc: str) -> None:
     main_dir = os.path.dirname(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -122,6 +148,14 @@ def main(config_loc: str) -> None:
                 "Could you have mixed up the event and argument detection files?"
             )
             raise ValueError(msg)
+
+        # Event count filtering
+        min_events = exp_vals.get("min_events")
+        max_events = exp_vals.get("max_events")
+        if task == "ed" and (min_events or max_events):
+            exp_data[exp_name] = strip_by_events(
+                exp_data[exp_name], gold_data, min_events, max_events
+            )
 
         exp_info[exp_name] = exp_vals
         exp_info[exp_name].pop("data_loc", None)

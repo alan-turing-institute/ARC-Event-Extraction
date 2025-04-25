@@ -84,6 +84,13 @@ ax1.axhline(
     linewidth=2,
     label="TextEE Best",
 )
+ax1.axhline(
+    y=14.6,
+    color="#a3b012",
+    linestyle="--",
+    linewidth=2,
+    label="TextEE LLM Best",
+)
 ax1.text(
     0.01,
     0.99,

@@ -117,7 +117,7 @@ for model, data in [
 ax1.text(
     0.02,
     0.98,
-    "Fine Tuning Argument Extraction",
+    "Fine-Tuning Argument Extraction",
     transform=ax1.transAxes,
     fontsize=12,
     va="top",

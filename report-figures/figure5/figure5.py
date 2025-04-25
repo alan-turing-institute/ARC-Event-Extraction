@@ -69,8 +69,9 @@ tuned_argument_data = pd.read_csv(
 
 tuned_map = {
     "ACE05 Labels": "ACE05 Labels",
-    "mistral24b256r": "Mistral-24b",
+    "llama3b512r": "Llama-3b",
     "llama8b256r": "Llama-8b",
+    "mistral24b256r": "Mistral-24b",
 }
 
 ##  Set up Figure ##

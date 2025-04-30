@@ -8,7 +8,7 @@ import os
 
 import pandas as pd
 from matplotlib.figure import Figure
-from matplotlib.ticker import AutoMinorLocator
+from matplotlib.ticker import AutoMinorLocator, MultipleLocator
 
 # Load data
 main_dir = os.path.abspath(os.path.join(__file__, "../../../.."))
@@ -125,7 +125,7 @@ ax1.axhline(
 ax1.text(
     0.01,
     0.99,
-    "Event Detection",
+    "Event Detection\nExact String Matching",
     transform=ax1.transAxes,
     fontsize=12,
     va="top",
@@ -137,9 +137,9 @@ ax1.set_xlim(-0.5, len(model_list) - 0.5)
 ax1.set_xticks(model_list)
 ax1.set_xticklabels(model_list, rotation=45, ha="right")
 ax1.grid(axis="y")
+ax1.yaxis.set_major_locator(MultipleLocator(10))
 ax1.yaxis.set_minor_locator(AutoMinorLocator(5))
 ax1.tick_params(axis="y", direction="in", which="both", left=True, right=True)
-
 
 ## PANEL B ##
 
@@ -196,6 +196,7 @@ ax2.set_xlim(ax1.get_xlim())
 ax2.set_xticks(model_list)
 ax2.set_xticklabels(model_list, rotation=45, ha="right")
 ax2.grid(axis="y")
+ax2.yaxis.set_major_locator(MultipleLocator(10))
 ax2.yaxis.set_minor_locator(AutoMinorLocator(5))
 ax2.tick_params(axis="y", direction="in", which="both", left=True, right=True)
 
@@ -248,7 +249,7 @@ ax3.axhline(
 ax3.text(
     0.01,
     0.99,
-    "Event Argumentation Extraction",
+    "Event Argumentation Extraction\nExact String Matching",
     transform=ax3.transAxes,
     fontsize=12,
     va="top",
@@ -257,11 +258,12 @@ ax3.text(
 ax3.plot([0, 0], [0, 0], "o", color="White", label=" ")  # Dummy plot for legend
 
 ax3.set_ylabel("Argument F1")
-ax3.set_ylim(0, 95)
+ax3.set_ylim(0, 96)
 ax3.set_xlim(ax1.get_xlim())
 ax3.set_xticks(model_list)
 ax3.set_xticklabels(model_list, rotation=45, ha="right")
 ax3.grid(axis="y")
+ax3.yaxis.set_major_locator(MultipleLocator(10))
 ax3.yaxis.set_minor_locator(AutoMinorLocator(5))
 ax3.tick_params(axis="y", direction="in", which="both", left=True, right=True)
 
@@ -334,6 +336,7 @@ ax4.set_xlim(ax1.get_xlim())
 ax4.set_xticks(model_list)
 ax4.set_xticklabels(model_list, rotation=45, ha="right")
 ax4.grid(axis="y")
+ax4.yaxis.set_major_locator(MultipleLocator(10))
 ax4.yaxis.set_minor_locator(AutoMinorLocator(5))
 ax4.tick_params(axis="y", direction="in", which="both", left=True, right=True)
 

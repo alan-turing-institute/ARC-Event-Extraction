@@ -59,7 +59,7 @@ ax1.errorbar(
     ed_close["event_f1"],
     yerr=ed_close["bs_std"],
     fmt="D",
-    label="Close examples",
+    label="Similar examples",
     color="#c947ba",
     capsize=8,
 )
@@ -130,7 +130,7 @@ ax2.errorbar(
     eae_close_same["argument_f1"],
     yerr=eae_close_same["bs_std"],
     fmt="v",
-    label="Close same event",
+    label="Similar same event",
     color="orange",
     capsize=8,
 )
@@ -139,7 +139,7 @@ ax2.errorbar(
     eae_close_any["argument_f1"],
     yerr=eae_close_any["bs_std"],
     fmt="D",
-    label="Close any event",
+    label="Similar any event",
     color="#c947ba",
     capsize=8,
 )

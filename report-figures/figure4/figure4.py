@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import os
 
+import matplotlib.patches as patches
 import pandas as pd
 from matplotlib.figure import Figure
 from matplotlib.ticker import AutoMinorLocator
@@ -122,6 +123,7 @@ ax1.text(
     fontsize=12,
     va="top",
     ha="left",
+    bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.6},
 )
 ax1.set_ylabel("Argument F1")
 ax1.set_xlabel("Rank of PEFT adapter", labelpad=-5)  # Moved up because two line tick
@@ -141,10 +143,24 @@ ax1.grid(axis="x")
 ax1.legend(bbox_to_anchor=(0.01, 0.95), loc="upper left")
 
 # INSET AXIS ##
+
+ax1.add_patch(
+    patches.Rectangle(
+        (0.50, 0.02),
+        0.47,
+        0.45,
+        transform=ax1.transAxes,
+        edgecolor=None,
+        facecolor="white",
+        zorder=2,
+        alpha=0.9,
+    )
+)
+
+
 inset_ax = ax1.inset_axes([0.55, 0.07, 0.42, 0.40])  # [x, y, width, height]
 
 # Plot data on inset axis
-
 inset_ax.errorbar(
     mistral_eae6["x_axis"],
     mistral_eae6["argument_f1"],
@@ -176,7 +192,22 @@ inset_ax.set_xticks(range(len(x_axis_values[:6])))
 inset_ax.set_xticklabels(x_axis_labels[:6])
 inset_ax.grid(axis="both", linestyle="--", alpha=0.5)
 
-inset_ax.legend(loc="lower right", fontsize=9, title="Mistral-24b", title_fontsize=9)
+inset_ax.text(
+    0.97,
+    0.04,
+    "Mistral-24b\nFine-tuning + Examples",
+    horizontalalignment="right",
+    transform=inset_ax.transAxes,
+    fontsize=10,
+    va="bottom",
+    ha="right",
+    bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.6},
+)
+inset_ax.legend(
+    loc="lower right",
+    fontsize=9,
+    bbox_to_anchor=(0.99, 0.21),
+)
 
 # Save the figure
 fig.savefig(os.path.join(main_dir, "report-figures/figure4/figure4.pdf"))

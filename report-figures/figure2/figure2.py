@@ -92,13 +92,14 @@ ax1.axhline(
     label="TextEE LLM Best",
 )
 ax1.text(
-    0.01,
-    0.99,
+    0.03,
+    0.98,
     "Event Detection",
     transform=ax1.transAxes,
     fontsize=12,
     va="top",
     ha="left",
+    bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.6},
 )
 ax1.set_ylabel("Event F1")
 ax1.set_ylim(0, 87)
@@ -157,13 +158,14 @@ ax2.axhline(
     label="TextEE LLM Best",
 )
 ax2.text(
-    0.01,
-    0.99,
+    0.03,
+    0.98,
     "Event Argumentation Extraction",
     transform=ax2.transAxes,
     fontsize=12,
     va="top",
     ha="left",
+    bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.6},
 )
 ax2.plot([0, 0], [0, 0], "o", color="White", label=" ")  # Dummy plot for legend
 

@@ -100,13 +100,14 @@ ax1.plot(
 )
 
 ax1.text(
-    0.02,
-    0.98,
+    0.03,
+    0.97,
     "Event Detection\nMistral 24B",
     transform=ax1.transAxes,
     fontsize=12,
     va="top",
     ha="left",
+    bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.6},
 )
 ax1.set_ylabel("Event F1")
 ax1.set_xlabel("Number of examples")
@@ -205,13 +206,14 @@ ax2.plot(
 )
 
 ax2.text(
-    0.02,
-    0.98,
+    0.03,
+    0.97,
     "Event Argument Extraction\nMistral 24B",
     transform=ax2.transAxes,
     fontsize=12,
     va="top",
     ha="left",
+    bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.6},
 )
 
 ax2.set_ylabel("Argument F1")

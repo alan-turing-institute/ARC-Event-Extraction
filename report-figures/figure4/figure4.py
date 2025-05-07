@@ -127,7 +127,7 @@ ax1.text(
 )
 ax1.set_ylabel("Argument F1")
 ax1.set_xlabel("Rank of PEFT adapter", labelpad=-5)
-ax1.set_ylim(25, 85)
+ax1.set_ylim(20, 85)
 ax1.set_xticks(range(len(x_axis_values)))
 ax1.set_xticklabels(x_axis_labels)
 ax1.tick_params(axis="y", direction="in", which="both", left=True, right=True)

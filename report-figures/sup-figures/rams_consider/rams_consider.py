@@ -31,8 +31,8 @@ def plot_answer_matrix(
         model_names (list[str]): The names of the models.
     """
     number_of_classes = len(model_names)
-    if model_names[0] == "ACE05 Labels":
-        model_names[0] = "ACE05\nLabels"
+    if model_names[0] == "RAMS Labels":
+        model_names[0] = "RAMS\nLabels"
     # Plotting the matrix
     axis.matshow(matrix.astype(float), cmap=cc.cm.kbc_r)
 

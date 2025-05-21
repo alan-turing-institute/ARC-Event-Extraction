@@ -38,12 +38,20 @@ This changes the python package versions to the latest available versions that a
 
 ### Install Pre-Commit Hooks
 
-Once you have set up your virtual environment and installed everything, if doing development on the repository you will need to install pre-commit hooks.
+Once you have set up your virtual environment and installed everything, if doing development on the repository, you will need to install pre-commit hooks.
 
 ```bash
 pre-commit install
 ```
 
+### Optional CUDA Dependencies
+
+If the quantised, fine-tuned models are run, this requires the `bitsandbytes` package, which can only work with CUDA.
+If you want to install this extra dependency manually with pip, or with `uv` you can run:
+
+```bash
+uv sync --all-extras
+```
 
 ## Project Structure
 

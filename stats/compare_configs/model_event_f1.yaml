@@ -1,0 +1,11 @@
+output_dict:
+  ACE05 Labels: data/ACE05/gold/gold_label_triggers.jsonl
+  gemma27b: outputs/ollamaModels/ACE05_split1_gemma27b_ED8_s_10_e5small.jsonl
+  llama70b: outputs/ollamaModels/ACE05_split1_llama70b_ED8_s_10_e5small.jsonl
+  mistral123b: outputs/ollamaModels/ACE05_split1_mistral123b_ED8_s_10_e5small.jsonl
+  phi4: outputs/ollamaModels/ACE05_split1_phi4_ED8_s_10_e5small.jsonl
+task: ed
+metric: event_f1
+semi_string: false
+plot_title: Model Event F1 Comparison
+output_plot_path: stats/figures/model_event_f1.png

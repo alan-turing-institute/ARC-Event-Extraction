@@ -1,0 +1,12 @@
+output_dict:
+  ACE05 Labels: data/ACE05/gold/gold_label_args.jsonl
+  gemma27b: outputs/ollamaModels/ACE05_split1_gemma27b_EAE6_s_10_e5small.jsonl
+  llama70b: outputs/ollamaModels/ACE05_split1_llama70b_EAE6_s_10_e5small.jsonl
+  mistral123b: outputs/ollamaModels/ACE05_split1_mistral123b_EAE6_s_10_e5small.jsonl
+  phi4: outputs/ollamaModels/ACE05_split1_phi4_EAE6_s_10_e5small.jsonl
+  gpt4o: outputs/gpt/ACE05_split1_gpt4o_EAE6_s_10_e5small.jsonl
+task: eae
+metric: argument_f1
+semi_string: false
+plot_title: Model Argument F1 Comparison
+output_plot_path: stats/figures/model_argument_f1.png

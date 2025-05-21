@@ -133,6 +133,7 @@ def main():
     save_loc = config.get("output_csv_path")
     if save_loc:
         save_loc = os.path.join(main_dir, save_loc)
+
         compare_df.to_csv(save_loc, index=False)
         print(f"Results saved to {save_loc}")
 

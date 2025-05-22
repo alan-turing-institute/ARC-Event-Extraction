@@ -1,10 +1,10 @@
 # ARC-Event-Extraction
 
-This project examines a range of state-of-the-art approaches for labeling events in text.
+This project examines a range of state-of-the-art approaches for labelling events in text.
 
 ## Installation
 
-As of the time of writing the project required python 3.12.
+As of the time of writing, this project requires Python 3.12.
 
 If Ollama models are to be used for prompting, then [Ollama](https://ollama.com/) must be installed.
 
@@ -33,7 +33,7 @@ uv sync
 source .venv/bin/activate
 ```
 
-If you are developing you will want to call `uv lock` to update the lock file.
+If you are developing, you will want to call `uv lock` to update the lock file.
 This changes the python package versions to the latest available versions that are compatible.
 
 ### Install Pre-Commit Hooks
@@ -47,7 +47,7 @@ pre-commit install
 ### Optional CUDA Dependencies
 
 If the quantised, fine-tuned models are run, this requires the `bitsandbytes` package, which can only work with CUDA.
-If you want to install this extra dependency manually with pip, or with `uv` you can run:
+If you want to install this extra dependency manually with pip, or with `uv`, you can run:
 
 ```bash
 uv sync --all-extras
@@ -63,7 +63,7 @@ This is the main experiment package for the ARC Event Extraction project. [Read 
 
 ### `poc` - Proof of Concept
 
-This is a proof of concept for the RAG prompting set up for the event extraction task. [Read Me Here](poc/README.md)
+This is a proof of concept for the RAG prompting set-up for the event extraction task. [Read Me Here](poc/README.md)
 
 ### `from_textee` - From TextEE
 
@@ -78,11 +78,11 @@ This folder stores the raw and pre-processed data for use by the event extractio
 ### `outputs`
 
 This folder stores the outputs from the models.
+This folder's structure follows the form found in the `scripts/configs` folder.
 
 ### `stats`
 
 This folder stores the statistics about model performance.
-
 
 ### `scripts`
 

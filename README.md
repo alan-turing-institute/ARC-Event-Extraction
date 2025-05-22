@@ -86,12 +86,38 @@ This folder stores the statistics about model performance.
 
 ### `scripts`
 
-The scripts folder contain scripts to run the following processes:
+The scripts folder contains scripts to run the following processes:
 
 #### `data_prep`
+
 The scripts in this folder process the data.
 To run `process_rams.py`, the following args could be used:
 `-i=data/RAMS/data -o=data/RAMS/output/split1 -s=data/RAMS/splits/split1`
 
 The script `create_dev_datasets.py` can be used to create a `train` and `dev` datasets that would specifically be used for prompt development, where the records come from an intersection of all five of the existing train splits (the number of splits can be altered, but there will be five if TextEE is followed). This can be run with the following args:
 `-o=data/RAMS/output/ --num_splits=5 --seed=42`
+
+#### `eval`
+
+The scripts in this folder run the models on the data.
+The `inference.py` script is run by providing a config from the `configs` folder.
+It also contains an example Slurm script.
+More information is provided in [the evaluation readme](scripts/eval/README.md).
+
+
+#### `fine_tune`
+
+The [script `run_fine_tune.py`](scripts/fine_tune/run_fine_tune.py) is used to fine-tune the model for a particular task.
+The script takes one argument, which is the path to a config in the `fine_tune/configs` folder.
+This can be run without using quantisation, but if it is required, the optional `cuda` dependency group needs to be installed.
+
+The adapters for the models that are fine-tuned are saved to the `models` folder.
+
+#### `stats`
+
+ There are four scripts in the `scripts/stats` folder.
+
+ * `generate_stats.py` - This generates the main statistics for the report and runs through the collection of results in the output folder and saves it to Weights and Biases.
+ * `f1_with_variance.py` - Generates the results to be shown in the figures, which can also save a collection of metadata and uses bootstrapping to calculate a confidence interval to display.
+ * `compare_prediction.py` -  This is used to compare the outputs of each of the models with each other by changing what is considered the ground truth.
+ * `view_examples.py` - This displays outputs of the model in a readable way and can be filtered on different criteria.

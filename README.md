@@ -55,7 +55,8 @@ uv sync --all-extras
 
 ## Project Structure
 
-This project has the following sub-packages that are used for different purposes.
+*This project comprises the following sub-packages*, each serving distinct purposes.
+These can be installed independly if only some of the functionality is needed.
 
 ### `arcee` - ARC Event Extraction
 
@@ -69,24 +70,12 @@ This is a proof of concept for the RAG prompting set-up for the event extraction
 
 This package has a set of scripts taken and updated from the [TextEE project](https://github.com/ej0cl6/TextEE). [Read Me Here](from_textee/README.md)
 
-Other folders in the project are:
-
-### `data`
-
-This folder stores the raw and pre-processed data for use by the event extraction models.
-
-### `outputs`
-
-This folder stores the outputs from the models.
-This folder's structure follows the form found in the `scripts/configs` folder.
-
-### `stats`
-
-This folder stores the statistics about model performance.
+*The main interface* for this project is contained in the scripts folder.
 
 ### `scripts`
 
-The scripts folder contains scripts to run the following processes:
+The scripts folder contains scripts which are broken down into four groups.
+The `from_textee` package is needed for some of the intishal processes in `data_prep`, and the `arcee` package is needed for everything else.
 
 #### `data_prep`
 
@@ -104,7 +93,6 @@ The `inference.py` script is run by providing a config from the `configs` folder
 It also contains an example Slurm script.
 More information is provided in [the evaluation readme](scripts/eval/README.md).
 
-
 #### `fine_tune`
 
 The [script `run_fine_tune.py`](scripts/fine_tune/run_fine_tune.py) is used to fine-tune the model for a particular task.
@@ -121,3 +109,27 @@ The adapters for the models that are fine-tuned are saved to the `models` folder
  * `f1_with_variance.py` - Generates the results to be shown in the figures, which can also save a collection of metadata and uses bootstrapping to calculate a confidence interval to display.
  * `compare_prediction.py` -  This is used to compare the outputs of each of the models with each other by changing what is considered the ground truth.
  * `view_examples.py` - This displays outputs of the model in a readable way and can be filtered on different criteria.
+
+*The following folders* contain the input and output files required for the project.
+
+### `data`
+
+This folder stores the raw and pre-processed data for use by the event extraction models.
+
+### `models`
+
+This folder is used to contain the language models used in the report and the adapters produced by the fine-tuning scripts.
+
+### `outputs`
+
+This folder stores the outputs from the models.
+This folder's structure follows the form found in the `scripts/configs` folder.
+
+### `stats`
+
+This folder stores the statistics about model performance.
+It also stores the configs that are used by the files in `scripts/stats` to decide what is generated.
+
+### `report-figures`
+
+This folder contains the scripts and data used to produce the figures for the report.

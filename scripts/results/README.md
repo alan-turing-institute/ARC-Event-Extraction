@@ -1,4 +1,4 @@
-`analysis.py` takes in a YAML config and computes results tables. This assumes that you have previously run event extraction jobs, produce their outputs, and computed model performances using `scripts/stats/generate_stats.py <OUTPUT_DIR_NAME>`.
+`analysis.py` takes in a YAML config and computes results tables. This assumes that you have previously run event extraction jobs, produce their outputs, and computed model performances using `python scripts/stats/generate_stats.py <OUTPUT_DIR_NAME>`.
 
 The YAML file should contain the following fields:
 

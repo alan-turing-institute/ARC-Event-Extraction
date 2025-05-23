@@ -3,7 +3,7 @@
 The YAML file should contain the following fields:
 
 - `name`: A name defining the output file. As written, should be one of `icl` or `ft`: to extend this, you should modify `APPROACH_LABEL_MAP` on line 55
-- `run_groups`: A list of run groups, defining criteria for different runs to include in your output.
+- `run_groups`: A list of run groups, defining criteria for different runs to include in your output. All run groups will be combined for the purpose of the final output, so where different tables are desired, different YAML files should be used.
 
 A single `run_group` should contain the following:
 

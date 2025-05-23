@@ -44,6 +44,21 @@ Once you have set up your virtual environment and installed everything, if doing
 pre-commit install
 ```
 
+### Using wandb
+
+We make use of wandb in our scripts. The wandb python package will have been installed into your virtual environment during the first setup steps. However, if this is your first time using wandb, please note that you will need to follow some additional steps:
+
+1. Create a wandb account at <https://wandb.ai/site/>
+2. Create an API key on your profile or at <https://wandb.ai/authorize>
+3. Run the following code in python, and be prepared to provide your API key:
+
+```python
+import wandb
+wandb.login()
+```
+
+When running your own wandb jobs, note that you will need to update the `entity` field used in some of our code to your own, or set it to `None`. You can do this in `arcee/src/arcee/constants.py` and changing the value for `WANDB_ENTITY_NAME`.
+
 ### Optional CUDA Dependencies
 
 If the quantised, fine-tuned models are run, this requires the `bitsandbytes` package, which can only work with CUDA.

@@ -1,0 +1,56 @@
+name: icl
+run_groups:
+  - folder:
+    - ollamaOutputFormat
+    - ollamaModels
+    - ollamaPrompts
+    model:
+    - gemma27b
+    - llama8b
+    - llama70b
+    - mistral24b
+    - mistral123b
+    - phi4
+    constraint:
+    - s
+    ed:
+      prompt:
+      - ED1
+      - ED3
+      - ED4
+      - ED8
+    eae:
+      prompt:
+      - EAE1
+      - EAE3
+      - EAE6
+      - EAE8
+    num_example:
+    - 0
+    - 5
+    - 10
+    - 20
+  - folder:
+    - gpt
+    model:
+    - gpt4o
+    constraint:
+    - f
+    - s
+    ed:
+      prompt:
+      - ED1
+      - ED3
+      - ED4
+      - ED8
+    eae:
+      prompt:
+      - EAE1
+      - EAE3
+      - EAE6
+      - EAE8
+    num_example:
+    - 0
+    - 5
+    - 10
+    - 20

@@ -61,6 +61,9 @@ scripts/configs/*
 !scripts/configs/examples/*
 !scripts/configs/inference_settings/*
 
+# Results scripts
+!scripts/configs/results
+
 scripts/slurm/*
 
 wandb/

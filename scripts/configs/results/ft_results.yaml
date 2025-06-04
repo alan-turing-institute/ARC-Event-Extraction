@@ -1,0 +1,24 @@
+name: ft
+run_groups:
+  - folder:
+    - fineTunedInference
+    model:
+    - llama3b
+    - mistral24b
+    - llama8b
+    - llama70b
+    constraint:
+    - s
+    ed:
+      prompt:
+      - ED1
+      - ED4
+    eae:
+      prompt:
+      - EAE1
+      - EAE6
+    num_example:
+    - 0
+    - 5
+    - 10
+    - 20

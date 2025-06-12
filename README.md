@@ -1,6 +1,6 @@
 # ARC-Event-Extraction
 
-This project examines a range of state-of-the-art approaches for labelling events in text.
+This project examines the use of LLMs for Event Extraction tasks.
 
 ## Installation
 

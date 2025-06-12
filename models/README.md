@@ -1,7 +1,3 @@
 # MODELS README
 
-This directory contains the models used in the project.
-
-Currently these are the list of models used.
-
-* `Llama-3.2-3B-Instruct`
+This directory stores the models used in the project - the models are not commited to the repo.

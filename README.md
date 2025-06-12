@@ -90,7 +90,11 @@ This package has a set of scripts taken and updated from the [TextEE project](ht
 ### `scripts`
 
 The scripts folder contains scripts which are broken down into four groups.
-The `from_textee` package is needed for some of the intishal processes in `data_prep`, and the `arcee` package is needed for everything else.
+The `from_textee` package is needed for some of the initial processes in `data_prep`, and the `arcee` package is needed for everything else.
+
+#### `configs`
+
+This folder contains a script `create_configs.py` that can be used to generate `yaml` config files to run the event extraction experiments. Given a list of model names, adapters, data split ids, prompts and required output formats, the script will output one config file for each experiment. This script is not essential, and the config files could be generated manually instead. Some examples of config files can be found in the `configs/examples` folder.
 
 #### `data_prep`
 
@@ -106,11 +110,11 @@ The script `create_dev_datasets.py` can be used to create a `train` and `dev` da
 The scripts in this folder run the models on the data.
 The `inference.py` script is run by providing a config from the `configs` folder.
 It also contains an example Slurm script.
-More information is provided in [the evaluation readme](scripts/eval/README.md).
+More information is provided in [the evaluation Read Me](scripts/eval/README.md).
 
 #### `fine_tune`
 
-The [script `run_fine_tune.py`](scripts/fine_tune/run_fine_tune.py) is used to fine-tune the model for a particular task.
+The script [`run_fine_tune.py`](scripts/fine_tune/run_fine_tune.py) is used to fine-tune the model for a particular task.
 The script takes one argument, which is the path to a config in the `fine_tune/configs` folder.
 This can be run without using quantisation, but if it is required, the optional `cuda` dependency group needs to be installed.
 
@@ -129,11 +133,14 @@ The adapters for the models that are fine-tuned are saved to the `models` folder
 
 ### `data`
 
-This folder stores the raw and pre-processed data for use by the event extraction models.
+This folder stores the raw and pre-processed data for use by the event extraction models. The data are not commited to the repo, but there are further details on the requirements of how the data should be stored in the sub-folders, where there is one sub-folder for each dataset:
+ * [`ACE05`](data/ACE05/README.md)
+ * [`RAMS`](data/RAMS/README.md)
+ * [`WikiEvents`](data/WikiEvents/README.md)
 
 ### `models`
 
-This folder is used to contain the language models used in the report and the adapters produced by the fine-tuning scripts.
+This folder is used to contain the language models used in the report and the adapters produced by the fine-tuning scripts. The models are not commited to the repo.
 
 ### `outputs`
 

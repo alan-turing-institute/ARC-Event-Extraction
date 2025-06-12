@@ -1,10 +1,10 @@
 # ARC-Event-Extraction
 
-This project examines a range of state-of-the-art approaches for labeling events in text.
+This project examines a range of state-of-the-art approaches for labelling events in text.
 
 ## Installation
 
-As of the time of writing the project required python 3.12.
+As of the time of writing, this project requires Python 3.12.
 
 If Ollama models are to be used for prompting, then [Ollama](https://ollama.com/) must be installed.
 
@@ -33,21 +33,45 @@ uv sync
 source .venv/bin/activate
 ```
 
-If you are developing you will want to call `uv lock` to update the lock file.
+If you are developing, you will want to call `uv lock` to update the lock file.
 This changes the python package versions to the latest available versions that are compatible.
 
 ### Install Pre-Commit Hooks
 
-Once you have set up your virtual environment and installed everything, if doing development on the repository you will need to install pre-commit hooks.
+Once you have set up your virtual environment and installed everything, if doing development on the repository, you will need to install pre-commit hooks.
 
 ```bash
 pre-commit install
 ```
 
+### Using wandb
+
+We make use of wandb in our scripts. The wandb python package will have been installed into your virtual environment during the first setup steps. However, if this is your first time using wandb, please note that you will need to follow some additional steps:
+
+1. Create a wandb account at <https://wandb.ai/site/>
+2. Create an API key on your profile or at <https://wandb.ai/authorize>
+3. Run the following code in python, and be prepared to provide your API key:
+
+```python
+import wandb
+wandb.login()
+```
+
+When running your own wandb jobs, note that you will need to update the `entity` field used in some of our code to your own, or set it to `None`. You can do this in `arcee/src/arcee/constants.py` and changing the value for `WANDB_ENTITY_NAME`.
+
+### Optional CUDA Dependencies
+
+If the quantised, fine-tuned models are run, this requires the `bitsandbytes` package, which can only work with CUDA.
+If you want to install this extra dependency manually with pip, or with `uv`, you can run:
+
+```bash
+uv sync --all-extras
+```
 
 ## Project Structure
 
-This project has the following sub-packages that are used for different purposes.
+*This project comprises the following sub-packages*, each serving distinct purposes.
+These can be installed independly if only some of the functionality is needed.
 
 ### `arcee` - ARC Event Extraction
 
@@ -55,35 +79,79 @@ This is the main experiment package for the ARC Event Extraction project. [Read 
 
 ### `poc` - Proof of Concept
 
-This is a proof of concept for the RAG prompting set up for the event extraction task. [Read Me Here](poc/README.md)
+This is a proof of concept for the RAG prompting set-up for the event extraction task. [Read Me Here](poc/README.md)
 
 ### `from_textee` - From TextEE
 
 This package has a set of scripts taken and updated from the [TextEE project](https://github.com/ej0cl6/TextEE). [Read Me Here](from_textee/README.md)
 
-Other folders in the project are:
-
-### `data`
-
-This folder stores the raw and pre-processed data for use by the event extraction models.
-
-### `outputs`
-
-This folder stores the outputs from the models.
-
-### `stats`
-
-This folder stores the statistics about model performance.
-
+*The main interface* for this project is contained in the scripts folder.
 
 ### `scripts`
 
-The scripts folder contain scripts to run the following processes:
+The scripts folder contains scripts which are broken down into four groups.
+The `from_textee` package is needed for some of the initial processes in `data_prep`, and the `arcee` package is needed for everything else.
+
+#### `configs`
+
+This folder contains a script `create_configs.py` that can be used to generate `yaml` config files to run the event extraction experiments. Given a list of model names, adapters, data split ids, prompts and required output formats, the script will output one config file for each experiment. This script is not essential, and the config files could be generated manually instead. Some examples of config files can be found in the `configs/examples` folder.
 
 #### `data_prep`
+
 The scripts in this folder process the data.
 To run `process_rams.py`, the following args could be used:
 `-i=data/RAMS/data -o=data/RAMS/output/split1 -s=data/RAMS/splits/split1`
 
 The script `create_dev_datasets.py` can be used to create a `train` and `dev` datasets that would specifically be used for prompt development, where the records come from an intersection of all five of the existing train splits (the number of splits can be altered, but there will be five if TextEE is followed). This can be run with the following args:
 `-o=data/RAMS/output/ --num_splits=5 --seed=42`
+
+#### `eval`
+
+The scripts in this folder run the models on the data.
+The `inference.py` script is run by providing a config from the `configs` folder.
+It also contains an example Slurm script.
+More information is provided in [the evaluation Read Me](scripts/eval/README.md).
+
+#### `fine_tune`
+
+The script [`run_fine_tune.py`](scripts/fine_tune/run_fine_tune.py) is used to fine-tune the model for a particular task.
+The script takes one argument, which is the path to a config in the `fine_tune/configs` folder.
+This can be run without using quantisation, but if it is required, the optional `cuda` dependency group needs to be installed.
+
+The adapters for the models that are fine-tuned are saved to the `models` folder.
+
+#### `stats`
+
+ There are four scripts in the `scripts/stats` folder.
+
+ * `generate_stats.py` - This generates the main statistics for the report and runs through the collection of results in the output folder and saves it to Weights and Biases.
+ * `f1_with_variance.py` - Generates the results to be shown in the figures, which can also save a collection of metadata and uses bootstrapping to calculate a confidence interval to display.
+ * `compare_prediction.py` -  This is used to compare the outputs of each of the models with each other by changing what is considered the ground truth.
+ * `view_examples.py` - This displays outputs of the model in a readable way and can be filtered on different criteria.
+
+*The following folders* contain the input and output files required for the project.
+
+### `data`
+
+This folder stores the raw and pre-processed data for use by the event extraction models. The data are not commited to the repo, but there are further details on the requirements of how the data should be stored in the sub-folders, where there is one sub-folder for each dataset:
+ * [`ACE05`](data/ACE05/README.md)
+ * [`RAMS`](data/RAMS/README.md)
+ * [`WikiEvents`](data/WikiEvents/README.md)
+
+### `models`
+
+This folder is used to contain the language models used in the report and the adapters produced by the fine-tuning scripts. The models are not commited to the repo.
+
+### `outputs`
+
+This folder stores the outputs from the models.
+This folder's structure follows the form found in the `scripts/configs` folder.
+
+### `stats`
+
+This folder stores the statistics about model performance.
+It also stores the configs that are used by the files in `scripts/stats` to decide what is generated.
+
+### `report-figures`
+
+This folder contains the scripts and data used to produce the figures for the report.

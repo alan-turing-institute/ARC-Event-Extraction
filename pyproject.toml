@@ -23,6 +23,9 @@ from_textee = { workspace = true }
 [tool.uv.workspace]
 members = ["arcee", "poc", "from_textee",]
 
+[tool.setuptools]
+py-modules = []  # Needed for pip installing
+
 [tool.mypy]
 files = ["src", "tests"]
 python_version = "3.12"

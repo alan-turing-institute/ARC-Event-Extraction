@@ -16,6 +16,7 @@ outputs/*
 
 # FIGURES
 report-figures/**/*.pdf
+paper-figures/**/*.pdf
 
 # STATS
 stats/*

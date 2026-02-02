@@ -28,19 +28,19 @@ axes = fig.subplots(3, 1)
 plot_answer_matrix(
     axes[0],
     zero_event_data.values,
-    "Zero-shot Event Extraction",
+    "Zero-shot Event Detection",
     zero_event_data.columns.tolist(),
 )
 plot_answer_matrix(
     axes[1],
     example_event_data.values,
-    "Few-shot Event Extraction",
+    "Few-shot Event Detection",
     example_event_data.columns.tolist(),
 )
 plot_answer_matrix(
     axes[2],
     example_event_type_data.values,
-    "Few-shot Event Type Extraction",
+    "Few-shot Event Type Detection",
     example_event_type_data.columns.tolist(),
 )
 

@@ -21,7 +21,7 @@ example_event_type_data = pd.read_csv(this_file.parent / "example_event_type_f1.
 ##  Set up Figure ##
 
 fig = Figure(
-    figsize=(4, 12), layout="constrained"
+    figsize=(4, 10.5), layout="constrained"
 )  # Use 'constrained' layout to optimize space
 axes = fig.subplots(3, 1)
 

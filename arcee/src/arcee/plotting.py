@@ -23,8 +23,12 @@ def plot_answer_matrix(
         model_names (list[str]): The names of the models.
     """
     number_of_classes = len(model_names)
-    if model_names[0] == "ACE05 Labels":
-        model_names[0] = "ACE05\nLabels"
+    max_length = max(len(name) for name in model_names if name != "ACE05 Labels")
+    for i, name in enumerate(model_names):
+        if name == "ACE05 Labels":
+            model_names[i] = "ACE05\nLabels"
+        elif len(name) < max_length:
+            model_names[i] = name.center(max_length)
     # Plotting the matrix
     axis.matshow(matrix.astype(float), cmap=cc.cm.kbc_r)
 

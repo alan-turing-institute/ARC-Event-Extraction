@@ -29,7 +29,7 @@ tuned_map = {
 ##  Set up Figure ##
 
 fig = Figure(
-    figsize=(4, 12), layout="constrained"
+    figsize=(4, 10.5), layout="constrained"
 )  # Use 'constrained' layout to optimize space
 axes = fig.subplots(3, 1)
 

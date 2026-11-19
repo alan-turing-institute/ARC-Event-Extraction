@@ -11,6 +11,7 @@ def plot_answer_matrix(
     matrix: np.ndarray,
     title: str,
     model_names: list[str],
+    title_loc: str = "center",
 ) -> None:
     """
     Plot the confusion matrix based on the given confusion values and source names. The
@@ -21,6 +22,7 @@ def plot_answer_matrix(
         matrix (np.ndarray): The confusion matrix.
         title (str): The title of the plot.
         model_names (list[str]): The names of the models.
+        title_loc (str): Title alignment: "left", "center" or "right".
     """
     number_of_classes = len(model_names)
     max_length = max(len(name) for name in model_names if name != "ACE05 Labels")
@@ -32,7 +34,7 @@ def plot_answer_matrix(
     # Plotting the matrix
     axis.matshow(matrix.astype(float), cmap=cc.cm.kbc_r)
 
-    axis.set_title(f"{title}")
+    axis.set_title(f"{title}", loc=title_loc)
 
     # Adding text in each cell
     for (i, j), val in np.ndenumerate(matrix):

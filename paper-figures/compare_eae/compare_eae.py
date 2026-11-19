@@ -29,33 +29,36 @@ tuned_map = {
 ##  Set up Figure ##
 
 fig = Figure(
-    figsize=(4, 10.5), layout="constrained"
+    figsize=(10.5, 3.7), layout="constrained"
 )  # Use 'constrained' layout to optimize space
-axes = fig.subplots(3, 1)
+axes = fig.subplots(1, 3)
 
 plot_answer_matrix(
     axes[0],
     zero_argument_data.values,
     "Zero-shot Argument Extraction",
     zero_argument_data.columns.tolist(),
+    title_loc="right",
 )
 plot_answer_matrix(
     axes[1],
     example_argument_data.values,
     "Few-shot Argument Extraction",
     example_argument_data.columns.tolist(),
+    title_loc="right",
 )
 plot_answer_matrix(
     axes[2],
     tuned_argument_data.values,
     "Fine-Tuned Argument Extraction",
     [tuned_map[label] for label in tuned_argument_data.columns],
+    title_loc="right",
 )
 
 # Add blank labels for space for the suplabels
 for ax in axes:
-    ax.set_ylabel(" ")
-axes[-1].set_xlabel(" ")
+    ax.set_xlabel(" ")
+axes[0].set_ylabel(" ")
 
 fig.supxlabel("Predicted answers", y=0.005)  # Adjusted y position to bring closer
 fig.supylabel("Referenced answers", x=0.005)  # Adjusted x position to bring closer

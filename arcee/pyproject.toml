@@ -18,6 +18,9 @@ dependencies = [
     "sentence-transformers",
     "datasets",
     "openai",
+    "colorcet",
+    "matplotlib",
+    "peft",
 ]
 
 [build-system]
